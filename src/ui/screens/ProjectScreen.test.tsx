@@ -13,7 +13,8 @@ const at = (path: string) =>
     </MemoryRouter>
   );
 
-const rail = (container: HTMLElement) => container.querySelector("aside") as HTMLElement;
+const rail = (container: HTMLElement) =>
+  container.querySelector("aside[aria-label='Steps']") as HTMLElement;
 
 /** A row is closed until it is opened, so anything about an answer has to open
  *  it first. That is the design and not an accident of the test. */
@@ -140,5 +141,40 @@ describe("the element panel", () => {
   it("says nothing was found for a tab that is not on this pathway", () => {
     const { container } = at("/projects/p1/steps/8/rod?pathway=P2");
     expect(container.querySelector("[data-state='absent']")).not.toBeNull();
+  });
+});
+
+describe("tabs are the step's parts, not a copy of the step", () => {
+  it("renders no tab strip where the step has one part", () => {
+    // Step 4 on P2 is a single FANEC; a lone tab repeating the step's name
+    // would read as if the step and the tab were the same object.
+    const { container } = at("/projects/p1/steps/4/fanec?pathway=P2");
+    expect(container.querySelector("[role='tablist']")).toBeNull();
+    expect(screen.getByText("FANEC — 6 elements")).toBeTruthy();
+  });
+
+  it("renders tabs where the step divides into parts", () => {
+    const { container } = at("/projects/p1/steps/4/scope?pathway=P4");
+    const list = container.querySelector("[role='tablist']");
+    expect(list).not.toBeNull();
+    const names = within(list as HTMLElement)
+      .getAllByRole("tab")
+      .map((tab) => (tab.textContent ?? "").trim());
+    expect(names).toEqual(["Scope of analysis", "Deadline", "Scoping", "Comment timing"]);
+  });
+
+  it("scrolls the strip rather than wrapping or clipping it", () => {
+    const { container } = at("/projects/p1/steps/4/scope?pathway=P4");
+    const wrap = container.querySelector("[data-overflow-right]");
+    expect(wrap).not.toBeNull();
+    expect(wrap?.getAttribute("data-overflow-left")).toBe("no");
+  });
+
+  it("marks no step active while a cross-cutting tab is open", () => {
+    const { container } = at("/projects/p1/steps/x/proposal-record");
+    const active = rail(container).querySelectorAll("[class*='active']");
+    // Only the cross-cutting entry itself, never a step in the sequence.
+    expect(active.length).toBe(1);
+    expect(active[0].textContent).toContain("Proposal record");
   });
 });

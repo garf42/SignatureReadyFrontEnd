@@ -118,23 +118,23 @@ function tabEntries(tabs: TabSpec[], activeIndex: number): TabEntry[] {
 
 export function stepEntries(pathway: PathwayId | null, activeStepId: string): Region<StepEntry[]> {
   const steps = stepsFor(pathway);
-  const activeIndex = Math.max(
-    0,
-    steps.findIndex((step) => step.id === activeStepId)
-  );
+  // -1 where the route is not on a step at all — the cross-cutting tabs sit
+  // outside the sequence. No step is active then, and marking the first one
+  // would leave Intake highlighted from anywhere in §7.7.
+  const activeIndex = steps.findIndex((step) => step.id === activeStepId);
   return filled(
     steps.map((step, i) => ({
       id: step.id,
       n: step.n,
       name: step.name,
-      mark: i < activeIndex ? "completed" : i === activeIndex ? "active" : "waiting",
+      mark: activeIndex < 0 ? "waiting" : i < activeIndex ? "completed" : i === activeIndex ? "active" : "waiting",
       meta:
-        i < activeIndex
+        activeIndex >= 0 && i < activeIndex
           ? `${step.tabs.length} of ${step.tabs.length} tabs`
           : i === activeIndex
             ? `0 of ${step.tabs.length} tabs`
             : "Not started",
-      tabs: tabEntries(step.tabs, i < activeIndex ? step.tabs.length : 0)
+      tabs: tabEntries(step.tabs, activeIndex >= 0 && i < activeIndex ? step.tabs.length : 0)
     }))
   );
 }
@@ -311,7 +311,7 @@ export function panelFor(tab: TabSpec, held: boolean, retrievalUp: boolean): Ele
       note: gated
         ? `The signature at ${rows.find((row) => row.gate)?.gate?.citation ?? ""} is reserved; the row above routes it`
         : left > 0
-          ? `${String(left)} ${left === 1 ? "question" : "questions"} still need review`
+          ? `${String(left)} ${left === 1 ? "question" : "questions"} still ${left === 1 ? "needs" : "need"} review`
           : undefined,
       destination: left > 0 ? STEP_LINK : undefined,
       source: left === 0 ? SUBMITTING : undefined

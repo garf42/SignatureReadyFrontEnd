@@ -47,7 +47,7 @@
 .control select {
   border: 0;
   background: none;
-  padding: 0 var(--s-3) 0 0;
+  padding: 0 var(--s-5) 0 0;
   font-size: var(--t-meta);
 }
 
@@ -103,6 +103,27 @@
   background: var(--well);
 }
 
+/* Open, a project is one box and not two: the summary row gives up its bottom
+   edge and the detail row gives up its top, so the border runs around both. */
+.group[data-open="yes"] > tr:first-child > td {
+  border-bottom: none;
+  border-radius: 0;
+}
+
+.group[data-open="yes"] > tr:first-child > td:first-child {
+  border-radius: var(--radius-box) 0 0 0;
+}
+
+.group[data-open="yes"] > tr:first-child > td:last-child {
+  border-radius: 0 var(--radius-box) 0 0;
+}
+
+.group[data-open="yes"] > tr:last-child > td {
+  border-top: none;
+  border-radius: 0 0 var(--radius-box) var(--radius-box);
+  padding-top: 0;
+}
+
 .group[data-mark="error"] td {
   border-color: var(--unresolved);
 }
@@ -148,7 +169,8 @@
 .detail {
   display: grid;
   gap: 6px;
-  padding-top: 0;
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--rule);
 }
 
 .summary {

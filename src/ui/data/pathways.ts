@@ -251,8 +251,10 @@ export const SHARED_STEPS: StepSpec[] = [
         ]
       },
       {
+        // Named for what it divides, not for its step: a tab that repeats its
+        // own step's name reads as a clone of it rather than a part of it.
         id: "level-of-review",
-        name: "Level of review",
+        name: "Sequence and significance",
         rows: [
           {
             ref: "1b.2(f)(2)(i)",
@@ -804,7 +806,7 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
           },
           {
             id: "comments",
-            name: "Comments",
+            name: "Comment timing",
             rows: [
               {
                 ref: "1b.7(d)(3)",

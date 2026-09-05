@@ -126,6 +126,35 @@ describe("pathways — §7.1 and §7.2", () => {
   });
 });
 
+describe("a tab is a part of its step, never a copy of one", () => {
+  it("never gives a tab the name of a step on the same pathway", () => {
+    const clashes: string[] = [];
+    for (const id of PATHWAY_IDS) {
+      const steps = stepsFor(id);
+      const stepNames = new Set(steps.map((step) => step.name));
+      for (const step of steps) {
+        // A step with one part renders no strip, so no clone is ever shown;
+        // the clash that matters is a tab standing beside its siblings under
+        // a name the step list already uses.
+        if (step.tabs.length < 2) continue;
+        for (const tab of step.tabs) {
+          if (stepNames.has(tab.name)) clashes.push(`${id} · step ${step.id} · ${tab.name}`);
+        }
+      }
+    }
+    expect(clashes).toEqual([]);
+  });
+
+  it("keeps tab names distinct within a step", () => {
+    for (const id of PATHWAY_IDS) {
+      for (const step of stepsFor(id)) {
+        const names = step.tabs.map((tab) => tab.name);
+        expect(new Set(names).size).toBe(names.length);
+      }
+    }
+  });
+});
+
 describe("cross-cutting — §7.7", () => {
   it("carries the ten tabs, reachable from every step on every pathway", () => {
     expect(CROSS_CUTTING).toHaveLength(10);

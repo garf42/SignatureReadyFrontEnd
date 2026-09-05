@@ -1,0 +1,89 @@
+/* Real tabs, sitting on the panel they open. Hand-built around Blueprint's
+   Tabs rather than replacing it: Blueprint keeps the roving-tabindex and the
+   aria wiring, and this adds the two behaviours it has no equivalent for —
+   tab shapes joined to the panel below, and an overflowing strip that fades
+   at whichever edge still has tabs behind it. */
+.wrap {
+  position: relative;
+  min-width: 0;
+}
+
+.scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--link);
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.fade {
+  position: absolute;
+  top: 0;
+  bottom: 1px;
+  width: 40px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade {
+    transition: none;
+  }
+}
+
+.fadeLeft {
+  left: 0;
+  background: linear-gradient(to right, var(--paper), transparent);
+}
+
+.fadeRight {
+  right: 0;
+  background: linear-gradient(to left, var(--paper), transparent);
+}
+
+.wrap[data-overflow-left="yes"] .fadeLeft,
+.wrap[data-overflow-right="yes"] .fadeRight {
+  opacity: 1;
+}
+
+.scroller :global(.bp6-tab-list) {
+  gap: 2px;
+  padding: 0 var(--s-1);
+}
+
+.scroller :global(.bp6-tab-indicator-wrapper) {
+  display: none;
+}
+
+.scroller :global(.bp6-tab) {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--rule);
+  border-bottom: none;
+  border-radius: var(--radius-box) var(--radius-box) 0 0;
+  background: var(--well);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.scroller :global(.bp6-tab[aria-selected="true"]) {
+  position: relative;
+  bottom: -1px;
+  background: var(--paper);
+  border-color: var(--link);
+  border-bottom: 1px solid var(--paper);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.done {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ok);
+  margin-left: var(--s-2);
+}

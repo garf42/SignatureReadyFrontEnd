@@ -66,7 +66,12 @@ export function InboxScreen() {
                 </tr>
               </thead>
               {list.projects.map((project) => (
-                <tbody key={project.id} className={css.group} data-mark={project.mark}>
+                <tbody
+                  key={project.id}
+                  className={css.group}
+                  data-mark={project.mark}
+                  data-open={open[project.id] ? "yes" : "no"}
+                >
                   <tr>
                     <td className={css.name}>{project.name}</td>
                     <td className={css.changed}>{project.changed}</td>

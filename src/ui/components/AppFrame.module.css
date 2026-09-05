@@ -31,18 +31,31 @@
   letter-spacing: -0.01em;
 }
 
+/* Both tracks are minmax(0, …): without it a grid child keeps its intrinsic
+   width, and the collapsed pane's rules run on under the page beside it. */
 .split {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
   align-items: start;
 }
 
 .split[data-nav="closed"] {
-  grid-template-columns: 84px minmax(0, 1fr);
+  grid-template-columns: 46px minmax(0, 1fr);
 }
 
 .nav {
-  padding: var(--s-3) var(--s-2) var(--s-4) 0;
+  overflow: hidden;
+  padding: var(--s-3) 0 var(--s-4);
+  border-right: 1px solid var(--rule);
+}
+
+.split[data-nav="closed"] .nav :global(.bp6-menu-item) {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.split[data-nav="closed"] .nav :global(.bp6-menu-item-icon) {
+  margin-right: 0;
 }
 
 .section {
@@ -52,13 +65,15 @@
 
 .current {
   background: var(--well);
-  border: 1px solid var(--link);
-  border-left: 5px solid var(--link);
+  border-left: 3px solid var(--link);
   color: var(--ink);
   font-weight: 500;
 }
 
 .content {
-  padding: var(--s-3) var(--s-4) var(--s-6) var(--s-2);
   min-width: 0;
+}
+
+.content[data-padded="yes"] {
+  padding: var(--s-3) var(--s-4) var(--s-6);
 }

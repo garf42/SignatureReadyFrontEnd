@@ -1,22 +1,24 @@
 import { useState } from "react";
-import { Link, Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Menu, MenuItem, Tab, Tabs } from "@blueprintjs/core";
+import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Menu, MenuItem } from "@blueprintjs/core";
 
 import type { SourceKind, StepEntry } from "@/ui/data/port";
 import { CROSS_CUTTING, usePathway, useProject, useSteps } from "@/ui/data/port";
+import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
 import { SourceOverlay } from "@/ui/components/SourceOverlay";
-import { CROSS_STEP, INBOX, crossPath, tabPath, withSearch } from "@/ui/routes";
+import { TabStrip } from "@/ui/components/TabStrip";
+import { CROSS_STEP, crossPath, tabPath, withSearch } from "@/ui/routes";
 
 import css from "@/ui/screens/ProjectScreen.module.css";
 
-/** The shell: wordmark, project band, pathway line, step list, tab bar, and the
- *  panel the element screen renders into.
+/** The project: band, pathway line, step list, the tabs of the step in hand,
+ *  and the panel the element screen renders into. It sits inside the same
+ *  frame as every other page, so the section pane is reachable from here too.
  *
  *  Every step is reachable. §7.2 requires the build to be walkable end to end
  *  as a regular user — every step, tab and row workable without agency
- *  credentials — so a step that is waiting reads as waiting and still opens.
- */
+ *  credentials — so a step that is waiting reads as waiting and still opens. */
 export function ProjectScreen() {
   const params = useParams();
   const projectRef = params.projectRef ?? "";
@@ -31,23 +33,10 @@ export function ProjectScreen() {
   const [source, setSource] = useState<SourceKind | null>(null);
 
   const go = (path: string) => navigate(withSearch(path, search));
+  const onCross = stepId === CROSS_STEP;
 
   return (
-    <main className={css.screen}>
-      <header className={css.top}>
-        <button
-          type="button"
-          className={css.paneToggle}
-          aria-label={railShut ? "Show the steps" : "Hide the steps"}
-          onClick={() => setRailShut((v) => !v)}
-        >
-          {railShut ? "»" : "«"}
-        </button>
-        <Link className={css.wordmark} to={withSearch(INBOX, search)}>
-          SignatureReady
-        </Link>
-      </header>
-
+    <AppFrame current="inbox" padded={false}>
       <div className={css.band}>
         <Region region={project} onSource={setSource}>
           {(header) => (
@@ -75,8 +64,13 @@ export function ProjectScreen() {
       </div>
 
       <div className={css.split} data-rail={railShut ? "closed" : "open"}>
-        <aside className={css.rail}>
-          <button type="button" className={css.railHead} onClick={() => setRailShut((v) => !v)}>
+        <aside className={css.rail} aria-label="Steps">
+          <button
+            type="button"
+            className={css.railHead}
+            aria-expanded={!railShut}
+            onClick={() => setRailShut((v) => !v)}
+          >
             <span>{railShut ? "" : "Steps"}</span>
             <span className={css.railGlyph}>{railShut ? "+" : "−"}</span>
           </button>
@@ -87,6 +81,7 @@ export function ProjectScreen() {
                   <MenuItem
                     key={step.id}
                     className={css.step + " " + css[step.mark]}
+                    title={step.name}
                     text={
                       railShut ? (
                         <span className={css.number}>{step.n}</span>
@@ -105,14 +100,13 @@ export function ProjectScreen() {
             )}
           </Region>
 
-          <button type="button" className={css.railHead} disabled>
-            <span>{railShut ? "" : "Across the project"}</span>
-          </button>
+          <p className={css.railHead}>{railShut ? "···" : "Across the project"}</p>
           <Menu>
             {CROSS_CUTTING.map((tab) => (
               <MenuItem
                 key={tab.id}
-                className={css.step + (stepId === CROSS_STEP && tabId === tab.id ? " " + css.active : "")}
+                className={css.step + (onCross && tabId === tab.id ? " " + css.active : "")}
+                title={tab.name}
                 text={railShut ? "·" : tab.name}
                 onClick={() => go(crossPath(projectRef, tab.id))}
               />
@@ -123,32 +117,13 @@ export function ProjectScreen() {
         <section className={css.panel}>
           <Region region={steps} onSource={setSource}>
             {(list) => (
-              <div className={css.tabs}>
-                <Tabs
-                  id="element-tabs"
-                  selectedTabId={tabId}
-                  onChange={(next) =>
-                    go(
-                      stepId === CROSS_STEP
-                        ? crossPath(projectRef, String(next))
-                        : tabPath(projectRef, stepId, String(next))
-                    )
-                  }
-                >
-                  {tabsFor(list, stepId).map((tab) => (
-                    <Tab
-                      key={tab.id}
-                      id={tab.id}
-                      title={
-                        <>
-                          {tab.name}
-                          {tab.done ? <span className={css.tabDone}>✓</span> : null}
-                        </>
-                      }
-                    />
-                  ))}
-                </Tabs>
-              </div>
+              <TabStrip
+                tabs={tabsFor(list, stepId)}
+                selected={tabId}
+                onSelect={(next) =>
+                  go(onCross ? crossPath(projectRef, next) : tabPath(projectRef, stepId, next))
+                }
+              />
             )}
           </Region>
           <div className={css.panelBox}>
@@ -158,7 +133,7 @@ export function ProjectScreen() {
       </div>
 
       {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
-    </main>
+    </AppFrame>
   );
 }
 
