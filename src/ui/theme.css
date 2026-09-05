@@ -212,11 +212,23 @@ textarea.bp6-input {
   margin-bottom: 6px;
 }
 
+/* A dialog taller than the window had no height cap and could not scroll, so
+   it was pinned to the top and ran off the bottom. Cap it to the window less
+   its own margin and let it scroll; the header stays put while it does. */
 .bp6-dialog {
   background: var(--paper);
   border-radius: var(--radius-overlay);
   box-shadow: var(--shadow-overlay);
   padding-bottom: 0;
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.bp6-dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .bp6-dialog-header {

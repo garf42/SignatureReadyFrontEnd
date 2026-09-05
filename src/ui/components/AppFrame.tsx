@@ -9,11 +9,13 @@ import { INBOX, withSearch } from "@/ui/routes";
 
 import css from "@/ui/components/AppFrame.module.css";
 
-const ICONS: Record<SectionIcon, "inbox" | "document" | "box" | "grid-view" | "people"> = {
+/** Blueprint's brain glyph is filed under `predictive-analysis`; there is no
+ *  `brain` in the 16px set. */
+const ICONS: Record<SectionIcon, "inbox" | "document" | "box" | "predictive-analysis" | "people"> = {
   inbox: "inbox",
   documents: "document",
   archive: "box",
-  grid: "grid-view",
+  learning: "predictive-analysis",
   people: "people"
 };
 

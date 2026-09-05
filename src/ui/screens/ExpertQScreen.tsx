@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Dialog, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
 
 import type { ExpertStatus, SourceKind } from "@/ui/data/port";
-import { EXPERT_RETURN, EXPERT_TRIGGER, PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
+import { EXPERT_TRIGGER, PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { ListControls } from "@/ui/components/ListControls";
 import { PageHead } from "@/ui/components/PageHead";
@@ -34,6 +34,7 @@ export function ExpertQScreen() {
           title={PAGES.experts.title}
           count={queue.state === "filled" ? queue.value.count : undefined}
           help={PAGES.experts.help}
+          notes={queue.state === "filled" ? [...queue.value.limits, EXPERT_TRIGGER] : [EXPERT_TRIGGER]}
         >
           {queue.state === "filled" ? (
             <ListControls filters={queue.value.filters} sorts={queue.value.sorts} />
@@ -102,23 +103,10 @@ export function ExpertQScreen() {
                 ))}
               </HTMLTable>
 
-              <div className={css.notes}>
-                <p className={css.notesTitle}>What this queue cannot show</p>
-                {page.limits.map((limit) => (
-                  <p key={limit} className={css.note}>
-                    {limit}
-                  </p>
-                ))}
-              </div>
             </>
           )}
         </Region>
 
-        <div className={css.notes}>
-          <p className={css.notesTitle}>How a request gets here, and how it closes</p>
-          <p className={css.note}>{EXPERT_TRIGGER}</p>
-          <p className={css.note}>{EXPERT_RETURN}</p>
-        </div>
       </div>
 
       {composing ? (
@@ -164,7 +152,7 @@ function ComposeOverlay({
               <p className={css.meta}>{request.recipientNote}</p>
               <FormGroup className={css.field} label="Request">
                 <TextArea
-                  rows={8}
+                  rows={6}
                   placeholder={request.body}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}

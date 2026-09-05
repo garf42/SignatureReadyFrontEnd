@@ -31,6 +31,13 @@ const GROUPS = [
   { id: "catalogue", name: "Categorical exclusions", done: false }
 ];
 
+/** The integrity checks as one line, so they sit with the page's other
+ *  caveats instead of in a box under the table. §6.6 asks for exactly this:
+ *  one line, not a page. */
+function integrityLine(region: ReturnType<typeof useIntegrity>): string {
+  return region.state === "filled" ? region.value.join(" · ") : "Integrity checks unavailable";
+}
+
 /** Three values, not two. 25 rows carry classDeclared=false and a NULL
  *  citable, and a null meaning "not declared" and a null meaning "not
  *  applicable" are the same null. They do not render the same here. */
@@ -56,6 +63,11 @@ export function ReferenceScreen() {
           title={PAGES.reference.title}
           count={reference.state === "filled" ? reference.value.count : undefined}
           help={PAGES.reference.help}
+          notes={
+            group === "corpus" && reference.state === "filled"
+              ? [reference.value.hazard, integrityLine(integrity)]
+              : undefined
+          }
         />
 
         <TabStrip
@@ -148,13 +160,6 @@ export function ReferenceScreen() {
                     </HTMLTable>
                   </div>
                 </div>
-                <div className={shared.notes}>
-                  <p className={shared.notesTitle}>About this corpus</p>
-                  <p className={shared.note}>{page.hazard}</p>
-                  <Region region={integrity} onSource={setSource}>
-                    {(lines) => <p className={shared.meta}>{lines.join(" · ")}</p>}
-                  </Region>
-                </div>
               </>
             )}
           </Region>
@@ -177,7 +182,11 @@ function RegulationPanel({ onSource }: { onSource: (kind: SourceKind) => void })
     <Region region={regulation} onSource={onSource}>
       {(page) => (
         <>
-          <PageHead title="7 CFR part 1b, as pinned" count={page.pin} />
+          <PageHead
+            title="7 CFR part 1b, as pinned"
+            count={page.pin}
+            notes={[REGULATION_CURRENCY, REGULATION_NOTE]}
+          />
           <div>
             {page.sections.map((section) => (
               <div key={section.id} className={css.section}>
@@ -202,16 +211,32 @@ function RegulationPanel({ onSource }: { onSource: (kind: SourceKind) => void })
                 ) : null}
               </div>
             ))}
-          </div>
-          <div className={shared.notes}>
-            <p className={shared.notesTitle}>Citations in the current text that do not resolve</p>
-            {page.unresolvedCitations.map((line) => (
-              <p key={line} className={shared.note}>
-                {line}
-              </p>
-            ))}
-            <p className={shared.meta}>{REGULATION_NOTE}</p>
-            <p className={shared.meta}>{REGULATION_CURRENCY}</p>
+            <div className={css.section}>
+              <button
+                type="button"
+                className={css.sectionHead}
+                aria-expanded={!!open.citations}
+                onClick={() => setOpen((state) => ({ ...state, citations: !state.citations }))}
+              >
+                <span className={css.sectionId}>§ —</span>
+                <span className={css.sectionName}>
+                  Citations in the current text that do not resolve
+                </span>
+                <span className={css.amended}>{page.unresolvedCitations.length} found</span>
+                <span className={css.sectionGlyph}>
+                  <Icon icon={open.citations ? "minus" : "plus"} />
+                </span>
+              </button>
+              {open.citations ? (
+                <div className={css.sectionBody}>
+                  {page.unresolvedCitations.map((line) => (
+                    <p key={line} className={shared.note}>
+                      {line}
+                    </p>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         </>
       )}
@@ -226,7 +251,11 @@ function CataloguePanel({ onSource }: { onSource: (kind: SourceKind) => void }) 
       <Region region={catalogue} onSource={onSource}>
         {(page) => (
           <>
-            <PageHead title="Categorical exclusions" help={page.split} />
+            <PageHead
+              title="Categorical exclusions"
+              help={page.split}
+              notes={[CATALOGUE_EMPTY_REASON]}
+            />
             <HTMLTable className={shared.table}>
               <thead>
                 <tr>
@@ -250,10 +279,6 @@ function CataloguePanel({ onSource }: { onSource: (kind: SourceKind) => void }) 
           </>
         )}
       </Region>
-      <div className={shared.notes}>
-        <p className={shared.notesTitle}>Why this is empty</p>
-        <p className={shared.note}>{CATALOGUE_EMPTY_REASON}</p>
-      </div>
     </>
   );
 }

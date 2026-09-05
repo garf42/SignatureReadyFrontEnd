@@ -106,13 +106,6 @@ export interface StepEntry {
   mark: StepMark;
   meta: string;
   tabs: TabEntry[];
-  /** Greyed and inaccessible: its inputs are not established yet. This is a
-   *  sequence lock and never a credential one — §7.2 requires every step to be
-   *  workable without agency credentials. */
-  locked: boolean;
-  lockedReason: string;
-  /** §7.7: shared by every pathway rather than belonging to one. */
-  shared: boolean;
 }
 
 export interface ProjectHeader {
@@ -123,7 +116,7 @@ export interface ProjectHeader {
   summary: string;
 }
 
-export type SectionIcon = "inbox" | "documents" | "archive" | "grid" | "people";
+export type SectionIcon = "inbox" | "documents" | "archive" | "learning" | "people";
 
 export interface NavSection {
   id: string;
@@ -170,13 +163,6 @@ export interface Session {
 import type { PathwayId } from "@/ui/data/pathways";
 
 export type { DocumentType, GateSpec, PathwayId, RowSpec, StepSpec, TabSpec } from "@/ui/data/pathways";
-
-/** Whether Step 0 has been submitted. Nothing downstream is populated until
- *  it has: the first retrieval push runs on its completion — §7.8. */
-export interface IntakeState {
-  complete: boolean;
-  note: string;
-}
 
 /** Which pathway Step 2 fixed. `null` is the state before it is fixed, and it
  *  is not an error: Steps 0–2 exist on every pathway, and until the

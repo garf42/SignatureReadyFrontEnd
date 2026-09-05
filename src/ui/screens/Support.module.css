@@ -1,25 +1,13 @@
-/* Shared by the four supporting pages, so their rows, notes and tables are
-   the same object in four places rather than four that drift apart. */
+/* Shared by the four supporting pages, so their rows and tables are the same
+   object in four places rather than four that drift apart. Page-level notes
+   live in the header block, not in a box under the content. */
 
 .stack {
   display: grid;
-  gap: var(--s-4);
+  gap: var(--s-3);
 }
 
-.notes {
-  display: grid;
-  gap: 6px;
-  padding: var(--s-3);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-box);
-  background: var(--well);
-}
 
-.notesTitle {
-  font-family: var(--mono);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-}
 
 .note {
   font-size: var(--t-meta);

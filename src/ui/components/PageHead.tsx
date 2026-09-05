@@ -8,15 +8,20 @@ export function PageHead({
   title,
   count,
   help,
+  notes,
   children
 }: {
   title: string;
   count?: string;
   help?: string;
+  /** What the page cannot show, or what its numbers rest on. Kept up here
+   *  with the standfirst rather than in a box at the foot: a caveat a reader
+   *  meets after the thing it qualifies has already been read too late. */
+  notes?: string[];
   children?: ReactNode;
 }) {
   return (
-    <>
+    <header className={css.wrap}>
       <div className={css.head}>
         <div className={css.heading}>
           <h1 className={css.title}>{title}</h1>
@@ -25,6 +30,15 @@ export function PageHead({
         {children ? <div className={css.controls}>{children}</div> : null}
       </div>
       {help ? <p className={css.help}>{help}</p> : null}
-    </>
+      {notes && notes.length > 0 ? (
+        <div className={css.notes}>
+          {notes.map((note) => (
+            <p key={note} className={css.note}>
+              {note}
+            </p>
+          ))}
+        </div>
+      ) : null}
+    </header>
   );
 }

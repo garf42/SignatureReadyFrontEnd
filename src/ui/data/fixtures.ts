@@ -164,7 +164,7 @@ export const SECTIONS: NavSection[] = [
   { id: "inbox", name: "Inbox", icon: "inbox", href: "/", current: false },
   { id: "archive", name: "Archive", icon: "archive", href: "/archive", current: false },
   { id: "experts", name: "Expert Q", icon: "people", href: "/experts", current: false },
-  { id: "learning", name: "Learning", icon: "grid", href: "/learning", current: false },
+  { id: "learning", name: "Learning", icon: "learning", href: "/learning", current: false },
   { id: "reference", name: "Reference", icon: "documents", href: "/reference", current: false }
 ];
 

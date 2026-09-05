@@ -2,8 +2,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { HTMLTable, Icon } from "@blueprintjs/core";
 
-import type { Mark, SourceKind, SourceRef } from "@/ui/data/port";
-import { SourceLine } from "@/ui/components/SourceLine";
+import type { Mark, SourceRef } from "@/ui/data/port";
 import { StatusMark } from "@/ui/components/StatusMark";
 
 import css from "@/ui/components/RecordTable.module.css";
@@ -33,16 +32,17 @@ export interface RecordRow {
  *  pages render through here and neither can drift from the other.
  *
  *  Open, a row is one box and not two: the summary row gives up its bottom
- *  edge and the detail its top, so the border runs around both. */
+ *  edge and the detail its top, so the border runs around both.
+ *
+ *  Who started or archived a record reads as plain text here. It is a name,
+ *  not a citation: there is no primary source behind it to open. */
 export function RecordTable({
   heads,
   records,
-  onSource,
   actions
 }: {
   heads: [string, string, string, string];
   records: RecordRow[];
-  onSource: (kind: SourceKind) => void;
   actions: (record: RecordRow) => ReactNode;
 }) {
   const [open, setOpen] = useState<Record<string, boolean>>({});
@@ -93,7 +93,10 @@ export function RecordTable({
                   <p className={css.summary}>{record.summary}</p>
                   <p className={css.meta}>{record.meta}</p>
                   {record.source ? (
-                    <SourceLine source={record.source} onOpen={onSource} />
+                    <p className={css.meta}>
+                      {record.source.lead}
+                      {record.source.label}
+                    </p>
                   ) : record.sourceNote ? (
                     <p className={css.meta}>{record.sourceNote}</p>
                   ) : null}

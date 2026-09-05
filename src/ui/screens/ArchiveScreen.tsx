@@ -33,13 +33,13 @@ export function ArchiveScreen() {
           title={PAGES.archive.title}
           count={archive.state === "filled" ? archive.value.count : undefined}
           help={PAGES.archive.help}
+          notes={[ARCHIVE_NOTE]}
         />
 
         <Region region={archive} onSource={setSource} variant="page">
           {(page) => (
             <RecordTable
               heads={["Project", "Archived", "Where it was", "Status"]}
-              onSource={setSource}
               records={page.rows.map(
                 (row): RecordRow => ({
                   id: row.id,
@@ -67,10 +67,6 @@ export function ArchiveScreen() {
           )}
         </Region>
 
-        <div className={css.notes}>
-          <p className={css.notesTitle}>What counts as a project here</p>
-          <p className={css.note}>{ARCHIVE_NOTE}</p>
-        </div>
       </div>
 
       <Dialog isOpen={purging !== null} title="Delete permanently" onClose={() => setPurging(null)}>

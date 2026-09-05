@@ -10,6 +10,10 @@ export const REFERENCE = "/reference";
  *  route says so rather than opening on a step the project has not reached. */
 export const FIRST_TAB = `steps/${SHARED_STEPS[0].id}/${SHARED_STEPS[0].tabs[0].id}`;
 
+/** §7.7's tabs hang off no step: they are reachable from every step on every
+ *  pathway, so they take a step segment of their own. */
+export const CROSS_STEP = "x";
+
 export function projectPath(projectRef: string): string {
   return "/projects/" + encodeURIComponent(projectRef);
 }
@@ -18,10 +22,8 @@ export function tabPath(projectRef: string, stepId: string, tabId: string): stri
   return projectPath(projectRef) + "/steps/" + stepId + "/" + tabId;
 }
 
-/** §7.7's items are steps of their own now, each holding one tab, so a
- *  cross-cutting route is an ordinary step route. */
 export function crossPath(projectRef: string, tabId: string): string {
-  return tabPath(projectRef, tabId, tabId);
+  return tabPath(projectRef, CROSS_STEP, tabId);
 }
 
 /** Query keeps the state the officer is looking at when a link moves them. */

@@ -27,7 +27,6 @@ export type {
   Gate,
   GateSpec,
   Inbox,
-  IntakeState,
   Learning,
   LearningTile,
   Mark,
@@ -68,7 +67,6 @@ import type {
   ExpertQueue,
   Gate,
   Inbox,
-  IntakeState,
   Learning,
   PathwayId,
   PathwayState,
@@ -154,12 +152,6 @@ function useRetrievalUp(): boolean {
   return params.get("retrieval") !== "down";
 }
 
-/** `?intake=open` leaves Step 0 unsubmitted, which locks every step after it.
- *  The default is submitted so the build stays walkable end to end. */
-function useIntakeComplete(): boolean {
-  const [params] = useSearchParams();
-  return params.get("intake") !== "open";
-}
 
 export function useSession(): Region<Session> {
   const [params] = useSearchParams();
@@ -207,21 +199,11 @@ export function usePathway(): Region<PathwayState> {
 export function useSteps(): Region<StepEntry[]> {
   const state = useShellKey();
   const pathway = usePathwayParam();
-  const intakeComplete = useIntakeComplete();
   const params = useParams();
   if (state === "absent") return pj.stepsAbsentSpec;
   if (state === "blocked") return pj.stepsBlockedSpec;
   if (state === "unresolved") return pj.stepsUnresolvedSpec;
-  return pj.stepEntries(pathway, params.stepId ?? "0", intakeComplete);
-}
-
-/** Whether Step 0 has been submitted. Nothing after it is populated until it
- *  has: §7.8 makes the first retrieval push fire on its completion. */
-export function useIntake(): Region<IntakeState> {
-  const state = useShellKey();
-  const complete = useIntakeComplete();
-  if (state === "unresolved") return pj.intakeUnresolved;
-  return pj.intakeState(complete);
+  return pj.stepEntries(pathway, params.stepId ?? "0");
 }
 
 /** The three surfaces the rule reserves to the responsible official. The
@@ -239,16 +221,11 @@ export function useElement(tabId: string): Region<ElementPanel> {
   const pathway = usePathwayParam();
   const held = useCredential();
   const retrievalUp = useRetrievalUp();
-  const intakeComplete = useIntakeComplete();
   const params = useParams();
-  const stepId = params.stepId ?? "0";
   if (state === "absent") return pj.elementAbsentSpec;
   if (state === "blocked") return pj.elementBlockedSpec;
   if (state === "unresolved") return pj.elementUnresolvedSpec;
-  // A locked step is reachable by URL and must still say what it waits on
-  // rather than showing rows it does not have yet.
-  if (!intakeComplete && stepId !== "0") return pj.elementLockedSpec;
-  return pj.panelRegion(pathway, stepId, tabId, held, retrievalUp);
+  return pj.panelRegion(pathway, params.stepId ?? "0", tabId, held, retrievalUp);
 }
 
 export function useSource(kind: SourceKind): Region<SourceDocument> {

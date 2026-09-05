@@ -342,3 +342,13 @@ describe("the regulation reads on the page — §6.6", () => {
     expect(screen.getByText(/seven days are unverified/)).toBeTruthy();
   });
 });
+
+describe("a record row states who, without a citation link", () => {
+  it("shows started by as plain text and opens no overlay from it", () => {
+    const { container } = at("/");
+    const group = container.querySelector("tbody") as HTMLElement;
+    fireEvent.click(within(group).getByLabelText("Show the details"));
+    expect(within(group).getByText(/Started by/)).toBeTruthy();
+    expect(group.querySelector("a")).toBeNull();
+  });
+});

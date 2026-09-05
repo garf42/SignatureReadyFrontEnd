@@ -51,8 +51,6 @@ export interface StepSpec {
   tabs: TabSpec[];
   /** P0 after Step 1, P1 after Step 4: no further step exists. */
   terminal?: boolean;
-  /** §7.7: reachable on every pathway rather than belonging to one. */
-  shared?: boolean;
 }
 
 export interface PathwaySpec {
@@ -1359,29 +1357,10 @@ export const DISCRETIONS: string[] = [
   "Whether a reevaluation finding no update needed is documented — 1b.9(r)(1)"
 ];
 
-/* --- the rail, assembled --- */
+/* --- lookups the screens use, so no screen walks the structure by hand --- */
 
-/** §7.7's items are shared by every pathway, so they are not tabs of any one
- *  of them. Each is its own step, and they sit after the pathway's steps: a
- *  tab divides the work inside a phase, and something every phase can reach
- *  is a phase of its own, not a division of one. */
-export function crossCuttingSteps(from: number): StepSpec[] {
-  return CROSS_CUTTING.map((tab, i) => ({
-    id: tab.id,
-    n: from + i,
-    name: tab.name,
-    shared: true,
-    tabs: [tab]
-  }));
-}
-
-/** Steps 0–2 always; the pathway's steps once Step 2 has fixed one; then the
- *  shared steps. Before a pathway is determined the pane carries no pathway
- *  step and names none — §7.1. */
 export function stepsFor(pathway: PathwayId | null): StepSpec[] {
-  const own = pathway ? PATHWAYS[pathway].steps : [];
-  const head = [...SHARED_STEPS, ...own];
-  return [...head, ...crossCuttingSteps(head.length)];
+  return pathway ? [...SHARED_STEPS, ...PATHWAYS[pathway].steps] : SHARED_STEPS;
 }
 
 export function findStep(pathway: PathwayId | null, stepId: string): StepSpec | undefined {

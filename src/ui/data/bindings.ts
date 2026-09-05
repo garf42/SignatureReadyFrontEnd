@@ -122,32 +122,6 @@ export const BINDINGS: Record<string, Binding> = {
     ]
   },
 
-  useIntake: {
-    serves: "whether Step 0 has been submitted, and so whether anything after it is open",
-    objectTypes: ["project"],
-    properties: [
-      "name",
-      "uniqueIdentificationNumber",
-      "uniqueIdentificationNumberIssuer",
-      "anticipatedImplementationStart"
-    ],
-    acts: ["submit-intake"],
-    datasets: [],
-    requires: ["§7.3 Step 0", "§7.8 retrieval pushes", "§7.1"],
-    status: "backlog",
-    needed: [
-      "a completion state for Step 0. submit-intake writes a subset of the step's fields and nothing records that the step is finished; per-step completion is C9's pathway state and is not built",
-      "the first retrieval push itself — on Step 0 completing, retrieval across the corpus, the forest plan register, the regulation and the CE catalogue, writing drafted rows into Steps 1 and 2. No Function, no AIP Logic and no model call exists to run it",
-      "an address for the remainder of Step 0. submit-intake writes four properties; the geographic extent, administrative unit, land management plan, federal nexus, deadline trigger, subcomponent, applicant involvement and agency roles have no ontology address"
-    ],
-    notes: [
-      "The order the front end assumes, and which the wiring has to preserve: Step 0 is the only step whose contents the officer supplies. Every later step is locked until it is submitted, because every later step is populated by a retrieval push that Step 0 triggers.",
-      "Step 1 establishes nothing downstream by itself — its outcome either terminates the project at P0 or opens Step 2 (§7.8).",
-      "Step 2 fixes the pathway, and that determination is what generates the pathway's step set and the element set for each document on it.",
-      "The lock is a sequence lock, never a credential one. §7.2 requires every step, tab and row to be workable without agency credentials; the three gated surfaces are signature rows and are handled by useGate."
-    ]
-  },
-
   useSteps: {
     serves: "the step list for the determined pathway, and each step's tabs",
     objectTypes: ["determination", "document", "element", "slot"],

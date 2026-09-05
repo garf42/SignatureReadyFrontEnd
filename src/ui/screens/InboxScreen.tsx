@@ -42,7 +42,6 @@ export function InboxScreen() {
         {(list) => (
           <RecordTable
             heads={["Project", "Changed", "Where it is", "Status"]}
-            onSource={setSource}
             records={list.projects.map(
               (project): RecordRow => ({
                 id: project.id,

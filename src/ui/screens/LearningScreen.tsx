@@ -27,7 +27,11 @@ export function LearningScreen() {
   return (
     <AppFrame current="learning">
       <div className={shared.stack}>
-        <PageHead title={PAGES.learning.title} help={PAGES.learning.help} />
+        <PageHead
+          title={PAGES.learning.title}
+          help={PAGES.learning.help}
+          notes={learning.state === "filled" ? [learning.value.notBuilt] : undefined}
+        />
 
         <Region region={learning} onSource={setSource}>
           {(page) => (
@@ -58,10 +62,6 @@ export function LearningScreen() {
                 ))}
               </div>
 
-              <div className={shared.notes}>
-                <p className={shared.notesTitle}>Named, and not built here</p>
-                <p className={shared.note}>{page.notBuilt}</p>
-              </div>
             </>
           )}
         </Region>
