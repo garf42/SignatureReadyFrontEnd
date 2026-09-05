@@ -1,19 +1,26 @@
 import { useState } from "react";
-import { Button, Dialog, HTMLTable } from "@blueprintjs/core";
+import { Button, Dialog } from "@blueprintjs/core";
 
 import type { SourceKind } from "@/ui/data/port";
-import { ARCHIVE_NOTE, useArchive } from "@/ui/data/port";
+import { ARCHIVE_NOTE, PAGES, useArchive } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
+import { RecordTable } from "@/ui/components/RecordTable";
+import type { RecordRow } from "@/ui/components/RecordTable";
 import { Region } from "@/ui/components/Region";
-import { SourceLine } from "@/ui/components/SourceLine";
 import { SourceOverlay } from "@/ui/components/SourceOverlay";
-import { StatusMark } from "@/ui/components/StatusMark";
 
 import css from "@/ui/screens/Support.module.css";
+import table from "@/ui/components/RecordTable.module.css";
 
-/** §6.3. The inbox's recently-deleted tab, in a page: the same row fields, plus
- *  when it was archived and by whom. Nothing new is displayed. */
+/** §6.3. The inbox's recently-deleted tab, in a page: the same row component
+ *  and the same fields, plus when it was archived and by whom. Nothing new is
+ *  displayed. The two actions sit on the row rather than in a menu, and the
+ *  second is confirmed.
+ *
+ *  The heading renders outside the region, so the page says what it holds in
+ *  every state — including the empty one, which is the state it will be in
+ *  until an archived state on `project` exists to read. */
 export function ArchiveScreen() {
   const archive = useArchive();
   const [source, setSource] = useState<SourceKind | null>(null);
@@ -22,53 +29,41 @@ export function ArchiveScreen() {
   return (
     <AppFrame current="archive">
       <div className={css.stack}>
+        <PageHead
+          title={PAGES.archive.title}
+          count={archive.state === "filled" ? archive.value.count : undefined}
+          help={PAGES.archive.help}
+        />
+
         <Region region={archive} onSource={setSource}>
           {(page) => (
-            <>
-              <PageHead title={page.heading} count={page.count} help={page.help} />
-              <HTMLTable className={css.table}>
-                <thead>
-                  <tr>
-                    <th>Project</th>
-                    <th>Archived</th>
-                    <th>Where it was</th>
-                    <th>Status</th>
-                    <th />
-                  </tr>
-                </thead>
-                {page.rows.map((row) => (
-                  <tbody key={row.id} className={css.group} data-mark={row.mark}>
-                    <tr>
-                      <td className={css.name}>
-                        {row.name}
-                        <p className={css.meta}>{row.meta}</p>
-                        <p className={css.note}>{row.summary}</p>
-                      </td>
-                      <td className={css.cell}>
-                        {row.archived}
-                        {row.archivedBy ? (
-                          <SourceLine source={row.archivedBy} onOpen={setSource} />
-                        ) : (
-                          <span className={css.faint}> · by whom is not recorded</span>
-                        )}
-                      </td>
-                      <td className={css.cell}>{row.position}</td>
-                      <td>
-                        <StatusMark mark={row.mark} />
-                      </td>
-                      <td>
-                        <div className={css.rowActions}>
-                          <Button className={css.secondary}>Restore</Button>
-                          <Button className={css.destructive} onClick={() => setPurging(row.id)}>
-                            Delete permanently
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  </tbody>
-                ))}
-              </HTMLTable>
-            </>
+            <RecordTable
+              heads={["Project", "Archived", "Where it was", "Status"]}
+              onSource={setSource}
+              records={page.rows.map(
+                (row): RecordRow => ({
+                  id: row.id,
+                  name: row.name,
+                  mark: row.mark,
+                  cells: [
+                    { id: "archived", text: row.archived, faint: true },
+                    { id: "position", text: row.position }
+                  ],
+                  summary: row.summary,
+                  meta: row.meta,
+                  source: row.archivedBy,
+                  sourceNote: "Who archived it is not recorded — no act writes an actor for it."
+                })
+              )}
+              actions={(row) => (
+                <>
+                  <Button className={table.secondary}>Restore</Button>
+                  <Button className={table.destructive} onClick={() => setPurging(row.id)}>
+                    Delete permanently
+                  </Button>
+                </>
+              )}
+            />
           )}
         </Region>
 
@@ -78,11 +73,7 @@ export function ArchiveScreen() {
         </div>
       </div>
 
-      <Dialog
-        isOpen={purging !== null}
-        title="Delete permanently"
-        onClose={() => setPurging(null)}
-      >
+      <Dialog isOpen={purging !== null} title="Delete permanently" onClose={() => setPurging(null)}>
         <div className={css.dialogBody}>
           <p className={css.note}>
             This removes the project and everything recorded against it. It cannot be undone, and no

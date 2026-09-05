@@ -176,9 +176,20 @@ a:hover {
 
 /* Blueprint parks the caret absolutely at the right edge; our padding above
    replaced the room it was counting on, so the text ran under it. Reserve the
-   gutter here, once, rather than per select. */
+   gutter here, once, rather than per select.
+
+   The wrapper is made a flex box for the same reason the caret was off: as a
+   block it sat the select on its own baseline, leaving the select a couple of
+   pixels adrift inside it and the caret centred on the wrapper rather than on
+   the text. Now the wrapper is exactly as tall as the select. */
+.bp6-html-select {
+  display: inline-flex;
+  align-items: stretch;
+}
+
 .bp6-html-select select,
 .bp6-html-select > select {
+  width: 100%;
   padding-right: var(--s-5);
 }
 

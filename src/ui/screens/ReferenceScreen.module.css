@@ -50,8 +50,18 @@
   color: var(--ink-faint);
 }
 
-.search {
+.tableHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-4);
   margin-bottom: var(--s-3);
+}
+
+.search {
+  flex: 1 1 320px;
+  min-width: 0;
 }
 
 .hazard {

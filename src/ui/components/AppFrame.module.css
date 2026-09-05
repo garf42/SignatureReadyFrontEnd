@@ -49,6 +49,14 @@
   border-right: 1px solid var(--rule);
 }
 
+/* Blueprint gives .bp6-menu a 180px min-width, so collapsed the items stayed
+   180px and were merely clipped — the icons landed hard against the viewport
+   edge instead of sitting in the rail. Release the min-width and the items
+   centre in the track they are actually in. */
+.nav :global(.bp6-menu) {
+  min-width: 0;
+}
+
 .split[data-nav="closed"] .nav :global(.bp6-menu-item) {
   justify-content: center;
   padding-inline: 0;
@@ -63,9 +71,11 @@
   color: var(--ink-soft);
 }
 
+/* An inset shadow rather than a border, so marking the current section does
+   not shift its icon out of centre when the rail is collapsed. */
 .current {
   background: var(--well);
-  border-left: 3px solid var(--link);
+  box-shadow: inset 3px 0 0 var(--link);
   color: var(--ink);
   font-weight: 500;
 }

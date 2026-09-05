@@ -58,9 +58,17 @@
   border-right: 1px solid var(--rule);
 }
 
+.rail :global(.bp6-menu) {
+  min-width: 0;
+}
+
 .split[data-rail="closed"] .rail :global(.bp6-menu-item) {
   justify-content: center;
   padding-inline: 0;
+}
+
+.split[data-rail="closed"] .rail .number {
+  margin-right: 0;
 }
 
 .railHead {
@@ -105,8 +113,7 @@
 
 .active {
   background: var(--well);
-  border: 1px solid var(--link);
-  border-left: 5px solid var(--link);
+  box-shadow: inset 3px 0 0 var(--link);
   color: var(--ink);
   font-weight: 500;
 }
@@ -168,4 +175,10 @@
   font-size: var(--t-micro);
   color: var(--ink-soft);
   overflow-wrap: anywhere;
+}
+
+/* The one rail entry that is not a numbered step. It is still a parent, and
+   its parts are tabs like any other step's. */
+.cross {
+  border-top: 1px solid var(--rule);
 }

@@ -100,17 +100,17 @@ export function ProjectScreen() {
             )}
           </Region>
 
-          <p className={css.railHead}>{railShut ? "···" : "Across the project"}</p>
+          {/* One entry, not ten. §7.7's tabs are the parts of this parent, and
+              they belong in the tab strip with every other step's parts — the
+              rail lists parents only, so nothing appears in both places. */}
           <Menu>
-            {CROSS_CUTTING.map((tab) => (
-              <MenuItem
-                key={tab.id}
-                className={css.step + (onCross && tabId === tab.id ? " " + css.active : "")}
-                title={tab.name}
-                text={railShut ? "·" : tab.name}
-                onClick={() => go(crossPath(projectRef, tab.id))}
-              />
-            ))}
+            <MenuItem
+              className={css.step + " " + css.cross + (onCross ? " " + css.active : "")}
+              title="Across the project"
+              text={railShut ? <span className={css.number}>§</span> : "Across the project"}
+              label={railShut ? undefined : `${CROSS_CUTTING.length} tabs`}
+              onClick={() => go(crossPath(projectRef, CROSS_CUTTING[0].id))}
+            />
           </Menu>
         </aside>
 
@@ -118,6 +118,7 @@ export function ProjectScreen() {
           <Region region={steps} onSource={setSource}>
             {(list) => (
               <TabStrip
+                id="element-tabs"
                 tabs={tabsFor(list, stepId)}
                 selected={tabId}
                 onSelect={(next) =>

@@ -204,8 +204,6 @@ export interface ArchiveRow {
 }
 
 export interface Archive {
-  heading: string;
-  help: string;
   count: string;
   rows: ArchiveRow[];
 }
@@ -226,8 +224,6 @@ export interface ExpertRow {
 }
 
 export interface ExpertQueue {
-  heading: string;
-  help: string;
   count: string;
   filters: string[];
   sorts: string[];
@@ -264,8 +260,6 @@ export interface LearningTile {
 }
 
 export interface Learning {
-  heading: string;
-  help: string;
   /** Tiles 1 and 2 — grounding honesty and mechanism status. */
   status: LearningTile[];
   tiles: LearningTile[];
@@ -310,9 +304,9 @@ export interface ReferenceRow {
 }
 
 export interface Reference {
-  heading: string;
-  help: string;
   count: string;
+  filters: string[];
+  sorts: string[];
   facets: Facet[];
   rows: ReferenceRow[];
   /** One line, not a page. */
@@ -352,7 +346,6 @@ export interface CatalogueRow {
 }
 
 export interface Catalogue {
-  heading: string;
   split: string;
   rows: CatalogueRow[];
 }

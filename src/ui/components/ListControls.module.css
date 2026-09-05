@@ -1,0 +1,35 @@
+/* Filter and sort, as one object. The inbox, the expert queue and the corpus
+   all sort and filter the same way, so they render through here and the three
+   cannot drift into three different control bars. */
+.controls {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-4);
+}
+
+.controls > :global(.bp6-button) {
+  align-self: center;
+}
+
+/* Baseline, not centre. The label is 11px mono and the value 12.5px sans, and
+   centring two boxes of different heights leaves their text sitting on two
+   different lines — which is what "not aligned" was. */
+.control {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.controlLabel {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+}
+
+.control select {
+  border: 0;
+  background: none;
+  padding: 0 var(--s-5) 0 0;
+  font-size: var(--t-meta);
+}
+

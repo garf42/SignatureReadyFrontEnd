@@ -38,8 +38,28 @@ import type {
  * §6.3 Archive — Level 1
  * ------------------------------------------------------------------------ */
 
-const ARCHIVE_HELP =
-  "Projects removed from the inbox. Restoring returns one to the inbox; deleting permanently is confirmed and cannot be undone.";
+/** Heading and help for each supporting page. §6.1 says empty is the expected
+ *  state at build time and should read as designed — a page whose title only
+ *  appears when it has rows does not. These render in every state, and only
+ *  the counts and the rows travel through a region. */
+export const PAGES = {
+  archive: {
+    title: "Archive",
+    help: "Projects removed from the inbox. Restoring returns one to the inbox; deleting permanently is confirmed and cannot be undone."
+  },
+  experts: {
+    title: "Expert Q",
+    help: "A specialist supplies input, a report or an onsite visit the review cannot be completed without. The system recognises the requirement and drafts the request; a person sends it."
+  },
+  learning: {
+    title: "Learning",
+    help: "What the system proposed, what a human did with it, and whether it is calibrated. Every number on this page was measured on the platform on 2026-09-04."
+  },
+  reference: {
+    title: "Reference",
+    help: "The corpus, the pinned regulation and the categorical-exclusion catalogue. Search covers titles and metadata: corpus.text holds 17 rows and zero PDF body text, so there is no body to search."
+  }
+} as const;
 
 /** §1 lists 17 acts and none of them deletes or restores, and §3 records no
  *  deleted or archivedAt property on project. The page has no backend address
@@ -52,8 +72,6 @@ export const archiveAbsent: Region<Archive> = absent(
 );
 
 export const archiveFilled: Region<Archive> = filled<Archive>({
-  heading: "Archive",
-  help: ARCHIVE_HELP,
   count: "⟨n⟩ archived",
   rows: [
     {
@@ -111,8 +129,6 @@ export const expertQueueAbsent: Region<ExpertQueue> = absent(
 );
 
 export const expertQueueFilled: Region<ExpertQueue> = filled<ExpertQueue>({
-  heading: "Expert Q",
-  help: "A specialist supplies input, a report or an onsite visit the review cannot be completed without. The system recognises the requirement and drafts the request; a person sends it.",
   count: "⟨n⟩ open · ⟨n⟩ overdue",
   filters: ["All requests", "Overdue", "Awaiting return", "Returned", "Accepted"],
   sorts: ["Overdue first", "Expected return", "Sent date", "Project", "Discipline"],
@@ -204,8 +220,6 @@ export const EXPERT_RETURN =
  * ------------------------------------------------------------------------ */
 
 export const learningFilled: Region<Learning> = filled<Learning>({
-  heading: "Learning",
-  help: "What the system proposed, what a human did with it, and whether it is calibrated. Every number on this page was measured on the platform on 2026-09-04.",
   status: [
     {
       id: "grounding",
@@ -383,9 +397,17 @@ const row = (
 });
 
 export const referenceFilled: Region<Reference> = filled<Reference>({
-  heading: "Reference",
-  help: "The corpus, the pinned regulation and the categorical-exclusion catalogue. Search covers titles and metadata: corpus.text holds 17 rows and zero PDF body text, so there is no body to search.",
   count: "312 artifacts · 7 media sets · 283 practice, 4 regulation, 25 undeclared",
+  filters: [
+    "All artifacts",
+    "Citable",
+    "Not citable",
+    "Not declared",
+    "Superseded authority",
+    "Rescinded",
+    "Will not open"
+  ],
+  sorts: ["Corpus", "Document type", "Rule vintage", "Title", "Byte length"],
   facets: [
     {
       id: "documentType",
@@ -575,7 +597,6 @@ export const catalogueAbsent: Region<Catalogue> = absent(
 );
 
 export const catalogueFilled: Region<Catalogue> = filled<Catalogue>({
-  heading: "Categorical exclusions",
   split:
     "87 categories: 39 at 1b.4(c) requiring no documentation, 48 at 1b.4(d) requiring a FANEC completed as set forth at 1b.3(g).",
   rows: [

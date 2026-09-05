@@ -1,9 +1,8 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import { Icon } from "@blueprintjs/core";
 
 import type { LearningTile, SourceKind } from "@/ui/data/port";
-import { useLearning, useUnresolved } from "@/ui/data/port";
+import { PAGES, useLearning, useUnresolved } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
 import { Region } from "@/ui/components/Region";
@@ -12,54 +11,50 @@ import { SourceOverlay } from "@/ui/components/SourceOverlay";
 import css from "@/ui/screens/LearningScreen.module.css";
 import shared from "@/ui/screens/Support.module.css";
 
-/** §6.5, Level 3. Tiles 1 and 2 sit across the top as status; the rest are a
- *  grid, each drilling into a list. No sparklines over series that do not
- *  exist — every figure here is one measurement, not a trend. */
+/** §6.5, Level 3. One measurement per row, top to bottom: the figure against a
+ *  fixed left edge, and beside it the prose that qualifies it.
+ *
+ *  Nothing here collapses. These are eight facts about the build, all of them
+ *  short, and hiding them behind a control only made a reader work to find out
+ *  that a zero is honest. §6.5 suggested a grid; §6 leaves layout to the
+ *  builder, and rows keep the figures on one scanline. No sparklines: there
+ *  are no series behind these numbers. */
 export function LearningScreen() {
   const learning = useLearning();
   const lanes = useUnresolved();
   const [source, setSource] = useState<SourceKind | null>(null);
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-
-  const toggle = (id: string) => setOpen((state) => ({ ...state, [id]: !state[id] }));
 
   return (
     <AppFrame current="learning">
       <div className={shared.stack}>
+        <PageHead title={PAGES.learning.title} help={PAGES.learning.help} />
+
         <Region region={learning} onSource={setSource}>
           {(page) => (
             <>
-              <PageHead title={page.heading} help={page.help} />
-
-              <div className={css.status}>
-                {page.status.map((tile) => (
-                  <Tile key={tile.id} tile={tile} open={!!open[tile.id]} onToggle={toggle} />
-                ))}
-              </div>
-
-              <div className={css.grid}>
-                {page.tiles.map((tile) => (
-                  <Tile key={tile.id} tile={tile} open={!!open[tile.id]} onToggle={toggle}>
+              <div className={css.rows}>
+                {[...page.status, ...page.tiles].map((tile) => (
+                  <Row key={tile.id} tile={tile}>
                     {tile.id === "unresolved" ? (
                       <Region region={lanes} onSource={setSource}>
                         {(rows) => (
-                          <>
+                          <div className={css.lanes}>
                             {rows.map((lane) => (
                               <div key={lane.lane} className={css.lane}>
                                 <p className={css.laneName}>{lane.lane}</p>
                                 <p className={css.detailLine}>{lane.reason}</p>
-                                <p className={shared.meta}>
+                                <p className={css.laneMeta}>
                                   {lane.correct
                                     ? "Correct: the distinction working, not a failure."
                                     : "A defect. Report it."}
                                 </p>
                               </div>
                             ))}
-                          </>
+                          </div>
                         )}
                       </Region>
                     ) : null}
-                  </Tile>
+                  </Row>
                 ))}
               </div>
 
@@ -77,45 +72,23 @@ export function LearningScreen() {
   );
 }
 
-function Tile({
-  tile,
-  open,
-  onToggle,
-  children
-}: {
-  tile: LearningTile;
-  open: boolean;
-  onToggle: (id: string) => void;
-  children?: ReactNode;
-}) {
+function Row({ tile, children }: { tile: LearningTile; children?: ReactNode }) {
   return (
-    <div className={css.tile} data-tone={tile.tone}>
-      <button
-        type="button"
-        className={css.tileHead}
-        aria-expanded={open}
-        onClick={() => onToggle(tile.id)}
-      >
-        <span className={css.tileTitle}>
-          <span>{tile.title}</span>
-          <span className={css.glyph}>
-            <Icon icon={open ? "minus" : "plus"} />
-          </span>
-        </span>
-        <span className={css.figure}>{tile.figure}</span>
-        <span className={css.unit}>{tile.unit}</span>
-        <span className={css.tileNote}>{tile.note}</span>
-      </button>
-      {open ? (
-        <div className={css.detail}>
-          {tile.detail.map((line) => (
-            <p key={line} className={css.detailLine}>
-              {line}
-            </p>
-          ))}
-          {children}
-        </div>
-      ) : null}
+    <div className={css.row} data-tone={tile.tone}>
+      <div className={css.metric}>
+        <p className={css.title}>{tile.title}</p>
+        <p className={css.figure}>{tile.figure}</p>
+        <p className={css.unit}>{tile.unit}</p>
+      </div>
+      <div className={css.prose}>
+        <p className={css.note}>{tile.note}</p>
+        {tile.detail.map((line) => (
+          <p key={line} className={css.detailLine}>
+            {line}
+          </p>
+        ))}
+        {children}
+      </div>
     </div>
   );
 }

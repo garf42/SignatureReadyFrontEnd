@@ -16,10 +16,12 @@ export interface StripTab {
  *  the step and the tab were the same object. They are not — the step is the
  *  parent and the tabs divide the work inside it. */
 export function TabStrip({
+  id,
   tabs,
   selected,
   onSelect
 }: {
+  id: string;
   tabs: StripTab[];
   selected: string;
   onSelect: (id: string) => void;
@@ -52,7 +54,7 @@ export function TabStrip({
       data-overflow-right={edges.right ? "yes" : "no"}
     >
       <div className={css.scroller} ref={scroller} onScroll={measure}>
-        <Tabs id="element-tabs" selectedTabId={selected} onChange={(next) => onSelect(String(next))}>
+        <Tabs id={id} selectedTabId={selected} onChange={(next) => onSelect(String(next))}>
           {tabs.map((tab) => (
             <Tab
               key={tab.id}

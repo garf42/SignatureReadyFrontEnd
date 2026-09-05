@@ -1,0 +1,159 @@
+/* The inbox row, as one object. §6.3 asks Archive to use the same row
+   component and the same fields as the inbox; sharing the markup is what
+   makes that true rather than a resemblance that drifts. */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 var(--s-2);
+}
+
+.table th {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  font-weight: 400;
+  color: var(--ink-faint);
+  text-align: left;
+  padding: 0 var(--s-4) var(--s-2);
+}
+
+.group td {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: var(--s-3) var(--s-4);
+  vertical-align: baseline;
+  background: var(--paper);
+}
+
+.group td:first-child {
+  border-left: 1px solid var(--rule);
+  border-radius: var(--radius-box) 0 0 var(--radius-box);
+}
+
+.group td:last-child {
+  border-right: 1px solid var(--rule);
+  border-radius: 0 var(--radius-box) var(--radius-box) 0;
+}
+
+.group[data-mark="ready"] td {
+  background: var(--well);
+}
+
+/* Open, a project is one box and not two: the summary row gives up its bottom
+   edge and the detail row gives up its top, so the border runs around both. */
+.group[data-open="yes"] > tr:first-child > td {
+  border-bottom: none;
+  border-radius: 0;
+}
+
+.group[data-open="yes"] > tr:first-child > td:first-child {
+  border-radius: var(--radius-box) 0 0 0;
+}
+
+.group[data-open="yes"] > tr:first-child > td:last-child {
+  border-radius: 0 var(--radius-box) 0 0;
+}
+
+.group[data-open="yes"] > tr:last-child > td {
+  border-top: none;
+  border-radius: 0 0 var(--radius-box) var(--radius-box);
+  padding-top: 0;
+}
+
+.group[data-mark="error"] td {
+  border-color: var(--unresolved);
+}
+
+.name {
+  font-size: var(--t-body);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.changed,
+.position {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.changed {
+  color: var(--ink-faint);
+}
+
+.position {
+  color: var(--ink-soft);
+}
+
+.glyph {
+  text-align: right;
+  width: 40px;
+}
+
+.glyphButton {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--ink);
+  cursor: pointer;
+  line-height: 1;
+}
+
+.detail {
+  display: grid;
+  gap: 6px;
+  padding-top: var(--s-2);
+  border-top: 1px solid var(--rule);
+}
+
+.summary {
+  font-size: var(--t-meta);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  max-width: 80ch;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.detailActions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: 6px;
+}
+
+.actions {
+  display: flex;
+  gap: var(--s-2);
+  margin-top: 6px;
+}
+
+.primary,
+.primary:hover {
+  background: var(--link);
+  color: var(--paper);
+  border: 1px solid var(--link);
+  box-shadow: var(--shadow-button);
+}
+
+.secondary,
+.secondary:hover {
+  background: var(--paper);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+}
+
+.destructive,
+.destructive:hover {
+  background: var(--paper);
+  color: var(--unresolved);
+  border: 1px solid var(--unresolved);
+}

@@ -60,7 +60,11 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
 
   it("keeps the cross-cutting tabs reachable from every step", () => {
     const { container } = at("/projects/p1/steps/x/proposal-record");
-    expect(within(rail(container)).getByText("Interdisciplinary preparation")).toBeTruthy();
+    // One rail entry, ten tabs — the rail lists parents, the strip lists parts.
+    expect(within(rail(container)).getByText("Across the project")).toBeTruthy();
+    expect(within(rail(container)).queryByText("Interdisciplinary preparation")).toBeNull();
+    const tabs = within(container.querySelector("[role='tablist']") as HTMLElement).getAllByRole("tab");
+    expect(tabs.map((t) => (t.textContent ?? "").trim())).toContain("Interdisciplinary preparation");
     expect(screen.getByText(/eleven categories of material/)).toBeTruthy();
   });
 });
@@ -175,6 +179,33 @@ describe("tabs are the step's parts, not a copy of the step", () => {
     const active = rail(container).querySelectorAll("[class*='active']");
     // Only the cross-cutting entry itself, never a step in the sequence.
     expect(active.length).toBe(1);
-    expect(active[0].textContent).toContain("Proposal record");
+    expect(active[0].textContent).toContain("Across the project");
+  });
+
+  it("never shows the same name in the rail and in the tab strip", () => {
+    const views: string[] = [
+      "/projects/p1/steps/0/proposed-action",
+      "/projects/p1/steps/2/level-of-review",
+      "/projects/p1/steps/x/proposal-record",
+      "/projects/p1/steps/3/scope?pathway=P3",
+      "/projects/p1/steps/4/scope?pathway=P4"
+    ];
+    for (const view of views) {
+      const { container } = at(view);
+      const list = container.querySelector("[role='tablist']");
+      const tabs = list
+        ? within(list as HTMLElement).getAllByRole("tab").map((t) => (t.textContent ?? "").trim())
+        : [];
+      const railNames = within(rail(container))
+        .getAllByRole("menuitem")
+        .map((item) => (item.textContent ?? "").trim());
+      for (const tab of tabs) {
+        expect(
+          railNames.some((name) => name.includes(tab)),
+          `"${tab}" appears in both the rail and the tab strip at ${view}`
+        ).toBe(false);
+      }
+      cleanup();
+    }
   });
 });

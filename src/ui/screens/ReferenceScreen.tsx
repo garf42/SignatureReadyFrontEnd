@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Button, Dialog, HTMLTable, InputGroup, Tab, Tabs } from "@blueprintjs/core";
+import { Button, Dialog, HTMLTable, InputGroup } from "@blueprintjs/core";
 
 import type { Citable, SourceKind } from "@/ui/data/port";
 import {
   CATALOGUE_EMPTY_REASON,
+  PAGES,
   REGULATION_NOTE,
   useCatalogue,
   useIntegrity,
@@ -13,11 +14,21 @@ import {
 } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
+import { ListControls } from "@/ui/components/ListControls";
 import { Region } from "@/ui/components/Region";
+import { TabStrip } from "@/ui/components/TabStrip";
 import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/ReferenceScreen.module.css";
 import shared from "@/ui/screens/Support.module.css";
+
+/** The same strip the project page uses, so a tab is one object across the
+ *  application rather than two that look alike until one is changed. */
+const GROUPS = [
+  { id: "corpus", name: "Corpus", done: false },
+  { id: "regulation", name: "7 CFR part 1b", done: false },
+  { id: "catalogue", name: "Categorical exclusions", done: false }
+];
 
 /** Three values, not two. 25 rows carry classDeclared=false and a NULL
  *  citable, and a null meaning "not declared" and a null meaning "not
@@ -52,17 +63,23 @@ export function ReferenceScreen() {
           )}
         </Region>
 
-        <Tabs id="reference-groups" selectedTabId={group} onChange={(next) => setGroup(String(next))}>
-          <Tab id="corpus" title="Corpus" />
-          <Tab id="regulation" title="7 CFR part 1b" />
-          <Tab id="catalogue" title="Categorical exclusions" />
-        </Tabs>
+        <PageHead
+          title={PAGES.reference.title}
+          count={reference.state === "filled" ? reference.value.count : undefined}
+          help={PAGES.reference.help}
+        />
+
+        <TabStrip
+          id="reference-groups"
+          tabs={GROUPS}
+          selected={group}
+          onSelect={setGroup}
+        />
 
         {group === "corpus" ? (
           <Region region={reference} onSource={setSource}>
             {(page) => (
               <>
-                <PageHead title={page.heading} count={page.count} help={page.help} />
                 <p className={css.hazard}>{page.hazard}</p>
                 <div className={css.split}>
                   <aside className={css.facets}>
@@ -80,8 +97,11 @@ export function ReferenceScreen() {
                   </aside>
 
                   <div>
-                    <div className={css.search}>
-                      <InputGroup placeholder="Search titles and metadata — there is no body text to search" />
+                    <div className={css.tableHead}>
+                      <div className={css.search}>
+                        <InputGroup placeholder="Search titles and metadata — there is no body text to search" />
+                      </div>
+                      <ListControls filters={page.filters} sorts={page.sorts} />
                     </div>
                     <HTMLTable className={shared.table + " " + css.corpusTable}>
                       <thead>
@@ -161,11 +181,7 @@ function RegulationPanel({ onSource }: { onSource: (kind: SourceKind) => void })
     <Region region={regulation} onSource={onSource}>
       {(page) => (
         <>
-          <PageHead
-            title="7 CFR part 1b, as pinned"
-            count={page.pin}
-            help={page.currency}
-          />
+          <PageHead title="7 CFR part 1b, as pinned" count={page.pin} help={page.currency} />
           <div>
             {page.sections.map((section) => (
               <div key={section.id} className={css.section}>
@@ -200,7 +216,7 @@ function CataloguePanel({ onSource }: { onSource: (kind: SourceKind) => void }) 
       <Region region={catalogue} onSource={onSource}>
         {(page) => (
           <>
-            <PageHead title={page.heading} help={page.split} />
+            <PageHead title="Categorical exclusions" help={page.split} />
             <HTMLTable className={shared.table}>
               <thead>
                 <tr>

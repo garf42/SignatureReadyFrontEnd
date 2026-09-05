@@ -167,3 +167,92 @@ describe("the inbox row opens into itself", () => {
     expect(within(group).getByText("Open project")).toBeTruthy();
   });
 });
+
+describe("a supporting page says what it holds in every state — §6.1", () => {
+  const pages: [string, string][] = [
+    ["/archive", "Archive"],
+    ["/experts", "Expert Q"],
+    ["/learning", "Learning"],
+    ["/reference", "Reference"]
+  ];
+
+  it.each(pages)("%s keeps its heading when the region is absent", (path, title) => {
+    const { container } = at(path + "?state=absent");
+    expect(within(container.querySelector("section") as HTMLElement).getByText(title)).toBeTruthy();
+  });
+
+  it.each(pages)("%s keeps its heading when the region is unresolved", (path, title) => {
+    const { container } = at(path + "?state=unresolved");
+    expect(within(container.querySelector("section") as HTMLElement).getByText(title)).toBeTruthy();
+  });
+});
+
+describe("Archive carries the inbox row, not a lookalike — §6.3", () => {
+  it("shows the same fields, with archived in place of changed", () => {
+    const { container } = at("/archive?state=filled");
+    const heads = [...container.querySelectorAll("th")].map((th) => th.textContent);
+    expect(heads).toEqual(["Project", "Archived", "Where it was", "Status", ""]);
+  });
+
+  it("opens a row into itself and offers restore and delete on the row", () => {
+    const { container } = at("/archive?state=filled");
+    const group = container.querySelector("tbody") as HTMLElement;
+    fireEvent.click(within(group).getByLabelText("Show the details"));
+    expect(group.getAttribute("data-open")).toBe("yes");
+    expect(within(group).getByText("Restore")).toBeTruthy();
+    expect(within(group).getByText("Delete permanently")).toBeTruthy();
+  });
+
+  it("says so where no act records who archived it", () => {
+    const { container } = at("/archive?state=filled");
+    const groups = container.querySelectorAll("tbody");
+    fireEvent.click(within(groups[1] as HTMLElement).getByLabelText("Show the details"));
+    expect(screen.getByText(/Who archived it is not recorded/)).toBeTruthy();
+  });
+});
+
+describe("Learning reads as rows — §6.5", () => {
+  it("hides nothing behind a control", () => {
+    const { container } = at("/learning");
+    const rows = container.querySelector("section") as HTMLElement;
+    // Nothing inside the page body toggles: every measurement is on the page.
+    expect(rows.querySelectorAll("[data-tone] [aria-expanded]").length).toBe(0);
+    expect(
+      screen.getByText(/LiveHTTPTransport.invoke raises even with a credential set/)
+    ).toBeTruthy();
+    expect(screen.getByText(/an adopted with no value can be recorded today/)).toBeTruthy();
+  });
+
+  it("puts all eight measurements on the page at once", () => {
+    const { container } = at("/learning");
+    const rows = container.querySelectorAll("[data-tone]");
+    expect(rows.length).toBe(8);
+  });
+});
+
+describe("a tab is one object across the application", () => {
+  it("gives Reference the same strip the project page uses", () => {
+    const { container } = at("/reference");
+    const list = container.querySelector("[role='tablist']");
+    expect(list).not.toBeNull();
+    const names = within(list as HTMLElement)
+      .getAllByRole("tab")
+      .map((tab) => (tab.textContent ?? "").trim());
+    expect(names).toEqual(["Corpus", "7 CFR part 1b", "Categorical exclusions"]);
+    expect(container.querySelector("[data-overflow-right]")).not.toBeNull();
+  });
+});
+
+describe("filter and sort are one control across the application", () => {
+  it.each([
+    ["/", "All projects"],
+    ["/experts?state=filled", "All requests"],
+    ["/reference", "All artifacts"]
+  ])("%s carries a labelled Filter and Sort", (path, firstFilter) => {
+    const { container } = at(path);
+    const section = container.querySelector("section") as HTMLElement;
+    expect(within(section).getAllByText("Filter").length).toBeGreaterThan(0);
+    expect(within(section).getAllByText("Sort").length).toBeGreaterThan(0);
+    expect(within(section).getAllByText(firstFilter).length).toBeGreaterThan(0);
+  });
+});

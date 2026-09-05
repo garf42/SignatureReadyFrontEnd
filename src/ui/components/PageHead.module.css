@@ -1,6 +1,6 @@
 .head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--s-4);
@@ -28,7 +28,7 @@
 
 .controls {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--s-4);
 }
 

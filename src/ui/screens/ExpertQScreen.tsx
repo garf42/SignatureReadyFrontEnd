@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Button, Dialog, FormGroup, HTMLSelect, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
+import { Button, Dialog, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
 
 import type { ExpertStatus, SourceKind } from "@/ui/data/port";
-import { EXPERT_RETURN, EXPERT_TRIGGER, useExpertQueue, useExpertRequest } from "@/ui/data/port";
+import { EXPERT_RETURN, EXPERT_TRIGGER, PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
+import { ListControls } from "@/ui/components/ListControls";
 import { PageHead } from "@/ui/components/PageHead";
 import { Region } from "@/ui/components/Region";
 import { SourceLine } from "@/ui/components/SourceLine";
@@ -29,26 +30,19 @@ export function ExpertQScreen() {
   return (
     <AppFrame current="experts">
       <div className={css.stack}>
+        <PageHead
+          title={PAGES.experts.title}
+          count={queue.state === "filled" ? queue.value.count : undefined}
+          help={PAGES.experts.help}
+        >
+          {queue.state === "filled" ? (
+            <ListControls filters={queue.value.filters} sorts={queue.value.sorts} />
+          ) : null}
+        </PageHead>
+
         <Region region={queue} onSource={setSource}>
           {(page) => (
             <>
-              <PageHead title={page.heading} count={page.count} help={page.help}>
-                <label className={css.field}>
-                  <HTMLSelect>
-                    {page.filters.map((option) => (
-                      <option key={option}>{option}</option>
-                    ))}
-                  </HTMLSelect>
-                </label>
-                <label className={css.field}>
-                  <HTMLSelect>
-                    {page.sorts.map((option) => (
-                      <option key={option}>{option}</option>
-                    ))}
-                  </HTMLSelect>
-                </label>
-              </PageHead>
-
               <HTMLTable className={css.table}>
                 <thead>
                   <tr>

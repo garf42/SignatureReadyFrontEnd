@@ -84,6 +84,7 @@ import type {
 export { sourceTitle, sectionsFor } from "@/ui/data/fixtures";
 export {
   ARCHIVE_NOTE,
+  PAGES,
   CATALOGUE_EMPTY_REASON,
   EXPERT_RETURN,
   EXPERT_TRIGGER,
