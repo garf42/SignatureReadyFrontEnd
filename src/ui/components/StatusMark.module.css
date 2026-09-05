@@ -1,0 +1,21 @@
+.mark {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mark[data-mark="accepted"],
+.mark[data-mark="ready"] {
+  color: var(--ok);
+}
+
+.mark[data-mark="waiting"] {
+  color: var(--ink-faint);
+}
+
+.mark[data-mark="error"] {
+  color: var(--unresolved);
+}

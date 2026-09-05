@@ -1,0 +1,420 @@
+/** Every hook in `port.ts` declares here the backend it stands in for. The
+ *  declaration is the point of the file: a screen cannot read data without
+ *  naming the object type, the properties, the act and the section of the
+ *  register or the amendments that requires it.
+ *
+ *  Two things read this file. `scripts/port-additions.mjs` emits
+ *  `PORT-ADDITIONS.md` from it — §6.7's table, generated rather than
+ *  maintained. And `port.bindings.test.ts` enumerates the hooks `port.ts`
+ *  actually exports and fails on one that is not declared here, so the list
+ *  cannot fall behind the code.
+ *
+ *  No imports on purpose: this is data, and a generator should be able to
+ *  load it without pulling React in behind it.
+ */
+
+/** §3's five verdicts, as measured on 2026-09-04. `answerable` means the
+ *  shape and the act exist and are exercisable — never that a row exists. */
+export type BindingStatus = "answerable" | "partial" | "backlog" | "absent";
+
+export interface Binding {
+  /** What the hook serves, in one line. */
+  serves: string;
+  /** Ontology object types read. */
+  objectTypes: string[];
+  /** Properties read off them. */
+  properties: string[];
+  /** Acts written, by API name, without the `signature-ready-` prefix. */
+  acts: string[];
+  /** Platform datasets read directly. */
+  datasets: string[];
+  /** Sections that require this surface. */
+  requires: string[];
+  /** §3's verdict for the weakest thing this hook needs. */
+  status: BindingStatus;
+  /** What the AI FDE has to supply. Empty means the backend can answer today. */
+  needed: string[];
+  /** Anything true of the binding that the screen must not hide. */
+  notes: string[];
+}
+
+export const BINDINGS: Record<string, Binding> = {
+  useSession: {
+    serves: "the signed-in officer, and the signed-out case",
+    objectTypes: [],
+    properties: [],
+    acts: [],
+    datasets: [],
+    requires: ["§1 actions", "README · the route to Foundry"],
+    status: "partial",
+    needed: [
+      "a caller identity from the shell's OSDK provider; the officer's name and title are not on any object type"
+    ],
+    notes: [
+      "Four acts write actorPrincipal from current_user_id, which makes the actor decidable against Multipass rather than trusted at write time (§1).",
+      "No platform predicate marks a user's class, so the session cannot answer whether this caller is the responsible official."
+    ]
+  },
+
+  useInbox: {
+    serves: "every project this officer holds",
+    objectTypes: ["project"],
+    properties: [
+      "name",
+      "uniqueIdentificationNumber",
+      "uniqueIdentificationNumberIssuer",
+      "anticipatedImplementationStart",
+      "synthetic"
+    ],
+    acts: ["submit-intake"],
+    datasets: [],
+    requires: ["§1 object types", "§3 process, record and competence"],
+    status: "partial",
+    needed: [
+      "a holder-to-project relation; nothing records which officer holds a project",
+      "a modified-at property; the inbox sorts and groups on 'recently changed' and nothing carries it",
+      "a position property, or a projection of it; 'where it is' is step and tab state, which is C9's pathway state and is not built"
+    ],
+    notes: [
+      "project holds 2 rows, both synthetic — one labelled 'C5 write-path tracer — safe to delete', one named 'lk' with every other field null. Anything that counts projects counts them (§6.3).",
+      "project rows live in the edits layer; signatureReady.project holds zero rows."
+    ]
+  },
+
+  useProject: {
+    serves: "the project band above every step",
+    objectTypes: ["project"],
+    properties: [
+      "name",
+      "uniqueIdentificationNumber",
+      "uniqueIdentificationNumberIssuer",
+      "anticipatedImplementationStart"
+    ],
+    acts: ["submit-intake"],
+    datasets: [],
+    requires: ["§7.3 initiation overlay", "§3 process, record and competence"],
+    status: "partial",
+    needed: [
+      "an office or subcomponent property; §3 records that no object type carries a USDA subcomponent identity, which is also 1b.4(a)'s third limb",
+      "a status property; project state is pathway state and is not built"
+    ],
+    notes: [
+      "1b.9(u) attaches the unique identification number to the EA and the EIS and makes it discretionary for a FANEC. It is modelled on project, which §3 records as a divergence rather than a defect."
+    ]
+  },
+
+  usePathway: {
+    serves: "which of P0–P4 the level-of-review determination fixed, and so which steps exist",
+    objectTypes: ["determination", "branch"],
+    properties: ["whichDetermination", "outcome", "taken", "citation"],
+    acts: ["open-determination", "record-determination-outcome", "record-determination", "record-branch"],
+    datasets: [],
+    requires: ["§7.2", "§7.8 pathway-dependent display", "§3 the determinations"],
+    status: "backlog",
+    needed: [
+      "pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9)",
+      "the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row",
+      "uniqueness over (project, whichDetermination); nothing refuses a second det_review_level"
+    ],
+    notes: [
+      "Steps 0–2 are shared and exist before any pathway is fixed. Before Step 2 completes the step list names no pathway step (§7.1).",
+      "Unknown significance routes to P3, not P4 — 1b.2(f)(2)(iv)(A)."
+    ]
+  },
+
+  useSteps: {
+    serves: "the step list for the determined pathway, and each step's tabs",
+    objectTypes: ["determination", "document", "element", "slot"],
+    properties: ["whichDetermination", "outcome", "documentType"],
+    acts: ["open-determination", "open-document"],
+    datasets: [],
+    requires: ["§7.1", "§7.3–§7.6", "§3 the documents"],
+    status: "backlog",
+    needed: [
+      "anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1)",
+      "element rows; the document → element → slot → claim spine traverses and all four types hold zero rows",
+      "per-step completion state, which is the same pathway state usePathway waits on"
+    ],
+    notes: [
+      "Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10)."
+    ]
+  },
+
+  useElement: {
+    serves: "one tab: its rows, their answers and the one act that closes it",
+    objectTypes: ["element", "slot", "claim", "adoption"],
+    properties: ["adoptedValue", "adoptionState", "adoptedAt", "actorPrincipal", "disposition"],
+    acts: ["adopt", "freeze-slot-disposition", "emit-document", "stamp-verifier-verdict"],
+    datasets: [],
+    requires: ["§7.3–§7.7", "§7.8 retrieval pushes", "§1 functions and AIP logic"],
+    status: "backlog",
+    needed: [
+      "the submission-time Function; eight named preconditions wait on one, including adopt's rule that adoptedValue must be present unless adoptionState is 'rejected'",
+      "element and slot rows, as above",
+      "an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered"
+    ],
+    notes: [
+      "An 'adopted' with no value can be recorded today — the conditional is over another parameter's nullity and is not expressible without a Function (§1).",
+      "A prefilled row is a proposal until adopt records what the officer did with it (§7.8)."
+    ]
+  },
+
+  useGate: {
+    serves: "the three signature surfaces the regulation reserves, and the route-to-holder action offered instead",
+    objectTypes: ["responsibleOfficial", "delegation", "document"],
+    properties: ["emittedBy", "emittedAt", "closureHolds", "manifestHash"],
+    acts: ["emit-document"],
+    datasets: [],
+    requires: ["§7.2 drafting authority and the signature gate", "§3 the documents"],
+    status: "partial",
+    needed: [
+      "a signature concept; document carries no date-issued and no signatory property, and §5 records a signature as the corpus's largest gap",
+      "a platform predicate for the caller's class; the interface presents the gate and cannot verify a credential",
+      "a record of a routing — that a document was referred to a holder for signature"
+    ],
+    notes: [
+      "Gated: FANEC signature 1b.3(g)(2)(vi), FONSI signature 1b.6(b)(5), ROD signature 1b.8(b)(8). The EA and the EIS carry no gate — 1b.5(c)(6) and 1b.7(h)(8) state that the certifying statement needs no signature.",
+      "A gate held only in the client is not a gate: the surface withholds the act, the platform refuses the write (§7.2)."
+    ]
+  },
+
+  useSource: {
+    serves: "the overlay that opens the primary source behind any value",
+    objectTypes: ["corpusArtifact", "proposalRecordItem", "incorporatedByReference"],
+    properties: ["documentId", "page", "sha256", "byteLength"],
+    acts: [],
+    datasets: ["corpus.census", "corpus.text"],
+    requires: ["§5 document production", "§6.6 the viewer"],
+    status: "partial",
+    needed: [
+      "a media-set read route, so the overlay can show the cited page rather than its metadata"
+    ],
+    notes: [
+      "corpus.text holds 17 rows and zero PDF body text, so an excerpt cannot be quoted from a dataset today.",
+      "proposalRecordItem.documentId and incorporatedByReference.documentId refer to a pinned corpus artifact and never to a document object — a link there would be wrong, not merely empty (§1)."
+    ]
+  },
+
+  useArchive: {
+    serves: "recently-deleted projects, ordered by archived date, with restore and purge",
+    objectTypes: ["project"],
+    properties: [],
+    acts: [],
+    datasets: [],
+    requires: ["§6.3", "§6.7"],
+    status: "absent",
+    needed: [
+      "an archived state on project",
+      "an archive act",
+      "a restore act",
+      "a purge act",
+      "an archivedAt property, and an archivedBy if that becomes recordable"
+    ],
+    notes: [
+      "§1 lists 17 acts and none of them deletes or restores; §3 records no deleted or archivedAt property on project. Archive has no backend address at all (§6.3).",
+      "Built against the port shape and renders empty until those exist."
+    ]
+  },
+
+  useExpertQueue: {
+    serves: "the open expert requests, overdue first, and what came back",
+    objectTypes: ["assignment", "engagement", "receivedArtifact", "slot", "holder", "discipline"],
+    properties: [
+      "sentAt",
+      "expectedReturnDate",
+      "outcome",
+      "gapsFound",
+      "artifactType",
+      "receivedAt",
+      "targetKind",
+      "targetName"
+    ],
+    acts: [
+      "identify-expert-requirement",
+      "package-expert-request",
+      "record-artifact-arrival",
+      "accept-artifact",
+      "state-factor-finding"
+    ],
+    datasets: [],
+    requires: ["§6.4", "§6.7", "§7.8 level 2 → level 4"],
+    status: "backlog",
+    needed: [
+      "anything that creates a slot row — eleven of seventeen acts wait on this, and the queue is empty until it exists",
+      "an actor on identify-expert-requirement, package-expert-request and state-factor-finding; none writes one, so the queue cannot show who sent a request",
+      "a holder-to-slot join (B.5.12); nothing joins a holder to the slot needing one, so a recipient is a suggestion the officer confirms",
+      "a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert"
+    ],
+    notes: [
+      "state-factor-finding closes at clear / present / undetermined. Present or undetermined is the condition that drafts a request and holds it in the queue (§6.4).",
+      "assignment.slot is written into the edits layer while the backing column is null; whether the edge resolves in that state is unknown and must be settled by traversing it, never by reading the property back (§1)."
+    ]
+  },
+
+  useExpertRequest: {
+    serves: "the drafted request in the compose overlay, and sending it",
+    objectTypes: ["assignment", "engagement", "slot", "project", "factor"],
+    properties: ["sentAt", "expectedReturnDate", "artifactAwaited", "finding"],
+    acts: ["package-expert-request"],
+    datasets: [],
+    requires: ["§6.4 the overlay", "§6.7"],
+    status: "backlog",
+    needed: [
+      "the same slot row the queue waits on",
+      "an actor on package-expert-request",
+      "an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline"
+    ],
+    notes: [
+      "package-expert-request is a modify ×2 — assignment.sentAt and expectedReturnDate, engagement.outcome='open' — and writes no actor. §1 records that as a named asymmetry.",
+      "Expert identities are notional for this build; nothing is transmitted (§6.4)."
+    ]
+  },
+
+  useLearning: {
+    serves: "what the system proposed, what a human did with it, and whether it is calibrated",
+    objectTypes: ["adoption", "ratification", "factor", "slot", "determinationEvidence"],
+    properties: ["adoptedValue", "adoptionState", "disposition", "verdict", "verdictStampedAt"],
+    acts: ["adopt", "freeze-slot-disposition", "stamp-verifier-verdict"],
+    datasets: [
+      "corpus.manifestStatus",
+      "check.regulationDrift",
+      "materialized.adoption",
+      "materialized.assignment",
+      "materialized.determination",
+      "materialized.engagement",
+      "materialized.receivedArtifact"
+    ],
+    requires: ["§6.5", "§6.7"],
+    status: "backlog",
+    needed: [
+      "the five object-dataset materializations — adoption, assignment, determination, engagement, receivedArtifact — all hold zero rows, so no transform can read an act-written row and ratification can never populate",
+      "the submission-time Function, which holds eight named preconditions including two intent-predicate clauses"
+    ],
+    notes: [
+      "Grounding is 0 live-model, 0 cassette, 103 template-substitution claims. No model call has happened and none can: the only configured provider host is an RFC-2606 .invalid domain and LiveHTTPTransport.invoke raises even with a credential set. The tile displays the real number (§6.5).",
+      "stamp-verifier-verdict still defaults to pass and can only be cleared by hand in Ontology Manager; since the act widened to accept fail on 2026-09-01, clause 3's pass-only requirement is held by nothing.",
+      "determinationEvidence has a declared evidence set for two of the five determinations and none for the other three, so those three report that nothing was asked rather than that nothing was found. That is the distinction working (§1)."
+    ]
+  },
+
+  useUnresolved: {
+    serves: "every unresolved lane in the application, grouped by lane",
+    objectTypes: ["determinationEvidence", "determination"],
+    properties: ["whichDetermination"],
+    acts: [],
+    datasets: [],
+    requires: ["§6.5 tile 6", "§1 can a query distinguish"],
+    status: "partial",
+    needed: [
+      "an ontology-side record of why a query returned nothing; the four-state contract is held by a repository artifact and nothing in the ontology records it"
+    ],
+    notes: [
+      "unresolved is always a defect in this build. A defect state with no aggregate view is a defect nobody reads (§6.5).",
+      "Three of the five determinations correctly report unresolved even under the filled fixture."
+    ]
+  },
+
+  useReference: {
+    serves: "the corpus, faceted and searchable — the only page in the application with real data in it",
+    objectTypes: ["corpusArtifact"],
+    properties: [
+      "title",
+      "corpus",
+      "documentType",
+      "ruleVintage",
+      "authorityClass",
+      "classDeclared",
+      "citable",
+      "supersededButClassedCurrent",
+      "extractability",
+      "minCharsOnAPage",
+      "sha256",
+      "byteLength"
+    ],
+    acts: [],
+    datasets: [
+      "corpus.census",
+      "corpus.manifest",
+      "corpus.manifestStatus",
+      "corpus.textProvenance"
+    ],
+    requires: ["§6.6", "§6.7"],
+    status: "answerable",
+    needed: [
+      "a decision on what add means — upload, or recording an intent to add. No act adds or removes a corpus artifact, nothing syncs, and the build account is Viewer-only and permanently so"
+    ],
+    notes: [
+      "312 artifacts across seven media sets: 283 practice, 4 regulation, 25 undeclared.",
+      "citable carries three values, not two: 25 rows have classDeclared=false and a NULL citable, and the null is being asked to carry a refusal. Not-declared renders distinctly from not-citable (§1, §6.6).",
+      "Free-text search covers titles and metadata only. corpus.text holds 17 rows and zero PDF body text, so there is no body to search."
+    ]
+  },
+
+  useReferenceArtifact: {
+    serves: "one artifact in the viewer, opened at a cited page range",
+    objectTypes: ["corpusArtifact"],
+    properties: ["sha256", "byteLength", "extractability", "minCharsOnAPage"],
+    acts: [],
+    datasets: ["corpus.textProvenance", "corpus.census"],
+    requires: ["§6.6 the viewer", "§6.7", "§5"],
+    status: "partial",
+    needed: [
+      "a media-set read route for the viewer. Whether an OSDK front end can read those bytes, and by what route, is not answerable from the interface side; until it is, the card carries metadata, digest and page-range citation and the viewer is a slot that lights up later"
+    ],
+    notes: [
+      "The addressable unit is a page range, not a document: one corpus FONSI occupies pages 31–34 of a 155-page file, so sufficiency lives at a page range (§5).",
+      "14 artifacts are image-only, one legitimately so because it is a map; 2 are truncated at source and will not open.",
+      "The 253 born-digital verdicts rest on marker absence and only 2 documents fired a marker at all, so a scanned document whose producer string is not in the conservative list reads as born-digital. minCharsOnAPage is exposed as a field so the suspicion is investigable.",
+      "Extracted text can be wrong while announcing nothing: on the 1990 Umatilla ROD the cover reads 'Forest Service' in the page image and 'Forest %Nice' in the text layer, on all three extractors."
+    ]
+  },
+
+  useRegulation: {
+    serves: "the pinned 7 CFR part 1b, browsable by section, with per-section amendment dates",
+    objectTypes: [],
+    properties: [],
+    acts: [],
+    datasets: ["corpus.text", "check.regulationPin", "check.regulationDrift"],
+    requires: ["§6.6 the regulation", "§2 currency"],
+    status: "answerable",
+    needed: [],
+    notes: [
+      "The pin is eCFR title-7 part 1b at issue date 2026-08-11, 222,131 bytes; the independent drift witness at 2026-08-25 is byte-identical. The stated currency line is 2026-09-01, so seven days are unverified (§2).",
+      "1b.12 Severability alone still carries interim-rule text from 2025-07-03; 1b.9 was amended 2026-07-02; everything else 2026-04-03.",
+      "Four places in the current text cite a paragraph that does not exist. They are shown as found. A resolver that quietly repairs them hides a finding (§4)."
+    ]
+  },
+
+  useCatalogue: {
+    serves: "the categorical-exclusion catalogue, and the 1b.4(c) / 1b.4(d) split",
+    objectTypes: ["category"],
+    properties: ["citation", "descriptionVerbatim"],
+    acts: [],
+    datasets: [],
+    requires: ["§6.6 the CE catalogue", "§6.7", "§3 the categorical-exclusion machinery"],
+    status: "backlog",
+    needed: [
+      "category populated from ce_categories.json — 87 rows already in the repository, no egress and no retrieval. §3 names it the single cheapest high-value population in the build, with five obligations blocked behind it"
+    ],
+    notes: [
+      "39 categories at 1b.4(c) require no documentation; 48 at 1b.4(d) require a FANEC. §2 re-derives 87 from the pinned text, so the file and the rule agree.",
+      "project_screened_against_category is the correct link type and is vacuous at the target end: both it and category hold zero rows.",
+      "Until the rows land the section renders empty and says why (§6.6)."
+    ]
+  },
+
+  useIntegrity: {
+    serves: "the one-line integrity strip: digests, pins and drift",
+    objectTypes: [],
+    properties: [],
+    acts: [],
+    datasets: ["check.corpusPin", "check.forestPlanPin", "check.regulationPin", "check.regulationDrift"],
+    requires: ["§6.6 integrity strip", "§1 what feeds them"],
+    status: "answerable",
+    needed: [],
+    notes: [
+      "287 of 287 declared artifacts match on digest and length in both directions; 11 forest-plan sources pinned; regulation pin green; drift clean.",
+      "reg-36cfr220 is still a WARN, not a FAIL: two rows declare authorityClass=regulation and citable=true with supersededButClassedCurrent=true, while 36 CFR 220 was superseded on 2025-07-03 and 111 corpus artifacts are written under it."
+    ]
+  }
+};

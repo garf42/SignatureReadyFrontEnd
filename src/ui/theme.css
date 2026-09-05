@@ -1,0 +1,243 @@
+@layer vendor;
+@import url("normalize.css") layer(vendor);
+@import url("@blueprintjs/core/lib/css/blueprint.css") layer(vendor);
+
+/* Everything below is unlayered, so it wins over the vendor layer without
+   a single !important. Rules that restyle Blueprint live here; rules that
+   lay out our own markup live in the component CSS Modules. */
+
+:root {
+  --t-micro: 11px;
+  --t-meta: 12.5px;
+  --t-body: 14px;
+  --t-read: 16px;
+  --t-count: 22px;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 20px;
+  --s-5: 32px;
+  --s-6: 52px;
+
+  --ink: oklch(0.24 0.012 250);
+  --ink-soft: oklch(0.47 0.01 250);
+  --ink-faint: oklch(0.645 0.008 250);
+  --paper: oklch(0.982 0.003 85);
+  --well: oklch(0.951 0.004 85);
+  --rule: oklch(0.855 0.005 250);
+  --link: oklch(0.5 0.14 252);
+  --ok: oklch(0.5 0.075 152);
+  --absent: oklch(0.58 0.004 250);
+  --blocked: oklch(0.56 0.095 72);
+  --unresolved: oklch(0.5 0.155 25);
+
+  --sans: "IBM Plex Sans", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", monospace;
+  --serif: Spectral, Georgia, serif;
+
+  --radius-box: 3px;
+  --radius-button: 5px;
+  --radius-overlay: 6px;
+  --shadow-button: 0 1px 1px oklch(0.24 0.012 250 / 0.12);
+  --shadow-overlay: 0 12px 32px oklch(0.24 0.012 250 / 0.22);
+  --scrim: oklch(0.24 0.012 250 / 0.34);
+}
+
+html,
+body {
+  min-height: 100vh;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* No wrapper container: the screen mounts straight onto #root, full bleed. */
+#root {
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+h1,
+h2,
+h3,
+p,
+blockquote,
+figure {
+  margin: 0;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+a:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 1px;
+}
+
+/* --- Blueprint, reset to this vocabulary. Prefix tracks the major version. --- */
+
+.bp6-button {
+  background: var(--paper);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-button);
+  padding: 9px 16px;
+  min-height: 0;
+  font-family: var(--sans);
+  font-size: var(--t-meta);
+  font-weight: 500;
+  line-height: 1;
+  box-shadow: none;
+}
+
+.bp6-button:disabled,
+.bp6-button.bp6-disabled {
+  background: var(--well);
+  color: var(--ink-faint);
+  border-color: var(--rule);
+  cursor: not-allowed;
+}
+
+.bp6-card {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  box-shadow: none;
+  padding: 0;
+}
+
+.bp6-callout {
+  background: var(--well);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  padding: var(--s-3);
+  font-size: var(--t-body);
+  line-height: 1.45;
+}
+
+.bp6-callout h5,
+.bp6-callout .bp6-heading {
+  color: var(--ink);
+}
+
+.bp6-menu {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: var(--ink-soft);
+}
+
+.bp6-menu-item {
+  border-radius: 0;
+  color: var(--ink-soft);
+  font-size: var(--t-body);
+  padding: var(--s-2) var(--s-3);
+}
+
+.bp6-menu-item:hover {
+  background: var(--well);
+}
+
+.bp6-menu-item .bp6-text-muted {
+  color: var(--ink-soft);
+}
+
+.bp6-input,
+.bp6-html-select select,
+.bp6-html-select > select {
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  box-shadow: none;
+  font-family: var(--sans);
+  font-size: var(--t-body);
+  height: auto;
+  padding: var(--s-3);
+}
+
+textarea.bp6-input {
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.bp6-form-group label.bp6-label {
+  color: var(--ink-soft);
+  font-size: var(--t-meta);
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.bp6-dialog {
+  background: var(--paper);
+  border-radius: var(--radius-overlay);
+  box-shadow: var(--shadow-overlay);
+  padding-bottom: 0;
+}
+
+.bp6-dialog-header {
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+  border-radius: var(--radius-overlay) var(--radius-overlay) 0 0;
+  box-shadow: none;
+  padding: var(--s-3) var(--s-4);
+  min-height: 0;
+}
+
+.bp6-dialog-header .bp6-heading {
+  color: var(--ink);
+  font-size: var(--t-body);
+  font-weight: 500;
+}
+
+.bp6-overlay-backdrop {
+  background: var(--scrim);
+}
+
+.bp6-tabs .bp6-tab {
+  color: var(--ink-soft);
+  font-size: var(--t-body);
+  line-height: 1;
+}
+
+.bp6-tab-indicator-wrapper .bp6-tab-indicator {
+  background: var(--link);
+}
+
+.bp6-non-ideal-state {
+  color: var(--ink-soft);
+}
+
+.bp6-non-ideal-state .bp6-heading {
+  color: var(--ink);
+  font-size: var(--t-read);
+  font-weight: 500;
+}
+
+.bp6-radio {
+  color: var(--ink-soft);
+  font-size: var(--t-body);
+}
+
+.bp6-html-table {
+  color: var(--ink);
+  font-size: var(--t-body);
+}

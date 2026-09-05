@@ -1,0 +1,144 @@
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, describe, expect, it } from "vitest";
+
+import { App } from "@/ui/App";
+
+afterEach(cleanup);
+
+const at = (path: string) =>
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+    </MemoryRouter>
+  );
+
+const rail = (container: HTMLElement) => container.querySelector("aside") as HTMLElement;
+
+/** A row is closed until it is opened, so anything about an answer has to open
+ *  it first. That is the design and not an accident of the test. */
+function openRows(container: HTMLElement) {
+  for (const header of container.querySelectorAll("[aria-expanded='false']")) {
+    fireEvent.click(header);
+  }
+  return container;
+}
+
+/** §7, checked where it can only be checked once it is rendered: which steps
+ *  exist, what a gated row offers, and what a lane that could not run says. */
+describe("pathway-dependent display — §7.1, §7.8", () => {
+  it("shows only the shared steps until Step 2 fixes a pathway", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const pane = rail(container);
+    expect(within(pane).getByText("Intake")).toBeTruthy();
+    expect(within(pane).getByText("Threshold determination")).toBeTruthy();
+    expect(within(pane).getByText("Level of review")).toBeTruthy();
+    expect(within(pane).queryByText("Assembly")).toBeNull();
+    expect(within(pane).queryByText("Record of decision")).toBeNull();
+  });
+
+  it("says so on the band rather than leaving the absence unexplained", () => {
+    at("/projects/p1/steps/0/proposed-action");
+    expect(screen.getByText(/The pathway is fixed at Step 2/)).toBeTruthy();
+  });
+
+  it("replaces the step set once a pathway is determined", () => {
+    const eis = at("/projects/p1/steps/5/eis?pathway=P4").container;
+    expect(within(rail(eis)).getByText("Record of decision")).toBeTruthy();
+    cleanup();
+    const ce = at("/projects/p1/steps/4/fanec?pathway=P2").container;
+    expect(within(rail(ce)).queryByText("Record of decision")).toBeNull();
+    expect(within(rail(ce)).getByText("Disposition")).toBeTruthy();
+  });
+
+  it("gives P0 no pathway step at all", () => {
+    const { container } = at("/projects/p1/steps/1/does-nepa-apply?pathway=P0");
+    const steps = within(rail(container)).getAllByText(/Intake|Threshold determination|Level of review/);
+    expect(steps.length).toBe(3);
+  });
+
+  it("keeps the cross-cutting tabs reachable from every step", () => {
+    const { container } = at("/projects/p1/steps/x/proposal-record");
+    expect(within(rail(container)).getByText("Interdisciplinary preparation")).toBeTruthy();
+    expect(screen.getByText(/eleven categories of material/)).toBeTruthy();
+  });
+});
+
+describe("the signature gate — §7.2", () => {
+  it("keeps the reserved row in place and offers the routing", () => {
+    openRows(at("/projects/p1/steps/4/fanec?pathway=P2").container);
+    expect(screen.getByText(/Date issued and signature of the responsible official/)).toBeTruthy();
+    expect(screen.getAllByText(/Reserved to the responsible official — 1b.3\(g\)\(2\)\(vi\)/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Route for signature").length).toBeGreaterThan(0);
+  });
+
+  it("is blocked, never absent — the precondition is a credential, not a missing record", () => {
+    const container = openRows(at("/projects/p1/steps/4/fanec?pathway=P2").container);
+    const gated = container.querySelector("[data-gated='withheld']");
+    expect(gated).not.toBeNull();
+    expect(gated?.querySelector("[data-state='blocked']")).not.toBeNull();
+    expect(gated?.querySelector("[data-state='absent']")).toBeNull();
+  });
+
+  it("offers the act itself where the caller is shown to hold the credential", () => {
+    openRows(at("/projects/p1/steps/4/fanec?pathway=P2&gate=held").container);
+    expect(screen.getAllByText("Sign and issue").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Route for signature")).toBeNull();
+  });
+
+  it("never claims to have verified the credential", () => {
+    openRows(at("/projects/p1/steps/4/fanec?pathway=P2").container);
+    expect(screen.getAllByText(/No platform predicate marks a caller's class/).length).toBeGreaterThan(0);
+  });
+
+  it("leaves the EA ungated at every row", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    expect(container.querySelector("[data-gated]")).toBeNull();
+  });
+});
+
+describe("retrieval that could not run — §7.8", () => {
+  it("reports unresolved, not absent", () => {
+    const container = openRows(at("/projects/p1/steps/4/ea?pathway=P3&retrieval=down").container);
+    const unresolved = container.querySelectorAll("[data-state='unresolved']");
+    expect(unresolved.length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/the drafting lane could not run/).length).toBeGreaterThan(0);
+  });
+
+  it("draws a proposal as a proposal while the lane is up", () => {
+    const container = openRows(at("/projects/p1/steps/4/ea?pathway=P3").container);
+    expect(container.querySelectorAll("[data-state='unresolved']").length).toBe(0);
+    expect(screen.getAllByText(/Drafted by AI from/).length).toBeGreaterThan(0);
+  });
+});
+
+describe("discretion is never a requirement — §7.9", () => {
+  it("says on the row that the rule permits rather than requires", () => {
+    openRows(at("/projects/p1/steps/1/does-nepa-apply").container);
+    expect(screen.getAllByText(/A permission in the rule, not a duty/).length).toBeGreaterThan(0);
+  });
+
+  it("does not hold the element open on an unanswered discretion", () => {
+    const { container } = at("/projects/p1/steps/3/public-involvement?pathway=P3");
+    const rows = container.querySelectorAll("[data-discretionary='yes']");
+    expect(rows.length).toBe(2);
+    expect(screen.getAllByText("2 of 2 completed").length).toBeGreaterThan(0);
+  });
+});
+
+describe("the element panel", () => {
+  it("names the document's element count where a tab assembles one", () => {
+    at("/projects/p1/steps/8/rod?pathway=P4");
+    expect(screen.getByText("Record of decision — 8 elements")).toBeTruthy();
+  });
+
+  it("carries the drafting authority into the tab's own words", () => {
+    at("/projects/p1/steps/6/fonsi?pathway=P3");
+    expect(screen.getByText(/the subcomponent only; 1b.10 does not extend to it/)).toBeTruthy();
+  });
+
+  it("says nothing was found for a tab that is not on this pathway", () => {
+    const { container } = at("/projects/p1/steps/8/rod?pathway=P2");
+    expect(container.querySelector("[data-state='absent']")).not.toBeNull();
+  });
+});

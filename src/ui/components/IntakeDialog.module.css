@@ -1,0 +1,48 @@
+.body {
+  padding: var(--s-4);
+  display: grid;
+  gap: var(--s-4);
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+.buttons {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.primary,
+.primary:hover {
+  background: var(--link);
+  color: var(--paper);
+  border: 1px solid var(--link);
+  box-shadow: var(--shadow-button);
+}
+
+.secondary,
+.secondary:hover {
+  background: var(--paper);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+}
+
+.note {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}

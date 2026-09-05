@@ -1,0 +1,58 @@
+.head {
+  padding-bottom: var(--s-3);
+  border-bottom: 1px solid var(--rule);
+  margin-bottom: var(--s-3);
+}
+
+.headLine {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+}
+
+.title {
+  font-size: var(--t-body);
+  font-weight: 500;
+}
+
+.progress {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.help {
+  font-size: var(--t-meta);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin-top: var(--s-2);
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.rows {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.rows[data-locked="yes"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* The gate is stated once at the head of the part, and again on the row it
+   belongs to. Neither place asserts an authorisation this client can check. */
+.gate {
+  margin-top: var(--s-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  color: var(--blocked);
+  overflow-wrap: anywhere;
+}
+
+.gate[data-held="yes"] {
+  color: var(--ok);
+}
