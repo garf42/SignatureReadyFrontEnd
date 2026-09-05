@@ -103,25 +103,6 @@ export const BINDINGS: Record<string, Binding> = {
     ]
   },
 
-  usePathway: {
-    serves: "which of P0–P4 the level-of-review determination fixed, and so which steps exist",
-    objectTypes: ["determination", "branch"],
-    properties: ["whichDetermination", "outcome", "taken", "citation"],
-    acts: ["open-determination", "record-determination-outcome", "record-determination", "record-branch"],
-    datasets: [],
-    requires: ["§7.2", "§7.8 pathway-dependent display", "§3 the determinations"],
-    status: "backlog",
-    needed: [
-      "pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9)",
-      "the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row",
-      "uniqueness over (project, whichDetermination); nothing refuses a second det_review_level"
-    ],
-    notes: [
-      "Steps 0–2 are shared and exist before any pathway is fixed. Before Step 2 completes the step list names no pathway step (§7.1).",
-      "Unknown significance routes to P3, not P4 — 1b.2(f)(2)(iv)(A)."
-    ]
-  },
-
   useSteps: {
     serves: "the step list for the determined pathway, and each step's tabs",
     objectTypes: ["determination", "document", "element", "slot"],
@@ -134,10 +115,13 @@ export const BINDINGS: Record<string, Binding> = {
       "anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1)",
       "element rows; the document → element → slot → claim spine traverses and all four types hold zero rows",
       "per-step completion state, which is the same pathway state usePathway waits on",
-      "a lock signal per step: which steps the officer may open given what has been established. The front end derives it from intake completion alone today, which is the coarsest correct rule and not the intended one"
+      "pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9)",
+      "the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row",
+      "uniqueness over (project, whichDetermination); nothing refuses a second det_review_level"
     ],
     notes: [
       "Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).",
+      "Steps 0–2 are shared and exist before any pathway is fixed; Steps 3 and beyond are the pathway's and do not exist until Step 2 determines it (§7.1). Unknown significance routes to P3, not P4 — 1b.2(f)(2)(iv)(A).",
       "The rail is three segments in one sequence, and the wiring must preserve the distinction. Steps 0–2 are shared and exist from the start. The pathway's own steps exist only once Step 2 fixes a pathway and are generated from that determination. §7.7's ten items are shared by every pathway, so each is a step of its own and they follow the pathway's steps.",
       "A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all."
     ]

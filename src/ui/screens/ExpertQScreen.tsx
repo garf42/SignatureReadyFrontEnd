@@ -6,7 +6,7 @@ import { PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { ListControls } from "@/ui/components/ListControls";
 import { PageHead } from "@/ui/components/PageHead";
-import { Overlay } from "@/ui/components/Overlay";
+import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 import { SourceLine } from "@/ui/components/SourceLine";
 
@@ -115,61 +115,54 @@ export function ExpertQScreen() {
 }
 
 /** Mounted only while a request is open, so the hook below runs unconditionally. */
-function ComposeOverlay({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
+function ComposeOverlay({ onClose }: { onClose: () => void }) {
   const draft = useExpertRequest();
   const [body, setBody] = useState("");
 
   return (
-    <Overlay title="Request specialist input" onClose={onClose}>
-      <Region region={draft}>
-        {(request) => (
-          <>
-            <div className={css.dialogBody}>
-              <p className={css.meta}>
-                {request.project} · {request.uniqueIdentificationNumber}
-              </p>
-              {/* The three facts the request is assembled from are read, not
-                  edited, so they are a list rather than three disabled fields
-                  taking a form row each. */}
-              <dl className={css.facts}>
-                <dt>Trigger</dt>
-                <dd>{request.trigger}</dd>
-                <dt>Artifact awaited</dt>
-                <dd>{request.artifactAwaited}</dd>
-                <dt>Expected return</dt>
-                <dd>{request.expectedReturn}</dd>
-              </dl>
-              <FormGroup className={css.field} label="Proposed recipient">
-                <InputGroup defaultValue={request.proposedRecipient} />
-              </FormGroup>
-              <FormGroup className={css.field} label="Request">
-                <TextArea
-                  rows={5}
-                  placeholder={request.body}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                />
-              </FormGroup>
-              <SourceLine source={request.regulatoryBasis} />
-            </div>
-            <div className={css.dialogFooter}>
-              <span />
-              <div className={css.buttons}>
-                <Button className={css.secondary} onClick={onClose}>
-                  Cancel
-                </Button>
-                <Button className={css.primary} onClick={onClose}>
-                  Send request
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </Region>
-    </Overlay>
+    <Region region={draft}>
+      {(request) => (
+        <Overlay
+          title="Request specialist input"
+          onClose={onClose}
+          footer={
+            <OverlayActions>
+              <Button className={css.secondary} onClick={onClose}>
+                Cancel
+              </Button>
+              <Button className={css.primary} onClick={onClose}>
+                Send request
+              </Button>
+            </OverlayActions>
+          }
+        >
+          <p className={css.meta}>
+            {request.project} · {request.uniqueIdentificationNumber}
+          </p>
+          {/* The three facts the request is assembled from are read, not
+              edited, so they are a list rather than three disabled fields. */}
+          <dl className={css.facts}>
+            <dt>Trigger</dt>
+            <dd>{request.trigger}</dd>
+            <dt>Artifact awaited</dt>
+            <dd>{request.artifactAwaited}</dd>
+            <dt>Expected return</dt>
+            <dd>{request.expectedReturn}</dd>
+          </dl>
+          <FormGroup className={css.field} label="Proposed recipient">
+            <InputGroup defaultValue={request.proposedRecipient} />
+          </FormGroup>
+          <FormGroup className={css.field} label="Request">
+            <TextArea
+              rows={5}
+              placeholder={request.body}
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+            />
+          </FormGroup>
+          <SourceLine source={request.regulatoryBasis} />
+        </Overlay>
+      )}
+    </Region>
   );
 }

@@ -189,7 +189,7 @@ export const expertQueueUnresolved: Region<ExpertQueue> = unresolved(
 export const expertDraftFilled: Region<ExpertDraft> = filled<ExpertDraft>({
   project: "⟨project.name⟩",
   uniqueIdentificationNumber: "⟨project.uniqueIdentificationNumber⟩",
-  trigger: "⟨finding.trigger⟩ · 1b.3(f)(2)",
+  trigger: "⟨finding.trigger⟩",
   artifactAwaited: "⟨artifactAwaited⟩",
   expectedReturn: "⟨expectedReturnDate⟩",
   regulatoryBasis: RULE,

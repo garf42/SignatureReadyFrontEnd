@@ -239,8 +239,25 @@ textarea.bp6-input {
   border-bottom: 1px solid var(--rule);
   border-radius: var(--radius-overlay) var(--radius-overlay) 0 0;
   box-shadow: none;
-  padding: var(--s-3) var(--s-4);
+  padding: var(--s-2) var(--s-4);
   min-height: 0;
+}
+
+/* Blueprint spaces form groups with a bottom margin; the overlay's own grid
+   gap does that, and the two together made the intake dialog airy. The field
+   padding is the compact one used everywhere a control holds a single line. */
+.bp6-dialog .bp6-form-group {
+  margin-bottom: 0;
+}
+
+.bp6-dialog .bp6-input,
+.bp6-dialog .bp6-html-select select {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.bp6-dialog .bp6-form-group label.bp6-label {
+  margin-bottom: 2px;
 }
 
 .bp6-dialog-header .bp6-heading {

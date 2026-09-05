@@ -12,7 +12,7 @@ import {
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
 import { ListControls } from "@/ui/components/ListControls";
-import { Overlay } from "@/ui/components/Overlay";
+import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
 
@@ -267,39 +267,39 @@ function CataloguePanel() {
 function ArtifactViewer({ id, onClose }: { id: string; onClose: () => void }) {
   const view = useReferenceArtifact(id);
   return (
-    <Overlay title="Corpus artifact" onClose={onClose}>
-      <div className={shared.dialogBody}>
-        <Region region={view}>
-          {(artifact) => (
-            <>
-              <p className={shared.name}>{artifact.row.title}</p>
-              <p className={shared.meta}>
-                {artifact.row.corpus} · {artifact.row.documentType} · {artifact.row.ruleVintage}
-              </p>
-              <p className={shared.meta}>
-                Pages {artifact.pageRange} · opens at {artifact.opensAt}
-              </p>
-              <p className={shared.meta}>
-                {artifact.row.sha256} · {artifact.row.byteLength} bytes ·{" "}
-                {CITABLE[artifact.row.citable]}
-              </p>
-              {artifact.caveats.map((caveat) => (
-                <p key={caveat} className={css.warning}>
-                  {caveat}
-                </p>
-              ))}
-            </>
-          )}
-        </Region>
-      </div>
-      <div className={shared.dialogFooter}>
-        <span />
-        <div className={shared.buttons}>
+    <Overlay
+      title="Corpus artifact"
+      onClose={onClose}
+      footer={
+        <OverlayActions>
           <Button className={shared.secondary} onClick={onClose}>
             Close
           </Button>
-        </div>
-      </div>
+        </OverlayActions>
+      }
+    >
+      <Region region={view}>
+        {(artifact) => (
+          <>
+            <p className={shared.name}>{artifact.row.title}</p>
+            <p className={shared.meta}>
+              {artifact.row.corpus} · {artifact.row.documentType} · {artifact.row.ruleVintage}
+            </p>
+            <p className={shared.meta}>
+              Pages {artifact.pageRange} · opens at {artifact.opensAt}
+            </p>
+            <p className={shared.meta}>
+              {artifact.row.sha256} · {artifact.row.byteLength} bytes ·{" "}
+              {CITABLE[artifact.row.citable]}
+            </p>
+            {artifact.caveats.map((caveat) => (
+              <p key={caveat} className={css.warning}>
+                {caveat}
+              </p>
+            ))}
+          </>
+        )}
+      </Region>
     </Overlay>
   );
 }

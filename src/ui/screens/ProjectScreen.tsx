@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, MenuItem } from "@blueprintjs/core";
 
 import type { StepEntry } from "@/ui/data/port";
-import { CROSS_CUTTING, usePathway, useProject, useSteps } from "@/ui/data/port";
+import { CROSS_CUTTING, useProject, useSteps } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
@@ -26,7 +26,6 @@ export function ProjectScreen() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const project = useProject();
-  const pathway = usePathway();
   const steps = useSteps();
   const [railShut, setRailShut] = useState(false);
 
@@ -47,16 +46,6 @@ export function ProjectScreen() {
               </div>
               <p className={css.projectSummary}>{header.summary}</p>
             </>
-          )}
-        </Region>
-        <Region region={pathway}>
-          {(state) => (
-            <p className={css.pathway} data-pathway={state.pathway ?? "none"}>
-              <span className={css.pathwayName}>{state.note}</span>
-              <span className={css.pathwayMeta}>
-                {state.reachedWhen} · ends in {state.terminalOutput}
-              </span>
-            </p>
           )}
         </Region>
       </div>

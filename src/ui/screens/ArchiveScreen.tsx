@@ -3,7 +3,7 @@ import { Button } from "@blueprintjs/core";
 
 import { PAGES, useArchive } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
-import { Overlay } from "@/ui/components/Overlay";
+import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { PageHead } from "@/ui/components/PageHead";
 import { RecordTable } from "@/ui/components/RecordTable";
 import type { RecordRow } from "@/ui/components/RecordTable";
@@ -67,24 +67,23 @@ export function ArchiveScreen() {
       </div>
 
       {purging !== null ? (
-        <Overlay title="Delete permanently" onClose={() => setPurging(null)}>
-        <div className={css.dialogBody}>
+        <Overlay
+          title="Delete permanently"
+          onClose={() => setPurging(null)}
+          footer={
+            <OverlayActions>
+              <Button className={css.secondary} onClick={() => setPurging(null)}>
+                Cancel
+              </Button>
+              <Button className={css.destructive} onClick={() => setPurging(null)}>
+                Delete permanently
+              </Button>
+            </OverlayActions>
+          }
+        >
           <p className={css.note}>
-            This removes the project and everything recorded against it. It cannot be undone, and no
-            act in the ontology restores it.
+            This removes the project and everything recorded against it. It cannot be undone.
           </p>
-        </div>
-        <div className={css.dialogFooter}>
-          <span className={css.meta}>⟨project.ref⟩</span>
-          <div className={css.buttons}>
-            <Button className={css.secondary} onClick={() => setPurging(null)}>
-              Cancel
-            </Button>
-            <Button className={css.destructive} onClick={() => setPurging(null)}>
-              Delete permanently
-            </Button>
-          </div>
-        </div>
         </Overlay>
       ) : null}
     </AppFrame>

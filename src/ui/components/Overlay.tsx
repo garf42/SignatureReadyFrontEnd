@@ -2,7 +2,10 @@ import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Dialog } from "@blueprintjs/core";
 
-/** Every overlay in the application opens through here.
+import css from "@/ui/components/Overlay.module.css";
+
+/** Every overlay in the application opens through here, and takes its padding
+ *  from here too, so the four of them cannot drift apart.
  *
  *  Blueprint centres a dialog in the viewport, which is the right answer in a
  *  browser window and the wrong one in a frame: this app is embedded, and a
@@ -13,10 +16,13 @@ import { Dialog } from "@blueprintjs/core";
 export function Overlay({
   title,
   onClose,
+  footer,
   children
 }: {
   title: string;
   onClose: () => void;
+  /** The left of the bar; the buttons passed as `actions` sit on the right. */
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   const seen = useRef(false);
@@ -25,15 +31,20 @@ export function Overlay({
     if (seen.current) return;
     seen.current = true;
     const frame = window.requestAnimationFrame(() => {
-      const dialog = document.querySelector(".bp6-dialog");
-      dialog?.scrollIntoView({ block: "center", inline: "nearest" });
+      document.querySelector(".bp6-dialog")?.scrollIntoView({ block: "center", inline: "nearest" });
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
   return (
     <Dialog isOpen title={title} onClose={onClose}>
-      {children}
+      <div className={css.body}>{children}</div>
+      {footer ? <div className={css.footer}>{footer}</div> : null}
     </Dialog>
   );
+}
+
+/** The right-hand end of an overlay's footer bar. */
+export function OverlayActions({ children }: { children: ReactNode }) {
+  return <div className={css.buttons}>{children}</div>;
 }

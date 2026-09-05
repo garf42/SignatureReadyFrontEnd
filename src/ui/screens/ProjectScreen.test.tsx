@@ -38,9 +38,11 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
     expect(within(pane).queryByText("Record of decision")).toBeNull();
   });
 
-  it("says so on the band rather than leaving the absence unexplained", () => {
-    at("/projects/p1/steps/0/proposed-action");
-    expect(screen.getByText(/The pathway is fixed at Step 2/)).toBeTruthy();
+  it("shows the band without commentary about the pathway", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    expect(band.textContent).toContain("⟨project.name⟩");
+    expect(band.textContent).not.toMatch(/pathway/i);
   });
 
   it("replaces the step set once a pathway is determined", () => {

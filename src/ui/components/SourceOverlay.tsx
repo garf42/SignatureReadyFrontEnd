@@ -2,7 +2,7 @@ import { Button } from "@blueprintjs/core";
 
 import type { SourceKind } from "@/ui/data/port";
 import { sourceTitle, useSource } from "@/ui/data/port";
-import { Overlay } from "@/ui/components/Overlay";
+import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 
 import css from "@/ui/components/SourceOverlay.module.css";
@@ -14,25 +14,28 @@ export function SourceOverlay({ kind, onClose }: { kind: SourceKind; onClose: ()
   const source = useSource(kind);
 
   return (
-    <Overlay title={sourceTitle[kind]} onClose={onClose}>
-      <div className={css.body}>
-        <Region region={source}>
-          {(doc) => (
-            <>
-              <p className={css.reference}>{doc.reference}</p>
-              <blockquote className={css.primary}>{doc.primary}</blockquote>
-              <p className={css.full}>
-                <a href={doc.full.href}>{doc.full.label}</a>
-              </p>
-            </>
-          )}
-        </Region>
-      </div>
-      <div className={css.footer}>
-        <Button className={css.close} onClick={onClose}>
-          Close
-        </Button>
-      </div>
+    <Overlay
+      title={sourceTitle[kind]}
+      onClose={onClose}
+      footer={
+        <OverlayActions>
+          <Button className={css.close} onClick={onClose}>
+            Close
+          </Button>
+        </OverlayActions>
+      }
+    >
+      <Region region={source}>
+        {(doc) => (
+          <>
+            <p className={css.reference}>{doc.reference}</p>
+            <blockquote className={css.primary}>{doc.primary}</blockquote>
+            <p className={css.full}>
+              <a href={doc.full.href}>{doc.full.label}</a>
+            </p>
+          </>
+        )}
+      </Region>
     </Overlay>
   );
 }

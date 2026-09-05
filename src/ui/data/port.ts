@@ -32,7 +32,6 @@ export type {
   Mark,
   NavSection,
   PathwayId,
-  PathwayState,
   ProjectHeader,
   ProjectRow,
   QuestionRow,
@@ -68,7 +67,6 @@ import type {
   Inbox,
   Learning,
   PathwayId,
-  PathwayState,
   ProjectHeader,
   Reference,
   Region,
@@ -172,18 +170,6 @@ export function useProject(): Region<ProjectHeader> {
     default:
       return fx.projectFilled;
   }
-}
-
-/** Which of P0–P4 Step 2 fixed, and so which steps exist. `null` is not an
- *  error: Steps 0–2 are shared, and before the determination is recorded the
- *  step list carries no pathway step and names none — §7.1. */
-export function usePathway(): Region<PathwayState> {
-  const state = useShellKey();
-  const pathway = usePathwayParam();
-  if (state === "absent") return pj.pathwayAbsent;
-  if (state === "blocked") return pj.pathwayBlocked;
-  if (state === "unresolved") return pj.pathwayUnresolved;
-  return pj.pathwayState(pathway);
 }
 
 export function useSteps(): Region<StepEntry[]> {
