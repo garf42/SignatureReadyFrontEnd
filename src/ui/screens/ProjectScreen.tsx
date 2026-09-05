@@ -3,12 +3,12 @@ import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, MenuItem } from "@blueprintjs/core";
 
 import type { SourceKind, StepEntry } from "@/ui/data/port";
-import { CROSS_CUTTING, usePathway, useProject, useSteps } from "@/ui/data/port";
+import { useIntake, usePathway, useProject, useSteps } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
 import { SourceOverlay } from "@/ui/components/SourceOverlay";
 import { TabStrip } from "@/ui/components/TabStrip";
-import { CROSS_STEP, crossPath, tabPath, withSearch } from "@/ui/routes";
+import { tabPath, withSearch } from "@/ui/routes";
 
 import css from "@/ui/screens/ProjectScreen.module.css";
 
@@ -16,9 +16,12 @@ import css from "@/ui/screens/ProjectScreen.module.css";
  *  and the panel the element screen renders into. It sits inside the same
  *  frame as every other page, so the section pane is reachable from here too.
  *
- *  Every step is reachable. §7.2 requires the build to be walkable end to end
- *  as a regular user — every step, tab and row workable without agency
- *  credentials — so a step that is waiting reads as waiting and still opens. */
+ *  The rail lists parents only. A step is a phase; its tabs are the parts of
+ *  that phase. Nothing appears in both places.
+ *
+ *  Locking here is a sequence lock and never a credential one: §7.2 requires
+ *  every step, tab and row to be workable without agency credentials, and a
+ *  step is greyed only while the inputs that populate it do not exist. */
 export function ProjectScreen() {
   const params = useParams();
   const projectRef = params.projectRef ?? "";
@@ -27,13 +30,13 @@ export function ProjectScreen() {
   const navigate = useNavigate();
   const { search } = useLocation();
   const project = useProject();
+  const intake = useIntake();
   const pathway = usePathway();
   const steps = useSteps();
   const [railShut, setRailShut] = useState(false);
   const [source, setSource] = useState<SourceKind | null>(null);
 
   const go = (path: string) => navigate(withSearch(path, search));
-  const onCross = stepId === CROSS_STEP;
 
   return (
     <AppFrame current="inbox" padded={false}>
@@ -61,6 +64,9 @@ export function ProjectScreen() {
             </p>
           )}
         </Region>
+        <Region region={intake} onSource={setSource}>
+          {(state) => (state.complete ? null : <p className={css.lockNote}>{state.note}</p>)}
+        </Region>
       </div>
 
       <div className={css.split} data-rail={railShut ? "closed" : "open"}>
@@ -81,8 +87,15 @@ export function ProjectScreen() {
                 {list.map((step) => (
                   <MenuItem
                     key={step.id}
-                    className={css.step + " " + css[step.mark]}
-                    title={step.name}
+                    className={
+                      css.step +
+                      " " +
+                      css[step.mark] +
+                      (step.locked ? " " + css.locked : "") +
+                      (step.shared ? " " + css.shared : "")
+                    }
+                    disabled={step.locked}
+                    title={step.locked ? step.lockedReason : step.name}
                     text={
                       railShut ? (
                         <span className={css.number}>{step.n}</span>
@@ -94,25 +107,16 @@ export function ProjectScreen() {
                       )
                     }
                     label={railShut ? undefined : step.meta}
-                    onClick={() => go(tabPath(projectRef, step.id, step.tabs[0]?.id ?? tabId))}
+                    onClick={
+                      step.locked
+                        ? undefined
+                        : () => go(tabPath(projectRef, step.id, step.tabs[0]?.id ?? tabId))
+                    }
                   />
                 ))}
               </Menu>
             )}
           </Region>
-
-          {/* One entry, not ten. §7.7's tabs are the parts of this parent, and
-              they belong in the tab strip with every other step's parts — the
-              rail lists parents only, so nothing appears in both places. */}
-          <Menu>
-            <MenuItem
-              className={css.step + " " + css.cross + (onCross ? " " + css.active : "")}
-              title="Across the project"
-              text={railShut ? <span className={css.number}>§</span> : "Across the project"}
-              label={railShut ? undefined : `${CROSS_CUTTING.length} tabs`}
-              onClick={() => go(crossPath(projectRef, CROSS_CUTTING[0].id))}
-            />
-          </Menu>
         </aside>
 
         <section className={css.panel}>
@@ -122,9 +126,7 @@ export function ProjectScreen() {
                 id="element-tabs"
                 tabs={tabsFor(list, stepId)}
                 selected={tabId}
-                onSelect={(next) =>
-                  go(onCross ? crossPath(projectRef, next) : tabPath(projectRef, stepId, next))
-                }
+                onSelect={(next) => go(tabPath(projectRef, stepId, next))}
               />
             )}
           </Region>
@@ -140,9 +142,6 @@ export function ProjectScreen() {
 }
 
 function tabsFor(steps: StepEntry[], stepId: string) {
-  if (stepId === CROSS_STEP) {
-    return CROSS_CUTTING.map((tab) => ({ id: tab.id, name: tab.name, done: false }));
-  }
   const step = steps.find((entry) => entry.id === stepId);
   return step ? step.tabs : [];
 }

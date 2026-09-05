@@ -89,8 +89,22 @@ describe("pathways — §7.1 and §7.2", () => {
   });
 
   it("names no pathway step before Step 2 fixes one", () => {
-    expect(stepsFor(null)).toEqual(SHARED_STEPS);
-    expect(stepsFor(null).map((step) => step.name)).not.toContain("Assembly");
+    const names = stepsFor(null).map((step) => step.name);
+    expect(names).not.toContain("Assembly");
+    expect(names).not.toContain("Record of decision");
+    // The shared steps are there from the start; the pathway's are not.
+    expect(stepsFor(null).filter((step) => !step.shared)).toEqual(SHARED_STEPS);
+  });
+
+  it("puts §7.7's shared steps after the pathway's own, on every pathway", () => {
+    for (const id of PATHWAY_IDS) {
+      const steps = stepsFor(id);
+      const firstShared = steps.findIndex((step) => step.shared);
+      expect(firstShared).toBeGreaterThan(0);
+      expect(steps.slice(firstShared).every((step) => step.shared)).toBe(true);
+      expect(steps.slice(firstShared)).toHaveLength(CROSS_CUTTING.length);
+      expect(steps.map((step) => step.n)).toEqual(steps.map((_, i) => i));
+    }
   });
 
   it("terminates P0 at the threshold determination", () => {
@@ -156,12 +170,21 @@ describe("a tab is a part of its step, never a copy of one", () => {
 });
 
 describe("cross-cutting — §7.7", () => {
-  it("carries the ten tabs, reachable from every step on every pathway", () => {
+  it("carries ten items, each a step of its own on every pathway", () => {
     expect(CROSS_CUTTING).toHaveLength(10);
     for (const id of PATHWAY_IDS) {
       for (const tab of CROSS_CUTTING) {
-        expect(findTab(id, "0", tab.id)).toBe(tab);
+        const step = stepsFor(id).find((entry) => entry.id === tab.id);
+        expect(step?.shared).toBe(true);
+        expect(step?.tabs).toEqual([tab]);
+        expect(findTab(id, tab.id, tab.id)).toBe(tab);
       }
+    }
+  });
+
+  it("gives each one part, so none renders a tab strip repeating its own name", () => {
+    for (const tab of CROSS_CUTTING) {
+      expect(stepsFor("P4").find((step) => step.id === tab.id)?.tabs).toHaveLength(1);
     }
   });
 });

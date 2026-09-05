@@ -58,13 +58,16 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
     expect(steps.length).toBe(3);
   });
 
-  it("keeps the cross-cutting tabs reachable from every step", () => {
-    const { container } = at("/projects/p1/steps/x/proposal-record");
-    // One rail entry, ten tabs — the rail lists parents, the strip lists parts.
-    expect(within(rail(container)).getByText("Across the project")).toBeTruthy();
-    expect(within(rail(container)).queryByText("Interdisciplinary preparation")).toBeNull();
-    const tabs = within(container.querySelector("[role='tablist']") as HTMLElement).getAllByRole("tab");
-    expect(tabs.map((t) => (t.textContent ?? "").trim())).toContain("Interdisciplinary preparation");
+  it("gives §7.7's items steps of their own, after the pathway's steps", () => {
+    const { container } = at("/projects/p1/steps/proposal-record/proposal-record?pathway=P4");
+    const names = within(rail(container))
+      .getAllByRole("menuitem")
+      .map((item) => (item.textContent ?? "").trim());
+    expect(names.at(-1)).toContain("Applicant or third party");
+    expect(names.some((n) => n.includes("Record of decision"))).toBe(true);
+    expect(names.findIndex((n) => n.includes("Proposal record"))).toBeGreaterThan(
+      names.findIndex((n) => n.includes("Record of decision"))
+    );
     expect(screen.getByText(/eleven categories of material/)).toBeTruthy();
   });
 });
@@ -174,19 +177,18 @@ describe("tabs are the step's parts, not a copy of the step", () => {
     expect(wrap?.getAttribute("data-overflow-left")).toBe("no");
   });
 
-  it("marks no step active while a cross-cutting tab is open", () => {
-    const { container } = at("/projects/p1/steps/x/proposal-record");
+  it("marks exactly the step in hand, and no other", () => {
+    const { container } = at("/projects/p1/steps/proposal-record/proposal-record");
     const active = rail(container).querySelectorAll("[class*='active']");
-    // Only the cross-cutting entry itself, never a step in the sequence.
     expect(active.length).toBe(1);
-    expect(active[0].textContent).toContain("Across the project");
+    expect(active[0].textContent).toContain("Proposal record");
   });
 
   it("never shows the same name in the rail and in the tab strip", () => {
     const views: string[] = [
       "/projects/p1/steps/0/proposed-action",
       "/projects/p1/steps/2/level-of-review",
-      "/projects/p1/steps/x/proposal-record",
+      "/projects/p1/steps/proposal-record/proposal-record",
       "/projects/p1/steps/3/scope?pathway=P3",
       "/projects/p1/steps/4/scope?pathway=P4"
     ];
@@ -207,5 +209,36 @@ describe("tabs are the step's parts, not a copy of the step", () => {
       }
       cleanup();
     }
+  });
+});
+
+describe("later steps are locked until intake is done — §7.8", () => {
+  it("greys and disables everything after Step 0 while intake is open", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?intake=open");
+    const items = within(rail(container)).getAllByRole("menuitem");
+    expect(items[0].getAttribute("aria-disabled")).not.toBe("true");
+    for (const item of items.slice(1)) {
+      expect(item.getAttribute("aria-disabled")).toBe("true");
+    }
+    expect(screen.getByText(/locked until intake is submitted/i)).toBeTruthy();
+  });
+
+  it("says what a locked step waits on rather than showing rows it has not got", () => {
+    const { container } = at("/projects/p1/steps/1/does-nepa-apply?intake=open");
+    expect(container.querySelector("[data-state='blocked']")).not.toBeNull();
+    expect(screen.getAllByText(/the intake at Step 0/).length).toBeGreaterThan(0);
+  });
+
+  it("opens every step once intake is submitted", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const items = within(rail(container)).getAllByRole("menuitem");
+    expect(items.every((item) => item.getAttribute("aria-disabled") !== "true")).toBe(true);
+  });
+
+  it("locks on the sequence and never on a credential", () => {
+    // §7.2: every step, tab and row is workable without agency credentials.
+    const { container } = at("/projects/p1/steps/4/fanec?pathway=P2");
+    const items = within(rail(container)).getAllByRole("menuitem");
+    expect(items.every((item) => item.getAttribute("aria-disabled") !== "true")).toBe(true);
   });
 });

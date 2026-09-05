@@ -28,6 +28,7 @@ import type {
   Answer,
   ElementPanel,
   Gate,
+  IntakeState,
   PathwayState,
   QuestionRow,
   Region,
@@ -116,28 +117,67 @@ function tabEntries(tabs: TabSpec[], activeIndex: number): TabEntry[] {
   return tabs.map((tab, i) => ({ id: tab.id, name: tab.name, done: i < activeIndex }));
 }
 
-export function stepEntries(pathway: PathwayId | null, activeStepId: string): Region<StepEntry[]> {
+const LOCK_REASON =
+  "Locked until Step 0 is submitted and the first retrieval push populates it";
+
+export function stepEntries(
+  pathway: PathwayId | null,
+  activeStepId: string,
+  intakeComplete: boolean
+): Region<StepEntry[]> {
   const steps = stepsFor(pathway);
-  // -1 where the route is not on a step at all — the cross-cutting tabs sit
-  // outside the sequence. No step is active then, and marking the first one
-  // would leave Intake highlighted from anywhere in §7.7.
+  // -1 where the route is not on a step at all. No step is active then, and
+  // marking the first one would leave Intake highlighted from anywhere else.
   const activeIndex = steps.findIndex((step) => step.id === activeStepId);
+
   return filled(
-    steps.map((step, i) => ({
-      id: step.id,
-      n: step.n,
-      name: step.name,
-      mark: activeIndex < 0 ? "waiting" : i < activeIndex ? "completed" : i === activeIndex ? "active" : "waiting",
-      meta:
-        activeIndex >= 0 && i < activeIndex
-          ? `${step.tabs.length} of ${step.tabs.length} tabs`
-          : i === activeIndex
-            ? `0 of ${step.tabs.length} tabs`
-            : "Not started",
-      tabs: tabEntries(step.tabs, activeIndex >= 0 && i < activeIndex ? step.tabs.length : 0)
-    }))
+    steps.map((step, i) => {
+      // Step 0 is always open: it is the one step whose contents the officer
+      // supplies rather than the system. Everything after it waits on it.
+      const locked = i > 0 && !intakeComplete;
+      const done = activeIndex >= 0 && i < activeIndex;
+      return {
+        id: step.id,
+        n: step.n,
+        name: step.name,
+        shared: step.shared === true,
+        locked,
+        lockedReason: LOCK_REASON,
+        mark: locked
+          ? ("waiting" as const)
+          : activeIndex < 0
+            ? ("waiting" as const)
+            : done
+              ? ("completed" as const)
+              : i === activeIndex
+                ? ("active" as const)
+                : ("waiting" as const),
+        meta: locked
+          ? "Locked"
+          : done
+            ? `${step.tabs.length} of ${step.tabs.length} tabs`
+            : i === activeIndex
+              ? `0 of ${step.tabs.length} tabs`
+              : "Not started",
+        tabs: tabEntries(step.tabs, done ? step.tabs.length : 0)
+      };
+    })
   );
 }
+
+export function intakeState(complete: boolean): Region<IntakeState> {
+  return filled<IntakeState>({
+    complete,
+    note: complete
+      ? "Intake is submitted; the steps after it are open."
+      : "Every step after Step 0 is locked until intake is submitted and the first retrieval push has populated it."
+  });
+}
+
+export const intakeUnresolved: Region<IntakeState> = unresolved(
+  "Whether intake is complete could not be read",
+  "no per-step completion state exists — this is C9's pathway state and it is not built"
+);
 
 export const stepsAbsentSpec: Region<StepEntry[]> = absent(
   "No steps have been worked out yet",
@@ -359,6 +399,12 @@ export const elementBlockedSpec: Region<ElementPanel> = blocked(
   "an earlier step",
   STEP_LINK
 );
+export const elementLockedSpec: Region<ElementPanel> = blocked(
+  "Not ready yet",
+  "the intake at Step 0, and the retrieval push that populates this step",
+  STEP_LINK
+);
+
 export const elementUnresolvedSpec: Region<ElementPanel> = unresolved(
   "No answer came back",
   "the lane could not have answered — element and slot both hold zero rows and nothing creates either"

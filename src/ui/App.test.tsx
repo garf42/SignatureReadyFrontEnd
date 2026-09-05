@@ -149,9 +149,12 @@ describe("Reference keeps three values for citable — §6.6", () => {
     expect(screen.getByText(/Forest %Nice/)).toBeTruthy();
   });
 
-  it("carries the integrity strip as one line", () => {
-    at("/reference");
-    expect(screen.getByText("287 / 287 digests and lengths match, both directions")).toBeTruthy();
+  it("keeps the integrity facts, at the foot rather than across the top", () => {
+    const { container } = at("/reference");
+    const notes = container.querySelector("[class*='notes']") as HTMLElement;
+    expect(notes.textContent).toContain("287 / 287 digests and lengths match");
+    // Not the first thing on the page any more.
+    expect(container.querySelector("section > div > div")?.textContent).not.toContain("287 / 287");
   });
 });
 
@@ -318,5 +321,24 @@ describe("an empty list surface centres its answer", () => {
     for (const region of container.querySelectorAll("[data-state]")) {
       expect(region.className).not.toMatch(/page/);
     }
+  });
+});
+
+describe("the regulation reads on the page — §6.6", () => {
+  it("lists sections collapsed, and opens one into its own text", () => {
+    const { container } = at("/reference");
+    fireEvent.click(within(container).getByRole("tab", { name: "7 CFR part 1b" }));
+    const heads = within(container).getAllByRole("button", { expanded: false });
+    expect(heads.length).toBeGreaterThan(11);
+    expect(screen.queryByText(/section text, from the pinned copy/)).toBeNull();
+    fireEvent.click(within(container).getByText("Severability"));
+    expect(screen.getByText(/section text, from the pinned copy/)).toBeTruthy();
+    expect(screen.getByText(/still carries interim-rule text/)).toBeTruthy();
+  });
+
+  it("keeps the seven unverified days, at the foot", () => {
+    const { container } = at("/reference");
+    fireEvent.click(within(container).getByRole("tab", { name: "7 CFR part 1b" }));
+    expect(screen.getByText(/seven days are unverified/)).toBeTruthy();
   });
 });

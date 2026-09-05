@@ -43,19 +43,19 @@ import type {
 export const PAGES = {
   archive: {
     title: "Archive",
-    help: "Projects removed from the inbox. Restoring returns one to the inbox; deleting permanently is confirmed and cannot be undone."
+    help: "Projects removed from the inbox. Restore returns one; delete permanently is confirmed and cannot be undone."
   },
   experts: {
     title: "Expert Q",
-    help: "A specialist supplies input, a report or an onsite visit the review cannot be completed without. The system recognises the requirement and drafts the request; a person sends it."
+    help: "Work the review cannot be completed without a specialist for. The system recognises the requirement and drafts the request; a person sends it."
   },
   learning: {
     title: "Learning",
-    help: "What the system proposed, what a human did with it, and whether it is calibrated. Every number on this page was measured on the platform on 2026-09-04."
+    help: "What the system proposed, what a human did with it, and whether it is calibrated. Every number was measured on 2026-09-04."
   },
   reference: {
     title: "Reference",
-    help: "The corpus, the pinned regulation and the categorical-exclusion catalogue. Search covers titles and metadata: corpus.text holds 17 rows and zero PDF body text, so there is no body to search."
+    help: "The corpus, the pinned regulation and the categorical-exclusion catalogue. Search covers titles and metadata; there is no document body text to search."
   }
 } as const;
 
@@ -233,7 +233,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "0 / 0 / 103",
       unit: "live-model / cassette / template-substitution claims",
       tone: "warn",
-      note: "No model call has happened and none can.",
+      note: "How much of what the system says is written by a model, and how much is filled into a template. Right now, none of it is written by a model.",
       detail: [
         "The only configured provider host is an RFC-2606 .invalid domain.",
         "LiveHTTPTransport.invoke raises even with a credential set.",
@@ -246,7 +246,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "0",
       unit: "rows in all five object-dataset materializations",
       tone: "error",
-      note: "Level 3 has its shape and not its mechanism.",
+      note: "Whether the parts that would let the system learn from what officers accept are actually connected. They are not.",
       detail: [
         "materialized.adoption, .assignment, .determination, .engagement and .receivedArtifact all hold zero rows.",
         "So no transform can read an act-written row, and ratification can never populate.",
@@ -261,7 +261,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "⟨n⟩",
       unit: "adoptions, by state",
       tone: "warn",
-      note: "Rate by state, and what changed between proposal and adopted value.",
+      note: "How often officers accept, edit or reject what the system proposes — and what they changed when they edited it.",
       detail: [
         "signature-ready-adopt writes adoptedValue and adoptionState (closed 3) with actorPrincipal from current_user_id.",
         "Latent defect, surfaced rather than filtered out: adoptedValue must be present unless the state is rejected. That is a conditional over another parameter's nullity, it is not expressible without a Function, and an adopted with no value can be recorded today."
@@ -273,7 +273,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "⟨retrieved / drafted / specialist⟩",
       unit: "against disposition_mix.pin.json",
       tone: "plain",
-      note: "Calibration proper — is the split behaving as pinned.",
+      note: "Whether work is arriving from the expected mix of sources: found in the record, drafted, or supplied by a specialist.",
       detail: ["Intent-predicate clause 2 turns on this comparison, and is recorded as enforcedAt 'none'."]
     },
     {
@@ -282,7 +282,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "⟨pass⟩ / ⟨fail⟩",
       unit: "from stamp-verifier-verdict",
       tone: "warn",
-      note: "Two warnings travel with this count.",
+      note: "How often the checks that run before a document is issued pass, and how often they fail.",
       detail: [
         "The default is still pass, and it can only be cleared by hand in Ontology Manager.",
         "Since the act widened to accept fail on 2026-09-01, clause 3's pass-only requirement is held by nothing. Recording a fail is correct; letting a failed claim into a signed document is not, and only an emission gate can tell those apart."
@@ -294,7 +294,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "3",
       unit: "lanes reporting unresolved",
       tone: "warn",
-      note: "A defect state with no aggregate view is a defect nobody reads.",
+      note: "How often a question came back with no answer because the system could not look, rather than because there was nothing to find.",
       detail: [
         "determinationEvidence has a declared evidence set for two of the five determinations and none for the other three.",
         "Those three report that nothing was asked rather than that nothing was found — the distinction working, not a failure."
@@ -306,7 +306,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "0",
       unit: "drift detected",
       tone: "plain",
-      note: "One row, noDriftDetected true.",
+      note: "Whether the copy of the regulation the system reasons against still matches the published one.",
       detail: [
         "Witness retrieved independently at eCFR issue date 2026-08-25, byte-identical to the 2026-08-11 pin.",
         "The pin reaches 2026-08-25 against a stated currency of 2026-09-01 — seven days unverified.",
@@ -319,7 +319,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "6",
       unit: "rows in corpus.manifestStatus",
       tone: "plain",
-      note: "Per-corpus shortfalls and not-retrieved notes, verbatim from the assembler.",
+      note: "Whether the reference library is complete: what each collection expected to hold, and what is missing.",
       detail: ["⟨corpus.manifestStatus — one row per corpus, quoted as written⟩"]
     }
   ],
@@ -551,37 +551,45 @@ export const artifactBlocked: Region<ArtifactView> = blocked(
   [DRAFTED]
 );
 
+export const REGULATION_BODY = "⟨1b · section text, from the pinned copy⟩";
+
+export const REGULATION_CURRENCY =
+  "The pin and its independent drift witness both reach eCFR issue date 2026-08-25 and agree byte for byte. The stated currency line is 2026-09-01, so seven days are unverified.";
+
 export const regulationFilled: Region<Regulation> = filled<Regulation>({
   pin: "eCFR title-7 subtitle A part 1b, issue date 2026-08-11 · 222,131 bytes · sha256 a8097af3…fea6db20",
   currency:
     "The pin and its independent drift witness both reach eCFR issue date 2026-08-25 and agree byte for byte. The stated currency line is 2026-09-01, so seven days are unverified.",
   sections: [
-    { id: "1b.1", name: "Purpose and scope", amended: "2026-04-03", note: null },
-    { id: "1b.2", name: "Applicability and level of review", amended: "2026-04-03", note: null },
-    { id: "1b.3", name: "Categorical exclusions", amended: "2026-04-03", note: null },
+    { id: "1b.1", name: "Purpose and scope", amended: "2026-04-03", note: null, body: REGULATION_BODY },
+    { id: "1b.2", name: "Applicability and level of review", amended: "2026-04-03", note: null, body: REGULATION_BODY },
+    { id: "1b.3", name: "Categorical exclusions", amended: "2026-04-03", note: null, body: REGULATION_BODY },
     {
       id: "1b.4",
       name: "USDA categorical exclusions",
       amended: "2026-04-03",
-      note: "Also carries an interim-period amendment at 2025-07-18. Three limbs, not two: (a) excludes nine named subcomponents outright."
+      note: "Also carries an interim-period amendment at 2025-07-18. Three limbs, not two: (a) excludes nine named subcomponents outright.",
+      body: REGULATION_BODY
     },
-    { id: "1b.5", name: "Environmental assessments", amended: "2026-04-03", note: null },
-    { id: "1b.6", name: "Findings of no significant impact", amended: "2026-04-03", note: null },
-    { id: "1b.7", name: "Environmental impact statements", amended: "2026-04-03", note: null },
-    { id: "1b.8", name: "Records of decision", amended: "2026-04-03", note: null },
+    { id: "1b.5", name: "Environmental assessments", amended: "2026-04-03", note: null, body: REGULATION_BODY },
+    { id: "1b.6", name: "Findings of no significant impact", amended: "2026-04-03", note: null, body: REGULATION_BODY },
+    { id: "1b.7", name: "Environmental impact statements", amended: "2026-04-03", note: null, body: REGULATION_BODY },
+    { id: "1b.8", name: "Records of decision", amended: "2026-04-03", note: null, body: REGULATION_BODY },
     {
       id: "1b.9",
       name: "General provisions",
       amended: "2026-07-02",
-      note: "Further amended at 91 FR 40353. The source note at the foot of the section corroborates both amendments from inside the document."
+      note: "Further amended at 91 FR 40353. The source note at the foot of the section corroborates both amendments from inside the document.",
+      body: REGULATION_BODY
     },
-    { id: "1b.10", name: "Applicant and third-party preparation", amended: "2026-04-03", note: null },
-    { id: "1b.11", name: "Definitions", amended: "2026-04-03", note: null },
+    { id: "1b.10", name: "Applicant and third-party preparation", amended: "2026-04-03", note: null, body: REGULATION_BODY },
+    { id: "1b.11", name: "Definitions", amended: "2026-04-03", note: null, body: REGULATION_BODY },
     {
       id: "1b.12",
       name: "Severability",
       amended: "2025-07-03",
-      note: "The only section the 2026-04-03 final rule did not touch. It still carries interim-rule text. Probably deliberate; not verified."
+      note: "The only section the 2026-04-03 final rule did not touch. It still carries interim-rule text. Probably deliberate; not verified.",
+      body: REGULATION_BODY
     }
   ],
   unresolvedCitations: [

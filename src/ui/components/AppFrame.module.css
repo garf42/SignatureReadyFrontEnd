@@ -39,8 +39,12 @@
   align-items: start;
 }
 
+/* 12 + 16 + 12: the menu item's own horizontal padding either side of a 16px
+   icon, plus the 1px rule. The collapsed rail is exactly as wide as the icon's
+   gutter, so the icon sits at the same x whether the pane is open or shut and
+   does not appear to move when it closes. */
 .split[data-nav="closed"] {
-  grid-template-columns: 46px minmax(0, 1fr);
+  grid-template-columns: 41px minmax(0, 1fr);
 }
 
 .nav {
@@ -61,11 +65,6 @@
    the (now empty) text span beside the icon, and that span carries .bp6-fill,
    so it took every spare pixel and left centring nothing to distribute. The
    icon ended up hard against x=0. Drop the span and the icon centres. */
-.split[data-nav="closed"] .nav :global(.bp6-menu-item) {
-  justify-content: center;
-  padding-inline: 0;
-}
-
 .split[data-nav="closed"] .nav :global(.bp6-menu-item) > :global(.bp6-fill) {
   display: none;
 }

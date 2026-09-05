@@ -59,9 +59,16 @@
   margin-bottom: var(--s-3);
 }
 
+/* Sized to its own text: the input inherited the form-field padding, which is
+   set for a field someone types a paragraph into. */
 .search {
   flex: 1 1 320px;
   min-width: 0;
+}
+
+.search input {
+  padding: 6px var(--s-3);
+  font-size: var(--t-meta);
 }
 
 .hazard {
@@ -85,17 +92,36 @@
 }
 
 .section {
-  display: grid;
-  gap: 4px;
-  padding: var(--s-2) 0;
   border-bottom: 1px solid var(--rule);
 }
 
+/* Collapsed by default: the list is the index, and a section opens into its
+   own text rather than sending the reader somewhere else for it. */
 .sectionHead {
-  display: flex;
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto 18px;
   align-items: baseline;
-  justify-content: space-between;
   gap: var(--s-3);
+  width: 100%;
+  appearance: none;
+  background: none;
+  border: 0;
+  text-align: left;
+  padding: var(--s-2) 0;
+  cursor: pointer;
+  font-family: var(--sans);
+}
+
+.sectionGlyph {
+  color: var(--ink);
+  text-align: right;
+  line-height: 1;
+}
+
+.sectionBody {
+  display: grid;
+  gap: var(--s-2);
+  padding: 0 0 var(--s-3) 64px;
 }
 
 .sectionId {

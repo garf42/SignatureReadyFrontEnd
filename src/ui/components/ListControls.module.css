@@ -7,10 +7,6 @@
   gap: var(--s-4);
 }
 
-.controls > :global(.bp6-button) {
-  align-self: center;
-}
-
 /* Baseline, not centre. The label is 11px mono and the value 12.5px sans, and
    centring two boxes of different heights leaves their text sitting on two
    different lines — which is what "not aligned" was. */

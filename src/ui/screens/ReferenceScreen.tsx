@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Button, Dialog, HTMLTable, InputGroup } from "@blueprintjs/core";
+import { Button, Dialog, HTMLTable, Icon, InputGroup } from "@blueprintjs/core";
 
 import type { Citable, SourceKind } from "@/ui/data/port";
 import {
   CATALOGUE_EMPTY_REASON,
   PAGES,
+  REGULATION_CURRENCY,
   REGULATION_NOTE,
   useCatalogue,
   useIntegrity,
@@ -51,18 +52,6 @@ export function ReferenceScreen() {
   return (
     <AppFrame current="reference">
       <div className={shared.stack}>
-        <Region region={integrity} onSource={setSource}>
-          {(lines) => (
-            <div className={shared.strip}>
-              {lines.map((line) => (
-                <span key={line} className={shared.stripItem}>
-                  {line}
-                </span>
-              ))}
-            </div>
-          )}
-        </Region>
-
         <PageHead
           title={PAGES.reference.title}
           count={reference.state === "filled" ? reference.value.count : undefined}
@@ -80,7 +69,6 @@ export function ReferenceScreen() {
           <Region region={reference} onSource={setSource} variant="page">
             {(page) => (
               <>
-                <p className={css.hazard}>{page.hazard}</p>
                 <div className={css.split}>
                   <aside className={css.facets}>
                     {page.facets.map((facet) => (
@@ -160,6 +148,13 @@ export function ReferenceScreen() {
                     </HTMLTable>
                   </div>
                 </div>
+                <div className={shared.notes}>
+                  <p className={shared.notesTitle}>About this corpus</p>
+                  <p className={shared.note}>{page.hazard}</p>
+                  <Region region={integrity} onSource={setSource}>
+                    {(lines) => <p className={shared.meta}>{lines.join(" · ")}</p>}
+                  </Region>
+                </div>
               </>
             )}
           </Region>
@@ -177,20 +172,34 @@ export function ReferenceScreen() {
 
 function RegulationPanel({ onSource }: { onSource: (kind: SourceKind) => void }) {
   const regulation = useRegulation();
+  const [open, setOpen] = useState<Record<string, boolean>>({});
   return (
     <Region region={regulation} onSource={onSource}>
       {(page) => (
         <>
-          <PageHead title="7 CFR part 1b, as pinned" count={page.pin} help={page.currency} />
+          <PageHead title="7 CFR part 1b, as pinned" count={page.pin} />
           <div>
             {page.sections.map((section) => (
               <div key={section.id} className={css.section}>
-                <div className={css.sectionHead}>
+                <button
+                  type="button"
+                  className={css.sectionHead}
+                  aria-expanded={!!open[section.id]}
+                  onClick={() => setOpen((state) => ({ ...state, [section.id]: !state[section.id] }))}
+                >
                   <span className={css.sectionId}>§ {section.id}</span>
                   <span className={css.sectionName}>{section.name}</span>
                   <span className={css.amended}>amended {section.amended}</span>
-                </div>
-                {section.note ? <p className={shared.note}>{section.note}</p> : null}
+                  <span className={css.sectionGlyph}>
+                    <Icon icon={open[section.id] ? "minus" : "plus"} />
+                  </span>
+                </button>
+                {open[section.id] ? (
+                  <div className={css.sectionBody}>
+                    {section.note ? <p className={shared.note}>{section.note}</p> : null}
+                    <blockquote className={shared.quote}>{section.body}</blockquote>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
@@ -202,6 +211,7 @@ function RegulationPanel({ onSource }: { onSource: (kind: SourceKind) => void })
               </p>
             ))}
             <p className={shared.meta}>{REGULATION_NOTE}</p>
+            <p className={shared.meta}>{REGULATION_CURRENCY}</p>
           </div>
         </>
       )}

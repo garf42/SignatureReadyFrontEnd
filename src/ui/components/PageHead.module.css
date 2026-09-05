@@ -1,16 +1,16 @@
-/* One baseline across the whole row. The heading has the greatest ascent of
-   the text on it, so it sets the line and does not move; the filter and sort
-   labels come to it. The button is a box rather than a line of text, so it
-   centres on the row instead of hanging off the baseline. */
+/* One baseline across the whole row, the button included. The button has the
+   greatest ascent on the row — 9px of padding above a 12.5px label — so it is
+   the thing that sets the line, and the heading, the count and the filter and
+   sort labels all come down to it. Nothing here moves the button. */
 .head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--s-4);
-  padding-bottom: var(--s-2);
+  padding-bottom: var(--s-1);
   border-bottom: 1px solid var(--rule);
-  margin-bottom: var(--s-3);
+  margin-bottom: var(--s-2);
 }
 
 .heading {
@@ -36,16 +36,13 @@
   gap: var(--s-4);
 }
 
-.controls > :global(.bp6-button) {
-  align-self: center;
-}
-
+/* One line where the width allows it. A page's standfirst was taking three
+   lines of column width and a block of air on either side of it. */
 .help {
   font-size: var(--t-meta);
-  line-height: 1.55;
+  line-height: 1.5;
   color: var(--ink-soft);
-  max-width: 80ch;
-  margin-bottom: var(--s-3);
+  margin: 0 0 var(--s-3);
   text-wrap: pretty;
   overflow-wrap: anywhere;
 }

@@ -11,7 +11,7 @@ Where the front end needs something the ontology does not yet support, the
 ontology is what changes. A declared gap is a note for the FDE, never a
 reason to redesign the screen.
 
-18 hooks declared · 16 with gaps · 2 answerable today.
+19 hooks declared · 17 with gaps · 2 answerable today.
 
 ## What each surface needs
 
@@ -24,6 +24,7 @@ reason to redesign the screen.
 | `useExpertRequest` — the drafted request in the compose overlay, and sending it | backlog | the same slot row the queue waits on; an actor on package-expert-request; an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline |
 | `useGate` — the three signature surfaces the regulation reserves, and the route-to-holder action offered instead | partial | a signature concept; document carries no date-issued and no signatory property, and §5 records a signature as the corpus's largest gap; a platform predicate for the caller's class; the interface presents the gate and cannot verify a credential; a record of a routing — that a document was referred to a holder for signature |
 | `useInbox` — every project this officer holds | partial | a holder-to-project relation; nothing records which officer holds a project; a modified-at property; the inbox sorts and groups on 'recently changed' and nothing carries it; a position property, or a projection of it; 'where it is' is step and tab state, which is C9's pathway state and is not built |
+| `useIntake` — whether Step 0 has been submitted, and so whether anything after it is open | backlog | a completion state for Step 0. submit-intake writes a subset of the step's fields and nothing records that the step is finished; per-step completion is C9's pathway state and is not built; the first retrieval push itself — on Step 0 completing, retrieval across the corpus, the forest plan register, the regulation and the CE catalogue, writing drafted rows into Steps 1 and 2. No Function, no AIP Logic and no model call exists to run it; an address for the remainder of Step 0. submit-intake writes four properties; the geographic extent, administrative unit, land management plan, federal nexus, deadline trigger, subcomponent, applicant involvement and agency roles have no ontology address |
 | `useLearning` — what the system proposed, what a human did with it, and whether it is calibrated | backlog | the five object-dataset materializations — adoption, assignment, determination, engagement, receivedArtifact — all hold zero rows, so no transform can read an act-written row and ratification can never populate; the submission-time Function, which holds eight named preconditions including two intent-predicate clauses |
 | `usePathway` — which of P0–P4 the level-of-review determination fixed, and so which steps exist | backlog | pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9); the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row; uniqueness over (project, whichDetermination); nothing refuses a second det_review_level |
 | `useProject` — the project band above every step | partial | an office or subcomponent property; §3 records that no object type carries a USDA subcomponent identity, which is also 1b.4(a)'s third limb; a status property; project state is pathway state and is not built |
@@ -31,7 +32,7 @@ reason to redesign the screen.
 | `useReferenceArtifact` — one artifact in the viewer, opened at a cited page range | partial | a media-set read route for the viewer. Whether an OSDK front end can read those bytes, and by what route, is not answerable from the interface side; until it is, the card carries metadata, digest and page-range citation and the viewer is a slot that lights up later |
 | `useSession` — the signed-in officer, and the signed-out case | partial | a caller identity from the shell's OSDK provider; the officer's name and title are not on any object type |
 | `useSource` — the overlay that opens the primary source behind any value | partial | a media-set read route, so the overlay can show the cited page rather than its metadata |
-| `useSteps` — the step list for the determined pathway, and each step's tabs | backlog | anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1); element rows; the document → element → slot → claim spine traverses and all four types hold zero rows; per-step completion state, which is the same pathway state usePathway waits on |
+| `useSteps` — the step list for the determined pathway, and each step's tabs | backlog | anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1); element rows; the document → element → slot → claim spine traverses and all four types hold zero rows; per-step completion state, which is the same pathway state usePathway waits on; a lock signal per step: which steps the officer may open given what has been established. The front end derives it from intake completion alone today, which is the coarsest correct rule and not the intended one |
 | `useUnresolved` — every unresolved lane in the application, grouped by lane | partial | an ontology-side record of why a query returned nothing; the four-state contract is held by a repository artifact and nothing in the ontology records it |
 
 ## Surfaces the backend can answer today
@@ -202,6 +203,30 @@ Rendered rather than hidden:
 
 - project holds 2 rows, both synthetic — one labelled 'C5 write-path tracer — safe to delete', one named 'lk' with every other field null. Anything that counts projects counts them (§6.3).
 - project rows live in the edits layer; signatureReady.project holds zero rows.
+
+### `useIntake`
+
+whether Step 0 has been submitted, and so whether anything after it is open. Verdict: **backlog**. Required by §7.3 Step 0; §7.8 retrieval pushes; §7.1.
+
+| | |
+| --- | --- |
+| object types | project |
+| properties | name; uniqueIdentificationNumber; uniqueIdentificationNumberIssuer; anticipatedImplementationStart |
+| acts | signature-ready-submit-intake |
+| datasets | — |
+
+Needed:
+
+- a completion state for Step 0. submit-intake writes a subset of the step's fields and nothing records that the step is finished; per-step completion is C9's pathway state and is not built
+- the first retrieval push itself — on Step 0 completing, retrieval across the corpus, the forest plan register, the regulation and the CE catalogue, writing drafted rows into Steps 1 and 2. No Function, no AIP Logic and no model call exists to run it
+- an address for the remainder of Step 0. submit-intake writes four properties; the geographic extent, administrative unit, land management plan, federal nexus, deadline trigger, subcomponent, applicant involvement and agency roles have no ontology address
+
+Rendered rather than hidden:
+
+- The order the front end assumes, and which the wiring has to preserve: Step 0 is the only step whose contents the officer supplies. Every later step is locked until it is submitted, because every later step is populated by a retrieval push that Step 0 triggers.
+- Step 1 establishes nothing downstream by itself — its outcome either terminates the project at P0 or opens Step 2 (§7.8).
+- Step 2 fixes the pathway, and that determination is what generates the pathway's step set and the element set for each document on it.
+- The lock is a sequence lock, never a credential one. §7.2 requires every step, tab and row to be workable without agency credentials; the three gated surfaces are signature rows and are handled by useGate.
 
 ### `useIntegrity`
 
@@ -385,7 +410,7 @@ Rendered rather than hidden:
 
 ### `useSteps`
 
-the step list for the determined pathway, and each step's tabs. Verdict: **backlog**. Required by §7.1; §7.3–§7.6; §3 the documents.
+the step list for the determined pathway, and each step's tabs. Verdict: **backlog**. Required by §7.1; §7.3–§7.7; §3 the documents.
 
 | | |
 | --- | --- |
@@ -399,10 +424,13 @@ Needed:
 - anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1)
 - element rows; the document → element → slot → claim spine traverses and all four types hold zero rows
 - per-step completion state, which is the same pathway state usePathway waits on
+- a lock signal per step: which steps the officer may open given what has been established. The front end derives it from intake completion alone today, which is the coarsest correct rule and not the intended one
 
 Rendered rather than hidden:
 
 - Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).
+- The rail is three segments in one sequence, and the wiring must preserve the distinction. Steps 0–2 are shared and exist from the start. The pathway's own steps exist only once Step 2 fixes a pathway and are generated from that determination. §7.7's ten items are shared by every pathway, so each is a step of its own and they follow the pathway's steps.
+- A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all.
 
 ### `useUnresolved`
 

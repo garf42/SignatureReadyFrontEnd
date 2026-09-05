@@ -122,21 +122,50 @@ export const BINDINGS: Record<string, Binding> = {
     ]
   },
 
+  useIntake: {
+    serves: "whether Step 0 has been submitted, and so whether anything after it is open",
+    objectTypes: ["project"],
+    properties: [
+      "name",
+      "uniqueIdentificationNumber",
+      "uniqueIdentificationNumberIssuer",
+      "anticipatedImplementationStart"
+    ],
+    acts: ["submit-intake"],
+    datasets: [],
+    requires: ["§7.3 Step 0", "§7.8 retrieval pushes", "§7.1"],
+    status: "backlog",
+    needed: [
+      "a completion state for Step 0. submit-intake writes a subset of the step's fields and nothing records that the step is finished; per-step completion is C9's pathway state and is not built",
+      "the first retrieval push itself — on Step 0 completing, retrieval across the corpus, the forest plan register, the regulation and the CE catalogue, writing drafted rows into Steps 1 and 2. No Function, no AIP Logic and no model call exists to run it",
+      "an address for the remainder of Step 0. submit-intake writes four properties; the geographic extent, administrative unit, land management plan, federal nexus, deadline trigger, subcomponent, applicant involvement and agency roles have no ontology address"
+    ],
+    notes: [
+      "The order the front end assumes, and which the wiring has to preserve: Step 0 is the only step whose contents the officer supplies. Every later step is locked until it is submitted, because every later step is populated by a retrieval push that Step 0 triggers.",
+      "Step 1 establishes nothing downstream by itself — its outcome either terminates the project at P0 or opens Step 2 (§7.8).",
+      "Step 2 fixes the pathway, and that determination is what generates the pathway's step set and the element set for each document on it.",
+      "The lock is a sequence lock, never a credential one. §7.2 requires every step, tab and row to be workable without agency credentials; the three gated surfaces are signature rows and are handled by useGate."
+    ]
+  },
+
   useSteps: {
     serves: "the step list for the determined pathway, and each step's tabs",
     objectTypes: ["determination", "document", "element", "slot"],
     properties: ["whichDetermination", "outcome", "documentType"],
     acts: ["open-determination", "open-document"],
     datasets: [],
-    requires: ["§7.1", "§7.3–§7.6", "§3 the documents"],
+    requires: ["§7.1", "§7.3–§7.7", "§3 the documents"],
     status: "backlog",
     needed: [
       "anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1)",
       "element rows; the document → element → slot → claim spine traverses and all four types hold zero rows",
-      "per-step completion state, which is the same pathway state usePathway waits on"
+      "per-step completion state, which is the same pathway state usePathway waits on",
+      "a lock signal per step: which steps the officer may open given what has been established. The front end derives it from intake completion alone today, which is the coarsest correct rule and not the intended one"
     ],
     notes: [
-      "Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10)."
+      "Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).",
+      "The rail is three segments in one sequence, and the wiring must preserve the distinction. Steps 0–2 are shared and exist from the start. The pathway's own steps exist only once Step 2 fixes a pathway and are generated from that determination. §7.7's ten items are shared by every pathway, so each is a step of its own and they follow the pathway's steps.",
+      "A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all."
     ]
   },
 
