@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "@/ui/App";
 
+import generated from "../../PORT-ADDITIONS.md?raw";
+
 afterEach(cleanup);
 
 const at = (path: string) =>
@@ -119,7 +121,7 @@ describe("Learning shows the honest zero — §6.5", () => {
 
   it("states the mechanism gap plainly, in one banner", () => {
     at("/learning");
-    expect(screen.getByText(/rows in all five object-dataset materializations/)).toBeTruthy();
+    expect(screen.getByText(/records the system can learn from/)).toBeTruthy();
   });
 });
 
@@ -141,21 +143,9 @@ describe("Reference keeps three values for citable — §6.6", () => {
 
   it("warns on every row written under a superseded authority", () => {
     at("/reference");
-    expect(screen.getAllByText(/36 CFR 220 was superseded on 2025-07-03/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Superseded 2025-07-03/).length).toBeGreaterThan(0);
   });
 
-  it("carries the extraction hazard on the page", () => {
-    at("/reference");
-    expect(screen.getByText(/Forest %Nice/)).toBeTruthy();
-  });
-
-  it("keeps the integrity facts, at the foot rather than across the top", () => {
-    const { container } = at("/reference");
-    const notes = container.querySelector("[class*='notes']") as HTMLElement;
-    expect(notes.textContent).toContain("287 / 287 digests and lengths match");
-    // Not the first thing on the page any more.
-    expect(container.querySelector("section > div > div")?.textContent).not.toContain("287 / 287");
-  });
 });
 
 describe("the inbox row opens into itself", () => {
@@ -206,11 +196,11 @@ describe("Archive carries the inbox row, not a lookalike — §6.3", () => {
     expect(within(group).getByText("Delete permanently")).toBeTruthy();
   });
 
-  it("says so where no act records who archived it", () => {
+  it("says the archiver is not recorded, without explaining the backend", () => {
     const { container } = at("/archive");
     const groups = container.querySelectorAll("tbody");
     fireEvent.click(within(groups[1] as HTMLElement).getByLabelText("Show the details"));
-    expect(screen.getByText(/Who archived it is not recorded/)).toBeTruthy();
+    expect(screen.getByText("Archived by ⟨not recorded⟩")).toBeTruthy();
   });
 });
 
@@ -220,17 +210,12 @@ describe("Learning reads as rows — §6.5", () => {
     const rows = container.querySelector("section") as HTMLElement;
     // Nothing inside the page body toggles: every measurement is on the page.
     expect(rows.querySelectorAll("[data-tone] [aria-expanded]").length).toBe(0);
+    expect(rows.querySelectorAll("[data-tone]").length).toBe(8);
     expect(
-      screen.getByText(/LiveHTTPTransport.invoke raises even with a credential set/)
+      screen.getByText(/how much of what the system says is written by a model/i)
     ).toBeTruthy();
-    expect(screen.getByText(/an adopted with no value can be recorded today/)).toBeTruthy();
   });
 
-  it("puts all eight measurements on the page at once", () => {
-    const { container } = at("/learning");
-    const rows = container.querySelectorAll("[data-tone]");
-    expect(rows.length).toBe(8);
-  });
 });
 
 describe("a tab is one object across the application", () => {
@@ -287,11 +272,10 @@ describe("Expert Q shows the queue and its compose overlay — §6.4", () => {
   it("opens the compose overlay from the row and closes back to the table", () => {
     const { container } = at("/experts");
     fireEvent.click(container.querySelector("tbody tr") as HTMLElement);
-    expect(screen.getByText("Request from a specialist")).toBeTruthy();
-    expect(screen.getByText(/signature-ready-package-expert-request/)).toBeTruthy();
-    expect(screen.getByText(/Extraordinary-circumstance finding returned present/)).toBeTruthy();
+    expect(screen.getByText("Request specialist input")).toBeTruthy();
+    expect(screen.getByText(/⟨finding.trigger⟩/)).toBeTruthy();
     fireEvent.click(screen.getByText("Cancel"));
-    expect(screen.queryByText("Request from a specialist")).toBeNull();
+    expect(screen.queryByText("Request specialist input")).toBeNull();
   });
 
   it("says the sender is not recorded, because no expert act writes one", () => {
@@ -334,11 +318,6 @@ describe("the regulation reads on the page — §6.6", () => {
     expect(screen.getByText(/still carries interim-rule text/)).toBeTruthy();
   });
 
-  it("keeps the seven unverified days, at the foot", () => {
-    const { container } = at("/reference");
-    fireEvent.click(within(container).getByRole("tab", { name: "7 CFR part 1b" }));
-    expect(screen.getByText(/seven days are unverified/)).toBeTruthy();
-  });
 });
 
 describe("a record row states who, without a citation link", () => {
@@ -351,12 +330,72 @@ describe("a record row states who, without a citation link", () => {
   });
 });
 
-describe("provenance is a note, not a link", () => {
-  it("states where a value came from without offering an overlay", () => {
+describe("a citation opens its source; a name does not", () => {
+  it("opens the primary source behind a cited value", () => {
     const { container } = at("/projects/p1/steps/0/timing");
     fireEvent.click(within(container).getAllByRole("button", { expanded: false })[1]);
-    expect(screen.getAllByText(/Choices from/).length).toBeGreaterThan(0);
-    // No source link anywhere on the panel: the overlay is gone, not hidden.
-    expect(container.querySelector("[class*='panelBox'] a")).toBeNull();
+    fireEvent.click(screen.getByText("⟨register.item.choice_list⟩"));
+    expect(screen.getByText("The project record")).toBeTruthy();
+    fireEvent.click(screen.getByText("Close"));
+    expect(screen.queryByText("The project record")).toBeNull();
   });
+
+  it("leaves a person as text, with nothing to open", () => {
+    const { container } = at("/");
+    const group = container.querySelector("tbody") as HTMLElement;
+    fireEvent.click(within(group).getByLabelText("Show the details"));
+    expect(within(group).getByText(/Started by/)).toBeTruthy();
+    expect(group.querySelector("a")).toBeNull();
+  });
+});
+
+describe("build commentary lives in the handoff, not on the screen", () => {
+  it.each(["/archive", "/experts", "/learning", "/reference"])(
+    "%s carries no explanatory prose beyond its standfirst",
+    (path) => {
+      const { container } = at(path);
+      const header = container.querySelector("section header") as HTMLElement;
+      // Title row and standfirst only — no notes block under it.
+      expect(header.children.length).toBeLessThanOrEqual(2);
+    }
+  );
+
+  it("keeps every one of those facts in PORT-ADDITIONS.md", () => {
+    for (const fact of [
+      "C5 write-path tracer",
+      "cannot show who sent a request",
+      "holder-to-slot join",
+      "Forest %Nice",
+      "287 of 287",
+      "supersededButClassedCurrent",
+      "ce_categories.json",
+      "seven days are unverified",
+      "1b.3(h)"
+    ]) {
+      expect(generated, `${fact} is not in the handoff`).toContain(fact);
+    }
+  });
+});
+
+describe("no backend vocabulary reaches the screen", () => {
+  const banned = [
+    /signature-ready-/,
+    /materialized\./,
+    /actorPrincipal/,
+    /current_user_id/,
+    /Ontology Manager/,
+    /RFC-2606/,
+    /LiveHTTPTransport/,
+    /platform predicate/
+  ];
+
+  it.each(["/", "/archive", "/experts", "/learning", "/reference"])(
+    "%s names no act, dataset or platform mechanism",
+    (path) => {
+      const { container } = at(path);
+      for (const pattern of banned) {
+        expect(container.textContent ?? "", String(pattern)).not.toMatch(pattern);
+      }
+    }
+  );
 });

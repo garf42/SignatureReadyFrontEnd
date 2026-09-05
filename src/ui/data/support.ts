@@ -19,8 +19,7 @@ import type {
   Reference,
   ReferenceRow,
   Region,
-  Regulation,
-  UnresolvedLane
+  Regulation
 } from "@/ui/data/types";
 
 /** §6, the four pages reachable from the left pane.
@@ -106,18 +105,9 @@ export const archiveUnresolved: Region<Archive> = unresolved(
 );
 
 /** Carried on the page because anything that counts projects counts these. */
-export const ARCHIVE_NOTE =
-  "The two project rows in the ontology are both synthetic — one labelled “C5 write-path tracer — safe to delete”, one named “lk” with every other field null. §4 asks whether they should be removed.";
-
 /* --------------------------------------------------------------------------
  * §6.4 Expert Q — Level 4
  * ------------------------------------------------------------------------ */
-
-const QUEUE_LIMITS = [
-  "Neither expert act writes an actor, so the queue cannot show who sent a request.",
-  "Nothing joins a holder to a slot, so a recipient is a suggestion the officer confirms, never a routing the system made.",
-  "Both acts key on a slot, and nothing creates one — eleven of seventeen acts wait on this."
-];
 
 export const expertQueueAbsent: Region<ExpertQueue> = absent(
   "No expert requests are open",
@@ -130,7 +120,6 @@ export const expertQueueFilled: Region<ExpertQueue> = filled<ExpertQueue>({
   count: "⟨n⟩ open · ⟨n⟩ overdue",
   filters: ["All requests", "Overdue", "Awaiting return", "Returned", "Accepted"],
   sorts: ["Overdue first", "Expected return", "Sent date", "Project", "Discipline"],
-  limits: QUEUE_LIMITS,
   rows: [
     {
       id: "q1",
@@ -200,13 +189,11 @@ export const expertQueueUnresolved: Region<ExpertQueue> = unresolved(
 export const expertDraftFilled: Region<ExpertDraft> = filled<ExpertDraft>({
   project: "⟨project.name⟩",
   uniqueIdentificationNumber: "⟨project.uniqueIdentificationNumber⟩",
-  trigger: "Extraordinary-circumstance finding returned present or undetermined — 1b.3(f)(2)",
+  trigger: "⟨finding.trigger⟩ · 1b.3(f)(2)",
   artifactAwaited: "⟨artifactAwaited⟩",
   expectedReturn: "⟨expectedReturnDate⟩",
   regulatoryBasis: RULE,
   proposedRecipient: "⟨holder.name, qualification⟩",
-  recipientNote:
-    "A suggestion, not a routing: nothing joins a holder to the slot that needs one, so the officer confirms the recipient.",
   body: "⟨request.body — drafted from the project and the finding that triggered it, fully editable⟩"
 });
 
@@ -214,12 +201,6 @@ export const expertDraftUnresolved: Region<ExpertDraft> = unresolved(
   "No request could be drafted",
   "the drafting lane could not run — no model call has occurred or can, and no Function or AIP Logic exists in the project"
 );
-
-export const EXPERT_TRIGGER =
-  "signature-ready-state-factor-finding closes at clear / present / undetermined. Present or undetermined is the condition that needs a discipline: on that finding the request is drafted and held here. The recognition is automated; the officer sends.";
-
-export const EXPERT_RETURN =
-  "The return leg belongs here too: record-artifact-arrival, then accept-artifact, which writes gapsFound and closes the engagement.";
 
 /* --------------------------------------------------------------------------
  * §6.5 Learning — Level 3
@@ -233,25 +214,15 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "0 / 0 / 103",
       unit: "live-model / cassette / template-substitution claims",
       tone: "warn",
-      note: "How much of what the system says is written by a model, and how much is filled into a template. Right now, none of it is written by a model.",
-      detail: [
-        "The only configured provider host is an RFC-2606 .invalid domain.",
-        "LiveHTTPTransport.invoke raises even with a credential set.",
-        "The number shown is the real one. A dashboard showing an honest zero is a stronger artifact than one showing a fabricated adoption rate."
-      ]
+      note: "How much of what the system says is written by a model, and how much is filled into a template. Right now, none of it is written by a model."
     },
     {
       id: "mechanism",
       title: "Mechanism status",
       figure: "0",
-      unit: "rows in all five object-dataset materializations",
+      unit: "records the system can learn from",
       tone: "error",
-      note: "Whether the parts that would let the system learn from what officers accept are actually connected. They are not.",
-      detail: [
-        "materialized.adoption, .assignment, .determination, .engagement and .receivedArtifact all hold zero rows.",
-        "So no transform can read an act-written row, and ratification can never populate.",
-        "A person must create these in Ontology Manager; no tool exposes it."
-      ]
+      note: "Whether the parts that would let the system learn from what officers accept are actually connected. They are not."
     }
   ],
   tiles: [
@@ -261,32 +232,23 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "⟨n⟩",
       unit: "adoptions, by state",
       tone: "warn",
-      note: "How often officers accept, edit or reject what the system proposes — and what they changed when they edited it.",
-      detail: [
-        "signature-ready-adopt writes adoptedValue and adoptionState (closed 3) with actorPrincipal from current_user_id.",
-        "Latent defect, surfaced rather than filtered out: adoptedValue must be present unless the state is rejected. That is a conditional over another parameter's nullity, it is not expressible without a Function, and an adopted with no value can be recorded today."
-      ]
+      note: "How often officers accept, edit or reject what the system proposes — and what they changed when they edited it."
     },
     {
       id: "disposition",
       title: "Disposition mix against its pin",
       figure: "⟨retrieved / drafted / specialist⟩",
-      unit: "against disposition_mix.pin.json",
+      unit: "against the expected split",
       tone: "plain",
-      note: "Whether work is arriving from the expected mix of sources: found in the record, drafted, or supplied by a specialist.",
-      detail: ["Intent-predicate clause 2 turns on this comparison, and is recorded as enforcedAt 'none'."]
+      note: "Whether work is arriving from the expected mix of sources: found in the record, drafted, or supplied by a specialist."
     },
     {
       id: "verdicts",
       title: "Verifier verdicts",
       figure: "⟨pass⟩ / ⟨fail⟩",
-      unit: "from stamp-verifier-verdict",
+      unit: "checks before issue",
       tone: "warn",
-      note: "How often the checks that run before a document is issued pass, and how often they fail.",
-      detail: [
-        "The default is still pass, and it can only be cleared by hand in Ontology Manager.",
-        "Since the act widened to accept fail on 2026-09-01, clause 3's pass-only requirement is held by nothing. Recording a fail is correct; letting a failed claim into a signed document is not, and only an emission gate can tell those apart."
-      ]
+      note: "How often the checks that run before a document is issued pass, and how often they fail."
     },
     {
       id: "unresolved",
@@ -294,11 +256,7 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "3",
       unit: "lanes reporting unresolved",
       tone: "warn",
-      note: "How often a question came back with no answer because the system could not look, rather than because there was nothing to find.",
-      detail: [
-        "determinationEvidence has a declared evidence set for two of the five determinations and none for the other three.",
-        "Those three report that nothing was asked rather than that nothing was found — the distinction working, not a failure."
-      ]
+      note: "How often a question came back with no answer because the system could not look, rather than because there was nothing to find."
     },
     {
       id: "drift",
@@ -306,30 +264,22 @@ export const learningFilled: Region<Learning> = filled<Learning>({
       figure: "0",
       unit: "drift detected",
       tone: "plain",
-      note: "Whether the copy of the regulation the system reasons against still matches the published one.",
-      detail: [
-        "Witness retrieved independently at eCFR issue date 2026-08-25, byte-identical to the 2026-08-11 pin.",
-        "The pin reaches 2026-08-25 against a stated currency of 2026-09-01 — seven days unverified.",
-        "§1 calls this the one thing in the build that would ever want to run on a schedule."
-      ]
+      note: "Whether the copy of the regulation the system reasons against still matches the published one."
     },
     {
       id: "corpus",
       title: "Corpus shortfalls",
       figure: "6",
-      unit: "rows in corpus.manifestStatus",
+      unit: "collections with shortfalls",
       tone: "plain",
-      note: "Whether the reference library is complete: what each collection expected to hold, and what is missing.",
-      detail: ["⟨corpus.manifestStatus — one row per corpus, quoted as written⟩"]
+      note: "Whether the reference library is complete: what each collection expected to hold, and what is missing."
     }
-  ],
-  notBuilt:
-    "1b.3(h) reliance on a prior CE determination is a genuine regulation-backed learning loop — §3 records precedent and prior_coverage in the spec and 51 artifacts in the prior-coverage corpus, and no object type records a reliance. Named here so it is visible as a future tile, and not built now."
+  ]
 });
 
 export const learningAbsent: Region<Learning> = absent(
   "Nothing has been proposed yet",
-  "⟨materialized.adoption · materialized.determination⟩"
+  "⟨adoption.byProject · determination.byProject⟩"
 );
 export const learningBlocked: Region<Learning> = blocked(
   "Not ready yet",
@@ -341,44 +291,19 @@ export const learningUnresolved: Region<Learning> = unresolved(
   "no transform can read an act-written row while the materializations hold zero rows"
 );
 
-export const unresolvedLanes: Region<UnresolvedLane[]> = filled<UnresolvedLane[]>([
-  {
-    lane: "determinationEvidence · det_extraordinary_circumstances",
-    count: "1",
-    reason: "No evidence set is declared for this determination, so nothing was asked.",
-    correct: true
-  },
-  {
-    lane: "determinationEvidence · det_documentation_required",
-    count: "1",
-    reason: "No evidence set is declared for this determination, so nothing was asked.",
-    correct: true
-  },
-  {
-    lane: "determinationEvidence · det_significance",
-    count: "1",
-    reason: "No evidence set is declared for this determination, so nothing was asked.",
-    correct: true
-  }
-]);
-
 /* --------------------------------------------------------------------------
  * §6.6 Reference — Levels 0 and 1
  * ------------------------------------------------------------------------ */
 
-const SUPERSEDED_WARNING =
-  "Declares itself current and is not: 36 CFR 220 was superseded on 2025-07-03, and 111 corpus artifacts are written under it. Still a WARN; it becomes a FAIL when a corrected manifest lands.";
+const SUPERSEDED_WARNING = "Superseded 2025-07-03 — declares itself current";
 
-const RESCINDED_WARNING =
-  "Rescinded in its entirety by WO Amendment 1909.15-2026-1, effective 2026-03-26. Never citable, and browsable: superseded practice is still evidence about practice.";
+const RESCINDED_WARNING = "Rescinded 2026-03-26 — WO Amendment 1909.15-2026-1";
 
-const IMAGE_ONLY_WARNING =
-  "Image-only. No text layer to select; the page image is the artifact.";
+const IMAGE_ONLY_WARNING = "Image-only — no text layer";
 
-const TRUNCATED_WARNING = "Truncated at source. This one will not open.";
+const TRUNCATED_WARNING = "Truncated at source — will not open";
 
-const MARKER_ABSENCE_WARNING =
-  "Born-digital by marker absence, not by measurement: only 2 documents in the corpus fire a producer marker at all. minCharsOnAPage is shown so the suspicion is investigable.";
+
 
 const row = (
   id: string,
@@ -466,9 +391,7 @@ export const referenceFilled: Region<Reference> = filled<Reference>({
     }
   ],
   rows: [
-    row("c1", "practice", "FONSI", "Current rule — 2026-04-03", "yes", "Born-digital", [
-      MARKER_ABSENCE_WARNING
-    ]),
+    row("c1", "practice", "FONSI", "Current rule — 2026-04-03", "yes", "Born-digital"),
     row("c2", "practice", "ROD", "36 CFR 220 — superseded 2025-07-03", "yes", "Born-digital", [
       SUPERSEDED_WARNING
     ]),
@@ -488,23 +411,12 @@ export const referenceFilled: Region<Reference> = filled<Reference>({
       "FSH 1909.15 — rescinded 2026-03-26",
       "not-declared",
       "Born-digital",
-      [
-        RESCINDED_WARNING,
-        "classDeclared is false and citable is NULL. Not declared is not the same claim as not citable, and the two must not share a null."
-      ]
+      [RESCINDED_WARNING]
     ),
     row("c7", "practice", "Decision Memo", "36 CFR 220 — superseded 2025-07-03", "not-declared", "OCR-derived", [
       "Issued under the prior rule. The current text has no Decision Memo; §4 asks a domain expert what the current-rule equivalent is in practice."
     ])
   ],
-  integrity: [
-    "287 of 287 declared artifacts match on digest and length, both directions",
-    "11 forest-plan sources pinned",
-    "Regulation pin green",
-    "Drift clean — witness at 2026-08-25 byte-identical to the 2026-08-11 pin"
-  ],
-  hazard:
-    "Extracted text can be wrong while announcing nothing. On the 1990 Umatilla ROD the cover reads “Forest Service” in the page image and “Forest %Nice” in the text layer, on all three extractors, with no error and no signal. Anything offered here as selectable text carries that caveat."
 });
 
 export const referenceAbsent: Region<Reference> = absent(
@@ -553,9 +465,6 @@ export const artifactBlocked: Region<ArtifactView> = blocked(
 
 export const REGULATION_BODY = "⟨1b · section text, from the pinned copy⟩";
 
-export const REGULATION_CURRENCY =
-  "The pin and its independent drift witness both reach eCFR issue date 2026-08-25 and agree byte for byte. The stated currency line is 2026-09-01, so seven days are unverified.";
-
 export const regulationFilled: Region<Regulation> = filled<Regulation>({
   pin: "eCFR title-7 subtitle A part 1b, issue date 2026-08-11 · 222,131 bytes · sha256 a8097af3…fea6db20",
   currency:
@@ -600,9 +509,6 @@ export const regulationFilled: Region<Regulation> = filled<Regulation>({
   ]
 });
 
-export const REGULATION_NOTE =
-  "Shown as found. These are not build defects and must not be silently repaired: a resolver that quietly fixes them hides a finding.";
-
 export const catalogueAbsent: Region<Catalogue> = absent(
   "The categorical-exclusion catalogue has not been loaded",
   "⟨category · citation, descriptionVerbatim⟩",
@@ -627,18 +533,3 @@ export const catalogueFilled: Region<Catalogue> = filled<Catalogue>({
   ]
 });
 
-export const CATALOGUE_EMPTY_REASON =
-  "category holds zero rows. The 87 rows sit in ce_categories.json, which §3 names as the single cheapest high-value population in the build, with five obligations blocked behind it. §2 re-derives 87 from the pinned text, so the file and the rule agree.";
-
-export const integrityStrip: Region<string[]> = filled<string[]>([
-  "287 / 287 digests and lengths match, both directions",
-  "11 forest-plan sources pinned",
-  "Regulation pin green",
-  "Drift clean at 2026-08-25",
-  "reg-36cfr220 — WARN: 2 rows declare themselves current"
-]);
-
-export const integrityUnresolved: Region<string[]> = unresolved(
-  "The integrity checks could not be read",
-  "check.corpusPin, check.forestPlanPin, check.regulationPin and check.regulationDrift are the four datasets this strip reads"
-);

@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 
-import type { ElementPanel } from "@/ui/data/port";
+import type { ElementPanel, SourceKind } from "@/ui/data/port";
 import { useElement, useGate } from "@/ui/data/port";
 import { ActionBar } from "@/ui/components/ActionBar";
 import { QuestionRow } from "@/ui/components/QuestionRow";
 import { Region } from "@/ui/components/Region";
+import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/ElementScreen.module.css";
 
@@ -17,12 +18,13 @@ export function ElementScreen() {
   const gate = useGate();
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [source, setSource] = useState<SourceKind | null>(null);
 
   const toggle = (id: string) => setOpen((state) => ({ ...state, [id]: !state[id] }));
 
   return (
     <>
-      <Region region={panel}>
+      <Region region={panel} onSource={setSource}>
         {(element) => (
           <>
             <header className={css.head}>
@@ -52,6 +54,7 @@ export function ElementScreen() {
                   row={row}
                   open={!!open[row.id]}
                   onToggle={toggle}
+                  onSource={setSource}
                 />
               ))}
             </div>
@@ -63,6 +66,7 @@ export function ElementScreen() {
           </>
         )}
       </Region>
+      {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
     </>
   );
 }

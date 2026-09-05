@@ -9,12 +9,25 @@
  */
 export type RegionState = "filled" | "absent" | "blocked" | "unresolved";
 
-/** Where a value came from, stated on the line under it. */
+/** The kinds of primary source a value can be traced to. A person is not one
+ *  of them: an officer's name is a name, and there is nothing to open behind
+ *  it. */
+export type SourceKind = "rule" | "record" | "document" | "inputs";
+
+/** Where a value came from, stated on the line under it. Where `kind` is set
+ *  the line opens the primary source; where it is not, the line is text. */
 export interface SourceRef {
+  kind?: SourceKind;
   /** Plain words first, e.g. "Retrieved from the project record · ". */
   lead: string;
   /** The address itself, always a register-supplied marker. */
   label: string;
+}
+
+export interface SourceDocument {
+  reference: string;
+  primary: string;
+  full: Destination;
 }
 
 export interface Destination {
@@ -223,8 +236,6 @@ export interface ExpertQueue {
   count: string;
   filters: string[];
   sorts: string[];
-  /** Limits of the acts behind the queue, rendered rather than hidden. */
-  limits: string[];
   rows: ExpertRow[];
 }
 
@@ -238,7 +249,6 @@ export interface ExpertDraft {
   expectedReturn: string;
   regulatoryBasis: SourceRef;
   proposedRecipient: string;
-  recipientNote: string;
   body: string;
 }
 
@@ -251,23 +261,12 @@ export interface LearningTile {
   unit: string;
   tone: TileTone;
   note: string;
-  /** Drill-down lines. Each is a measured fact, not a projection. */
-  detail: string[];
 }
 
 export interface Learning {
   /** Tiles 1 and 2 — grounding honesty and mechanism status. */
   status: LearningTile[];
   tiles: LearningTile[];
-  /** Named so it is visible as a future tile, and not built now. */
-  notBuilt: string;
-}
-
-export interface UnresolvedLane {
-  lane: string;
-  count: string;
-  reason: string;
-  correct: boolean;
 }
 
 export type Citable = "yes" | "no" | "not-declared";
@@ -305,10 +304,6 @@ export interface Reference {
   sorts: string[];
   facets: Facet[];
   rows: ReferenceRow[];
-  /** One line, not a page. */
-  integrity: string[];
-  /** The extraction hazard, worth one line on the page. */
-  hazard: string;
 }
 
 export interface ArtifactView {

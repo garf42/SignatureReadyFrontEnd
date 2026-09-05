@@ -6,26 +6,32 @@ import type {
   NavSection,
   Region,
   Session,
+  SourceDocument,
+  SourceKind,
   SourceRef
 } from "@/ui/data/types";
 
 /* Every supplied string is a register marker. No project data lives here. */
 
-export const RULE: SourceRef = { lead: "7 CFR 1b · ", label: "⟨cite.section⟩" };
+export const RULE: SourceRef = { kind: "rule", lead: "7 CFR 1b · ", label: "⟨cite.section⟩" };
 export const RECORD: SourceRef = {
+  kind: "record",
   lead: "Retrieved from the project record · ",
   label: "⟨record.path⟩"
 };
-export const DRAFTED: SourceRef = { lead: "Drafted by AI from ", label: "⟨corpus.basis⟩" };
+export const DRAFTED: SourceRef = { kind: "document", lead: "Drafted by AI from ", label: "⟨corpus.basis⟩" };
 export const DRAFTED_SET: SourceRef = {
+  kind: "document",
   lead: "Question and choices drafted by AI from ",
   label: "⟨corpus.basis⟩"
 };
 export const CALCULATED: SourceRef = {
+  kind: "inputs",
   lead: "Calculated from ",
   label: "⟨inputs⟩ earlier answers"
 };
 export const CHOICE_LIST: SourceRef = {
+  kind: "record",
   lead: "Choices from ",
   label: "⟨register.item.choice_list⟩"
 };
@@ -89,6 +95,41 @@ export const sessionOut: Region<Session> = absent(
   "⟨session.lookup⟩",
   [{ id: "sign-in", label: "Sign in", look: "primary", enabled: true }]
 );
+
+/* --- source overlay --- */
+
+export const sourceTitle: Record<SourceKind, string> = {
+  rule: "The rule, as written",
+  record: "The project record",
+  document: "Source document",
+  inputs: "Earlier answers used"
+};
+
+const sourceRef: Record<SourceKind, string> = {
+  rule: "7 CFR 1b · ⟨cite.section⟩",
+  record: "⟨record.path⟩",
+  document: "⟨corpus.basis⟩",
+  inputs: "⟨inputs.list⟩"
+};
+
+export function sourceFilled(kind: SourceKind): Region<SourceDocument> {
+  return filled<SourceDocument>({
+    reference: sourceRef[kind],
+    primary: "⟨source.excerpt⟩",
+    full: { label: "Open the full document ›", href: "#full-document" }
+  });
+}
+
+export const sourceAbsent: Region<SourceDocument> = absent(
+  "Nothing found in the project record",
+  "⟨register.item.retrieval_query⟩"
+);
+export const sourceBlocked: Region<SourceDocument> = blocked(
+  "Not ready yet",
+  "⟨earlier.answer⟩",
+  STEP_LINK
+);
+export const sourceUnresolved: Region<SourceDocument> = unresolved("This document could not be read");
 
 /* --- project band --- */
 

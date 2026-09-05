@@ -53,16 +53,3 @@
   text-wrap: pretty;
   overflow-wrap: anywhere;
 }
-
-.notes {
-  display: grid;
-  gap: var(--s-1);
-}
-
-.note {
-  font-size: var(--t-meta);
-  line-height: 1.5;
-  color: var(--ink-faint);
-  text-wrap: pretty;
-  overflow-wrap: anywhere;
-}

@@ -3,12 +3,8 @@ import { Button, HTMLTable, Icon, InputGroup } from "@blueprintjs/core";
 
 import type { Citable } from "@/ui/data/port";
 import {
-  CATALOGUE_EMPTY_REASON,
   PAGES,
-  REGULATION_CURRENCY,
-  REGULATION_NOTE,
   useCatalogue,
-  useIntegrity,
   useReference,
   useReferenceArtifact,
   useRegulation
@@ -31,13 +27,6 @@ const GROUPS = [
   { id: "catalogue", name: "Categorical exclusions", done: false }
 ];
 
-/** The integrity checks as one line, so they sit with the page's other
- *  caveats instead of in a box under the table. §6.6 asks for exactly this:
- *  one line, not a page. */
-function integrityLine(region: ReturnType<typeof useIntegrity>): string {
-  return region.state === "filled" ? region.value.join(" · ") : "Integrity checks unavailable";
-}
-
 /** Three values, not two. 25 rows carry classDeclared=false and a NULL
  *  citable, and a null meaning "not declared" and a null meaning "not
  *  applicable" are the same null. They do not render the same here. */
@@ -51,7 +40,6 @@ const CITABLE: Record<Citable, string> = {
  *  page in the application with real data in it. */
 export function ReferenceScreen() {
   const reference = useReference();
-  const integrity = useIntegrity();
   const [viewing, setViewing] = useState<string | null>(null);
   const [group, setGroup] = useState("corpus");
 
@@ -62,11 +50,6 @@ export function ReferenceScreen() {
           title={PAGES.reference.title}
           count={reference.state === "filled" ? reference.value.count : undefined}
           help={PAGES.reference.help}
-          notes={
-            group === "corpus" && reference.state === "filled"
-              ? [reference.value.hazard, integrityLine(integrity)]
-              : undefined
-          }
         />
 
         <TabStrip
@@ -183,7 +166,6 @@ function RegulationPanel() {
           <PageHead
             title="7 CFR part 1b, as pinned"
             count={page.pin}
-            notes={[REGULATION_CURRENCY, REGULATION_NOTE]}
           />
           <div>
             {page.sections.map((section) => (
@@ -252,7 +234,6 @@ function CataloguePanel() {
             <PageHead
               title="Categorical exclusions"
               help={page.split}
-              notes={[CATALOGUE_EMPTY_REASON]}
             />
             <HTMLTable className={shared.table}>
               <thead>
@@ -312,7 +293,7 @@ function ArtifactViewer({ id, onClose }: { id: string; onClose: () => void }) {
         </Region>
       </div>
       <div className={shared.dialogFooter}>
-        <span className={shared.meta}>⟨mediaSet.read⟩</span>
+        <span />
         <div className={shared.buttons}>
           <Button className={shared.secondary} onClick={onClose}>
             Close

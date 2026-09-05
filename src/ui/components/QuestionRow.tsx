@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Card, HTMLSelect, Icon, Radio, RadioGroup } from "@blueprintjs/core";
 
-import type { Answer, QuestionRow as Row } from "@/ui/data/port";
+import type { Answer, QuestionRow as Row, SourceKind } from "@/ui/data/port";
 import { Region } from "@/ui/components/Region";
 import { StatusMark } from "@/ui/components/StatusMark";
 
@@ -13,10 +13,12 @@ export function QuestionRow({
   row,
   open,
   onToggle,
+  onSource
 }: {
   row: Row;
   open: boolean;
   onToggle: (id: string) => void;
+  onSource: (kind: SourceKind) => void;
 }) {
   return (
     <Card
@@ -49,11 +51,11 @@ export function QuestionRow({
           ) : null}
           {row.gate ? (
             <p className={css.gate}>
-              Reserved to the {row.gate.reservedTo} — {row.gate.citation}.{" "}
-              {row.gate.held ? "You hold this." : row.gate.cannotVerify}
+              Reserved to the {row.gate.reservedTo} — {row.gate.citation}.
+              {row.gate.held ? " You hold this." : null}
             </p>
           ) : null}
-          <Region region={row.answer}>
+          <Region region={row.answer} onSource={onSource}>
             {(answer) => <AnswerBody answer={answer} />}
           </Region>
         </div>

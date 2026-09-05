@@ -11,7 +11,7 @@ Where the front end needs something the ontology does not yet support, the
 ontology is what changes. A declared gap is a note for the FDE, never a
 reason to redesign the screen.
 
-17 hooks declared · 15 with gaps · 2 answerable today.
+16 hooks declared · 15 with gaps · 1 answerable today.
 
 ## What each surface needs
 
@@ -30,14 +30,13 @@ reason to redesign the screen.
 | `useReference` — the corpus, faceted and searchable — the only page in the application with real data in it | answerable | a decision on what add means — upload, or recording an intent to add. No act adds or removes a corpus artifact, nothing syncs, and the build account is Viewer-only and permanently so |
 | `useReferenceArtifact` — one artifact in the viewer, opened at a cited page range | partial | a media-set read route for the viewer. Whether an OSDK front end can read those bytes, and by what route, is not answerable from the interface side; until it is, the card carries metadata, digest and page-range citation and the viewer is a slot that lights up later |
 | `useSession` — the signed-in officer, and the signed-out case | partial | a caller identity from the shell's OSDK provider; the officer's name and title are not on any object type |
+| `useSource` — the overlay that opens the primary source behind a value | partial | a media-set read route, so the overlay can show the cited page rather than its metadata |
 | `useSteps` — the step list for the determined pathway, and each step's tabs | backlog | anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1); element rows; the document → element → slot → claim spine traverses and all four types hold zero rows; per-step completion state, which is the same pathway state usePathway waits on; a lock signal per step: which steps the officer may open given what has been established. The front end derives it from intake completion alone today, which is the coarsest correct rule and not the intended one |
-| `useUnresolved` — every unresolved lane in the application, grouped by lane | partial | an ontology-side record of why a query returned nothing; the four-state contract is held by a repository artifact and nothing in the ontology records it |
 
 ## Surfaces the backend can answer today
 
 | for | verdict | reads |
 | --- | --- | --- |
-| `useIntegrity` — the one-line integrity strip: digests, pins and drift | answerable | check.corpusPin; check.forestPlanPin; check.regulationPin; check.regulationDrift |
 | `useRegulation` — the pinned 7 CFR part 1b, browsable by section, with per-section amendment dates | answerable | corpus.text; check.regulationPin; check.regulationDrift |
 
 "Answerable" means the shape and the act exist and are exercisable — not that
@@ -202,22 +201,6 @@ Rendered rather than hidden:
 - project holds 2 rows, both synthetic — one labelled 'C5 write-path tracer — safe to delete', one named 'lk' with every other field null. Anything that counts projects counts them (§6.3).
 - project rows live in the edits layer; signatureReady.project holds zero rows.
 
-### `useIntegrity`
-
-the one-line integrity strip: digests, pins and drift. Verdict: **answerable**. Required by §6.6 integrity strip; §1 what feeds them.
-
-| | |
-| --- | --- |
-| object types | — |
-| properties | — |
-| acts | — |
-| datasets | signatureReady.check.corpusPin; signatureReady.check.forestPlanPin; signatureReady.check.regulationPin; signatureReady.check.regulationDrift |
-
-Rendered rather than hidden:
-
-- 287 of 287 declared artifacts match on digest and length in both directions; 11 forest-plan sources pinned; regulation pin green; drift clean.
-- reg-36cfr220 is still a WARN, not a FAIL: two rows declare authorityClass=regulation and citable=true with supersededButClassedCurrent=true, while 36 CFR 220 was superseded on 2025-07-03 and 111 corpus artifacts are written under it.
-
 ### `useLearning`
 
 what the system proposed, what a human did with it, and whether it is calibrated. Verdict: **backlog**. Required by §6.5; §6.7.
@@ -239,6 +222,7 @@ Rendered rather than hidden:
 - Grounding is 0 live-model, 0 cassette, 103 template-substitution claims. No model call has happened and none can: the only configured provider host is an RFC-2606 .invalid domain and LiveHTTPTransport.invoke raises even with a credential set. The tile displays the real number (§6.5).
 - stamp-verifier-verdict still defaults to pass and can only be cleared by hand in Ontology Manager; since the act widened to accept fail on 2026-09-01, clause 3's pass-only requirement is held by nothing.
 - determinationEvidence has a declared evidence set for two of the five determinations and none for the other three, so those three report that nothing was asked rather than that nothing was found. That is the distinction working (§1).
+- Named as a future tile and not built: 1b.3(h) reliance on a prior CE determination is a genuine regulation-backed learning loop. §3 records precedent and prior_coverage in the spec and 51 artifacts in the prior-coverage corpus, and no object type records a reliance (§6.5).
 
 ### `usePathway`
 
@@ -302,6 +286,8 @@ Rendered rather than hidden:
 - 312 artifacts across seven media sets: 283 practice, 4 regulation, 25 undeclared.
 - citable carries three values, not two: 25 rows have classDeclared=false and a NULL citable, and the null is being asked to carry a refusal. Not-declared renders distinctly from not-citable (§1, §6.6).
 - Free-text search covers titles and metadata only. corpus.text holds 17 rows and zero PDF body text, so there is no body to search.
+- Integrity, from check.corpusPin, check.forestPlanPin, check.regulationPin and check.regulationDrift: 287 of 287 declared artifacts match on digest and length in both directions; 11 forest-plan sources pinned; regulation pin green; drift clean at 2026-08-25.
+- reg-36cfr220 is a WARN and not a FAIL: two rows declare authorityClass=regulation and citable=true with supersededButClassedCurrent=true, while 36 CFR 220 was superseded on 2025-07-03 and 111 corpus artifacts are written under it.
 
 ### `useReferenceArtifact`
 
@@ -362,6 +348,27 @@ Rendered rather than hidden:
 - Four acts write actorPrincipal from current_user_id, which makes the actor decidable against Multipass rather than trusted at write time (§1).
 - No platform predicate marks a user's class, so the session cannot answer whether this caller is the responsible official.
 
+### `useSource`
+
+the overlay that opens the primary source behind a value. Verdict: **partial**. Required by §5 document production; §6.6 the viewer.
+
+| | |
+| --- | --- |
+| object types | corpusArtifact; proposalRecordItem; incorporatedByReference |
+| properties | documentId; page; sha256; byteLength |
+| acts | — |
+| datasets | signatureReady.corpus.census; signatureReady.corpus.text |
+
+Needed:
+
+- a media-set read route, so the overlay can show the cited page rather than its metadata
+
+Rendered rather than hidden:
+
+- corpus.text holds 17 rows and zero PDF body text, so an excerpt cannot be quoted from a dataset today.
+- proposalRecordItem.documentId and incorporatedByReference.documentId refer to a pinned corpus artifact and never to a document object — a link there would be wrong, not merely empty (§1).
+- A person is not a source kind. An officer's name has no primary source behind it, so those lines are text and open nothing.
+
 ### `useSteps`
 
 the step list for the determined pathway, and each step's tabs. Verdict: **backlog**. Required by §7.1; §7.3–§7.7; §3 the documents.
@@ -385,23 +392,3 @@ Rendered rather than hidden:
 - Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).
 - The rail is three segments in one sequence, and the wiring must preserve the distinction. Steps 0–2 are shared and exist from the start. The pathway's own steps exist only once Step 2 fixes a pathway and are generated from that determination. §7.7's ten items are shared by every pathway, so each is a step of its own and they follow the pathway's steps.
 - A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all.
-
-### `useUnresolved`
-
-every unresolved lane in the application, grouped by lane. Verdict: **partial**. Required by §6.5 tile 6; §1 can a query distinguish.
-
-| | |
-| --- | --- |
-| object types | determinationEvidence; determination |
-| properties | whichDetermination |
-| acts | — |
-| datasets | — |
-
-Needed:
-
-- an ontology-side record of why a query returned nothing; the four-state contract is held by a repository artifact and nothing in the ontology records it
-
-Rendered rather than hidden:
-
-- unresolved is always a defect in this build. A defect state with no aggregate view is a defect nobody reads (§6.5).
-- Three of the five determinations correctly report unresolved even under the filled fixture.

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
 
 import type { ExpertStatus } from "@/ui/data/port";
-import { EXPERT_RETURN, EXPERT_TRIGGER, PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
+import { PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { ListControls } from "@/ui/components/ListControls";
 import { PageHead } from "@/ui/components/PageHead";
@@ -33,11 +33,6 @@ export function ExpertQScreen() {
           title={PAGES.experts.title}
           count={queue.state === "filled" ? queue.value.count : undefined}
           help={PAGES.experts.help}
-          notes={
-            queue.state === "filled"
-              ? [...queue.value.limits, EXPERT_TRIGGER, EXPERT_RETURN]
-              : [EXPERT_TRIGGER, EXPERT_RETURN]
-          }
         >
           {queue.state === "filled" ? (
             <ListControls filters={queue.value.filters} sorts={queue.value.sorts} />
@@ -129,7 +124,7 @@ function ComposeOverlay({
   const [body, setBody] = useState("");
 
   return (
-    <Overlay title="Request from a specialist" onClose={onClose}>
+    <Overlay title="Request specialist input" onClose={onClose}>
       <Region region={draft}>
         {(request) => (
           <>
@@ -151,7 +146,6 @@ function ComposeOverlay({
               <FormGroup className={css.field} label="Proposed recipient">
                 <InputGroup defaultValue={request.proposedRecipient} />
               </FormGroup>
-              <p className={css.meta}>{request.recipientNote}</p>
               <FormGroup className={css.field} label="Request">
                 <TextArea
                   rows={5}
@@ -163,9 +157,7 @@ function ComposeOverlay({
               <SourceLine source={request.regulatoryBasis} />
             </div>
             <div className={css.dialogFooter}>
-              <span className={css.meta}>
-                Sending performs signature-ready-package-expert-request
-              </span>
+              <span />
               <div className={css.buttons}>
                 <Button className={css.secondary} onClick={onClose}>
                   Cancel

@@ -45,6 +45,8 @@ export type {
   RowSpec,
   SectionIcon,
   Session,
+  SourceDocument,
+  SourceKind,
   SourceRef,
   StepEntry,
   StepMark,
@@ -52,8 +54,7 @@ export type {
   SubmitBar,
   TabEntry,
   TabSpec,
-  TileTone,
-  UnresolvedLane
+  TileTone
 } from "@/ui/data/types";
 
 import type {
@@ -73,20 +74,13 @@ import type {
   Region,
   Regulation,
   Session,
-  StepEntry,
-  UnresolvedLane
+  SourceDocument,
+  SourceKind,
+  StepEntry
 } from "@/ui/data/types";
 
-export { sectionsFor } from "@/ui/data/fixtures";
-export {
-  ARCHIVE_NOTE,
-  PAGES,
-  CATALOGUE_EMPTY_REASON,
-  EXPERT_RETURN,
-  REGULATION_CURRENCY,
-  EXPERT_TRIGGER,
-  REGULATION_NOTE
-} from "@/ui/data/support";
+export { sourceTitle, sectionsFor } from "@/ui/data/fixtures";
+export { PAGES } from "@/ui/data/support";
 export { CROSS_CUTTING, DOCUMENT_AUTHORITY, RETRIEVAL_PUSHES, TRIGGERS } from "@/ui/data/project";
 export { DISCRETIONS, PATHWAYS, PATHWAY_IDS, stepsFor } from "@/ui/data/pathways";
 
@@ -224,6 +218,14 @@ export function useElement(tabId: string): Region<ElementPanel> {
   return pj.panelRegion(pathway, params.stepId ?? "0", tabId, held, retrievalUp);
 }
 
+export function useSource(kind: SourceKind): Region<SourceDocument> {
+  const state = useScreenKey();
+  if (state === "absent") return fx.sourceAbsent;
+  if (state === "blocked") return fx.sourceBlocked;
+  if (state === "unresolved") return fx.sourceUnresolved;
+  return fx.sourceFilled(kind);
+}
+
 /* --- §6, the four supporting pages --- */
 
 /** Placeholder rows by default, as on the inbox — the page has to show what
@@ -278,10 +280,6 @@ export function useLearning(): Region<Learning> {
   }
 }
 
-export function useUnresolved(): Region<UnresolvedLane[]> {
-  return sp.unresolvedLanes;
-}
-
 export function useReference(): Region<Reference> {
   switch (useScreenKey()) {
     case "absent":
@@ -311,8 +309,4 @@ export function useRegulation(): Region<Regulation> {
  *  sit in ce_categories.json. */
 export function useCatalogue(): Region<Catalogue> {
   return useScreenKeyDefault("absent") === "filled" ? sp.catalogueFilled : sp.catalogueAbsent;
-}
-
-export function useIntegrity(): Region<string[]> {
-  return useScreenKey() === "unresolved" ? sp.integrityUnresolved : sp.integrityStrip;
 }

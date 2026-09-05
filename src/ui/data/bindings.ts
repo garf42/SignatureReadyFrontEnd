@@ -181,6 +181,24 @@ export const BINDINGS: Record<string, Binding> = {
     ]
   },
 
+  useSource: {
+    serves: "the overlay that opens the primary source behind a value",
+    objectTypes: ["corpusArtifact", "proposalRecordItem", "incorporatedByReference"],
+    properties: ["documentId", "page", "sha256", "byteLength"],
+    acts: [],
+    datasets: ["corpus.census", "corpus.text"],
+    requires: ["§5 document production", "§6.6 the viewer"],
+    status: "partial",
+    needed: [
+      "a media-set read route, so the overlay can show the cited page rather than its metadata"
+    ],
+    notes: [
+      "corpus.text holds 17 rows and zero PDF body text, so an excerpt cannot be quoted from a dataset today.",
+      "proposalRecordItem.documentId and incorporatedByReference.documentId refer to a pinned corpus artifact and never to a document object — a link there would be wrong, not merely empty (§1).",
+      "A person is not a source kind. An officer's name has no primary source behind it, so those lines are text and open nothing."
+    ]
+  },
+
   useArchive: {
     serves: "recently-deleted projects, ordered by archived date, with restore and purge",
     objectTypes: ["project"],
@@ -279,24 +297,8 @@ export const BINDINGS: Record<string, Binding> = {
     notes: [
       "Grounding is 0 live-model, 0 cassette, 103 template-substitution claims. No model call has happened and none can: the only configured provider host is an RFC-2606 .invalid domain and LiveHTTPTransport.invoke raises even with a credential set. The tile displays the real number (§6.5).",
       "stamp-verifier-verdict still defaults to pass and can only be cleared by hand in Ontology Manager; since the act widened to accept fail on 2026-09-01, clause 3's pass-only requirement is held by nothing.",
-      "determinationEvidence has a declared evidence set for two of the five determinations and none for the other three, so those three report that nothing was asked rather than that nothing was found. That is the distinction working (§1)."
-    ]
-  },
-
-  useUnresolved: {
-    serves: "every unresolved lane in the application, grouped by lane",
-    objectTypes: ["determinationEvidence", "determination"],
-    properties: ["whichDetermination"],
-    acts: [],
-    datasets: [],
-    requires: ["§6.5 tile 6", "§1 can a query distinguish"],
-    status: "partial",
-    needed: [
-      "an ontology-side record of why a query returned nothing; the four-state contract is held by a repository artifact and nothing in the ontology records it"
-    ],
-    notes: [
-      "unresolved is always a defect in this build. A defect state with no aggregate view is a defect nobody reads (§6.5).",
-      "Three of the five determinations correctly report unresolved even under the filled fixture."
+      "determinationEvidence has a declared evidence set for two of the five determinations and none for the other three, so those three report that nothing was asked rather than that nothing was found. That is the distinction working (§1).",
+      "Named as a future tile and not built: 1b.3(h) reliance on a prior CE determination is a genuine regulation-backed learning loop. §3 records precedent and prior_coverage in the spec and 51 artifacts in the prior-coverage corpus, and no object type records a reliance (§6.5)."
     ]
   },
 
@@ -332,7 +334,9 @@ export const BINDINGS: Record<string, Binding> = {
     notes: [
       "312 artifacts across seven media sets: 283 practice, 4 regulation, 25 undeclared.",
       "citable carries three values, not two: 25 rows have classDeclared=false and a NULL citable, and the null is being asked to carry a refusal. Not-declared renders distinctly from not-citable (§1, §6.6).",
-      "Free-text search covers titles and metadata only. corpus.text holds 17 rows and zero PDF body text, so there is no body to search."
+      "Free-text search covers titles and metadata only. corpus.text holds 17 rows and zero PDF body text, so there is no body to search.",
+      "Integrity, from check.corpusPin, check.forestPlanPin, check.regulationPin and check.regulationDrift: 287 of 287 declared artifacts match on digest and length in both directions; 11 forest-plan sources pinned; regulation pin green; drift clean at 2026-08-25.",
+      "reg-36cfr220 is a WARN and not a FAIL: two rows declare authorityClass=regulation and citable=true with supersededButClassedCurrent=true, while 36 CFR 220 was superseded on 2025-07-03 and 111 corpus artifacts are written under it."
     ]
   },
 
@@ -386,21 +390,6 @@ export const BINDINGS: Record<string, Binding> = {
       "39 categories at 1b.4(c) require no documentation; 48 at 1b.4(d) require a FANEC. §2 re-derives 87 from the pinned text, so the file and the rule agree.",
       "project_screened_against_category is the correct link type and is vacuous at the target end: both it and category hold zero rows.",
       "Until the rows land the section renders empty and says why (§6.6)."
-    ]
-  },
-
-  useIntegrity: {
-    serves: "the one-line integrity strip: digests, pins and drift",
-    objectTypes: [],
-    properties: [],
-    acts: [],
-    datasets: ["check.corpusPin", "check.forestPlanPin", "check.regulationPin", "check.regulationDrift"],
-    requires: ["§6.6 integrity strip", "§1 what feeds them"],
-    status: "answerable",
-    needed: [],
-    notes: [
-      "287 of 287 declared artifacts match on digest and length in both directions; 11 forest-plan sources pinned; regulation pin green; drift clean.",
-      "reg-36cfr220 is still a WARN, not a FAIL: two rows declare authorityClass=regulation and citable=true with supersededButClassedCurrent=true, while 36 CFR 220 was superseded on 2025-07-03 and 111 corpus artifacts are written under it."
     ]
   }
 };

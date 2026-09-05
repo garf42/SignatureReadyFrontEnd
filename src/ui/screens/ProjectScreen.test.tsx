@@ -91,9 +91,10 @@ describe("the signature gate — §7.2", () => {
     expect(screen.queryByText("Route for signature")).toBeNull();
   });
 
-  it("never claims to have verified the credential", () => {
-    openRows(at("/projects/p1/steps/4/fanec?pathway=P2").container);
-    expect(screen.getAllByText(/No platform predicate marks a caller's class/).length).toBeGreaterThan(0);
+  it("names the gate without explaining the backend behind it", () => {
+    const container = openRows(at("/projects/p1/steps/4/fanec?pathway=P2").container);
+    expect(container.textContent).not.toMatch(/platform predicate/);
+    expect(screen.getAllByText(/Reserved to the responsible official/).length).toBeGreaterThan(0);
   });
 
   it("leaves the EA ungated at every row", () => {

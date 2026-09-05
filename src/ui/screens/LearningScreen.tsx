@@ -1,7 +1,5 @@
-import type { ReactNode } from "react";
-
 import type { LearningTile } from "@/ui/data/port";
-import { PAGES, useLearning, useUnresolved } from "@/ui/data/port";
+import { PAGES, useLearning } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
 import { Region } from "@/ui/components/Region";
@@ -9,57 +7,24 @@ import { Region } from "@/ui/components/Region";
 import css from "@/ui/screens/LearningScreen.module.css";
 import shared from "@/ui/screens/Support.module.css";
 
-/** §6.5, Level 3. One measurement per row, top to bottom: the figure against a
- *  fixed left edge, and beside it the prose that qualifies it.
- *
- *  Nothing here collapses. These are eight facts about the build, all of them
- *  short, and hiding them behind a control only made a reader work to find out
- *  that a zero is honest. §6.5 suggested a grid; §6 leaves layout to the
- *  builder, and rows keep the figures on one scanline. No sparklines: there
- *  are no series behind these numbers. */
+/** §6.5, Level 3. One card per measurement: the figure, what it counts, and a
+ *  sentence saying what it measures. Nothing collapses and nothing is hidden —
+ *  these are eight facts about the build and they all fit on the page. */
 export function LearningScreen() {
   const learning = useLearning();
-  const lanes = useUnresolved();
 
   return (
     <AppFrame current="learning">
       <div className={shared.stack}>
-        <PageHead
-          title={PAGES.learning.title}
-          help={PAGES.learning.help}
-          notes={learning.state === "filled" ? [learning.value.notBuilt] : undefined}
-        />
+        <PageHead title={PAGES.learning.title} help={PAGES.learning.help} />
 
-        <Region region={learning}>
+        <Region region={learning} variant="page">
           {(page) => (
-            <>
-              <div className={css.rows}>
-                {[...page.status, ...page.tiles].map((tile) => (
-                  <Row key={tile.id} tile={tile}>
-                    {tile.id === "unresolved" ? (
-                      <Region region={lanes}>
-                        {(rows) => (
-                          <div className={css.lanes}>
-                            {rows.map((lane) => (
-                              <div key={lane.lane} className={css.lane}>
-                                <p className={css.laneName}>{lane.lane}</p>
-                                <p className={css.detailLine}>{lane.reason}</p>
-                                <p className={css.laneMeta}>
-                                  {lane.correct
-                                    ? "Correct: the distinction working, not a failure."
-                                    : "A defect. Report it."}
-                                </p>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </Region>
-                    ) : null}
-                  </Row>
-                ))}
-              </div>
-
-            </>
+            <div className={css.grid}>
+              {[...page.status, ...page.tiles].map((tile) => (
+                <Card key={tile.id} tile={tile} />
+              ))}
+            </div>
           )}
         </Region>
       </div>
@@ -67,23 +32,13 @@ export function LearningScreen() {
   );
 }
 
-function Row({ tile, children }: { tile: LearningTile; children?: ReactNode }) {
+function Card({ tile }: { tile: LearningTile }) {
   return (
-    <div className={css.row} data-tone={tile.tone}>
-      <div className={css.metric}>
-        <p className={css.title}>{tile.title}</p>
-        <p className={css.figure}>{tile.figure}</p>
-        <p className={css.unit}>{tile.unit}</p>
-      </div>
-      <div className={css.prose}>
-        <p className={css.note}>{tile.note}</p>
-        {tile.detail.map((line) => (
-          <p key={line} className={css.detailLine}>
-            {line}
-          </p>
-        ))}
-        {children}
-      </div>
+    <div className={css.card} data-tone={tile.tone}>
+      <p className={css.title}>{tile.title}</p>
+      <p className={css.figure}>{tile.figure}</p>
+      <p className={css.unit}>{tile.unit}</p>
+      <p className={css.note}>{tile.note}</p>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@blueprintjs/core";
 
-import { ARCHIVE_NOTE, PAGES, useArchive } from "@/ui/data/port";
+import { PAGES, useArchive } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Overlay } from "@/ui/components/Overlay";
 import { PageHead } from "@/ui/components/PageHead";
@@ -31,7 +31,6 @@ export function ArchiveScreen() {
           title={PAGES.archive.title}
           count={archive.state === "filled" ? archive.value.count : undefined}
           help={PAGES.archive.help}
-          notes={[ARCHIVE_NOTE]}
         />
 
         <Region region={archive} variant="page">
@@ -50,7 +49,7 @@ export function ArchiveScreen() {
                   summary: row.summary,
                   meta: row.meta,
                   source: row.archivedBy,
-                  sourceNote: "Who archived it is not recorded — no act writes an actor for it."
+                  sourceNote: "Archived by ⟨not recorded⟩"
                 })
               )}
               actions={(row) => (
