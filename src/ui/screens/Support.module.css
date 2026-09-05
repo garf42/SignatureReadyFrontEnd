@@ -229,3 +229,28 @@
 .queueTable td:last-child {
   width: 104px;
 }
+
+/* Facts the overlay was assembled from: read, not edited. */
+.facts {
+  display: grid;
+  grid-template-columns: 130px minmax(0, 1fr);
+  gap: 2px var(--s-3);
+  margin: 0;
+  padding: var(--s-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  background: var(--well);
+}
+
+.facts dt {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: var(--t-meta);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}

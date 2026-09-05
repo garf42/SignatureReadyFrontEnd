@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Button, Dialog, FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
+import { Button, FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
 
-import type { SourceKind } from "@/ui/data/port";
 import { useSession } from "@/ui/data/port";
+import { Overlay } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 import { SourceLine } from "@/ui/components/SourceLine";
 import { FIRST_TAB, projectPath, withSearch } from "@/ui/routes";
@@ -21,10 +21,8 @@ import css from "@/ui/components/IntakeDialog.module.css";
  *  itself needs. */
 export function IntakeDialog({
   onClose,
-  onSource
 }: {
   onClose: () => void;
-  onSource: (kind: SourceKind) => void;
 }) {
   const session = useSession();
   const navigate = useNavigate();
@@ -34,7 +32,7 @@ export function IntakeDialog({
   const [start, setStart] = useState("");
 
   return (
-    <Dialog isOpen title="Start a project" onClose={onClose}>
+    <Overlay title="Start a project" onClose={onClose}>
       <div className={css.body}>
         <FormGroup className={css.field} label="Project name">
           <InputGroup
@@ -70,8 +68,8 @@ export function IntakeDialog({
         </p>
       </div>
       <div className={css.footer}>
-        <Region region={session} onSource={onSource}>
-          {(who) => <SourceLine source={{ ...who.officer, lead: "Starting as " }} onOpen={onSource} />}
+        <Region region={session}>
+          {(who) => <SourceLine source={{ ...who.officer, lead: "Starting as " }} />}
         </Region>
         <div className={css.buttons}>
           <Button className={css.secondary} onClick={onClose}>
@@ -87,6 +85,6 @@ export function IntakeDialog({
           </Button>
         </div>
       </div>
-    </Dialog>
+    </Overlay>
   );
 }

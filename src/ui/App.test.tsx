@@ -289,9 +289,7 @@ describe("Expert Q shows the queue and its compose overlay — §6.4", () => {
     fireEvent.click(container.querySelector("tbody tr") as HTMLElement);
     expect(screen.getByText("Request from a specialist")).toBeTruthy();
     expect(screen.getByText(/signature-ready-package-expert-request/)).toBeTruthy();
-    expect(
-      screen.getByDisplayValue(/Extraordinary-circumstance finding returned present/)
-    ).toBeTruthy();
+    expect(screen.getByText(/Extraordinary-circumstance finding returned present/)).toBeTruthy();
     fireEvent.click(screen.getByText("Cancel"));
     expect(screen.queryByText("Request from a specialist")).toBeNull();
   });
@@ -350,5 +348,15 @@ describe("a record row states who, without a citation link", () => {
     fireEvent.click(within(group).getByLabelText("Show the details"));
     expect(within(group).getByText(/Started by/)).toBeTruthy();
     expect(group.querySelector("a")).toBeNull();
+  });
+});
+
+describe("provenance is a note, not a link", () => {
+  it("states where a value came from without offering an overlay", () => {
+    const { container } = at("/projects/p1/steps/0/timing");
+    fireEvent.click(within(container).getAllByRole("button", { expanded: false })[1]);
+    expect(screen.getAllByText(/Choices from/).length).toBeGreaterThan(0);
+    // No source link anywhere on the panel: the overlay is gone, not hidden.
+    expect(container.querySelector("[class*='panelBox'] a")).toBeNull();
   });
 });

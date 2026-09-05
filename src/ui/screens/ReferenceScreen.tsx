@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Button, Dialog, HTMLTable, Icon, InputGroup } from "@blueprintjs/core";
+import { Button, HTMLTable, Icon, InputGroup } from "@blueprintjs/core";
 
-import type { Citable, SourceKind } from "@/ui/data/port";
+import type { Citable } from "@/ui/data/port";
 import {
   CATALOGUE_EMPTY_REASON,
   PAGES,
@@ -16,9 +16,9 @@ import {
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
 import { ListControls } from "@/ui/components/ListControls";
+import { Overlay } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
-import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/ReferenceScreen.module.css";
 import shared from "@/ui/screens/Support.module.css";
@@ -52,7 +52,6 @@ const CITABLE: Record<Citable, string> = {
 export function ReferenceScreen() {
   const reference = useReference();
   const integrity = useIntegrity();
-  const [source, setSource] = useState<SourceKind | null>(null);
   const [viewing, setViewing] = useState<string | null>(null);
   const [group, setGroup] = useState("corpus");
 
@@ -78,7 +77,7 @@ export function ReferenceScreen() {
         />
 
         {group === "corpus" ? (
-          <Region region={reference} onSource={setSource} variant="page">
+          <Region region={reference} variant="page">
             {(page) => (
               <>
                 <div className={css.split}>
@@ -165,21 +164,20 @@ export function ReferenceScreen() {
           </Region>
         ) : null}
 
-        {group === "regulation" ? <RegulationPanel onSource={setSource} /> : null}
-        {group === "catalogue" ? <CataloguePanel onSource={setSource} /> : null}
+        {group === "regulation" ? <RegulationPanel /> : null}
+        {group === "catalogue" ? <CataloguePanel /> : null}
       </div>
 
       {viewing ? <ArtifactViewer id={viewing} onClose={() => setViewing(null)} /> : null}
-      {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
     </AppFrame>
   );
 }
 
-function RegulationPanel({ onSource }: { onSource: (kind: SourceKind) => void }) {
+function RegulationPanel() {
   const regulation = useRegulation();
   const [open, setOpen] = useState<Record<string, boolean>>({});
   return (
-    <Region region={regulation} onSource={onSource}>
+    <Region region={regulation}>
       {(page) => (
         <>
           <PageHead
@@ -244,11 +242,11 @@ function RegulationPanel({ onSource }: { onSource: (kind: SourceKind) => void })
   );
 }
 
-function CataloguePanel({ onSource }: { onSource: (kind: SourceKind) => void }) {
+function CataloguePanel() {
   const catalogue = useCatalogue();
   return (
     <>
-      <Region region={catalogue} onSource={onSource}>
+      <Region region={catalogue}>
         {(page) => (
           <>
             <PageHead
@@ -288,9 +286,9 @@ function CataloguePanel({ onSource }: { onSource: (kind: SourceKind) => void }) 
 function ArtifactViewer({ id, onClose }: { id: string; onClose: () => void }) {
   const view = useReferenceArtifact(id);
   return (
-    <Dialog isOpen title="Corpus artifact" onClose={onClose}>
+    <Overlay title="Corpus artifact" onClose={onClose}>
       <div className={shared.dialogBody}>
-        <Region region={view} onSource={() => undefined}>
+        <Region region={view}>
           {(artifact) => (
             <>
               <p className={shared.name}>{artifact.row.title}</p>
@@ -321,6 +319,6 @@ function ArtifactViewer({ id, onClose }: { id: string; onClose: () => void }) {
           </Button>
         </div>
       </div>
-    </Dialog>
+    </Overlay>
   );
 }

@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@blueprintjs/core";
 
-import type { SourceKind } from "@/ui/data/port";
 import { useInbox } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { IntakeDialog } from "@/ui/components/IntakeDialog";
@@ -11,7 +10,6 @@ import { PageHead } from "@/ui/components/PageHead";
 import { RecordTable } from "@/ui/components/RecordTable";
 import type { RecordRow } from "@/ui/components/RecordTable";
 import { Region } from "@/ui/components/Region";
-import { SourceOverlay } from "@/ui/components/SourceOverlay";
 import { FIRST_TAB, projectPath, withSearch } from "@/ui/routes";
 
 import table from "@/ui/components/RecordTable.module.css";
@@ -20,7 +18,6 @@ export function InboxScreen() {
   const inbox = useInbox();
   const navigate = useNavigate();
   const { search } = useLocation();
-  const [source, setSource] = useState<SourceKind | null>(null);
   const [intake, setIntake] = useState(false);
 
   return (
@@ -38,7 +35,7 @@ export function InboxScreen() {
         ) : null}
       </PageHead>
 
-      <Region region={inbox} onSource={setSource} onAction={() => setIntake(true)} variant="page">
+      <Region region={inbox} onAction={() => setIntake(true)} variant="page">
         {(list) => (
           <RecordTable
             heads={["Project", "Changed", "Where it is", "Status"]}
@@ -72,9 +69,7 @@ export function InboxScreen() {
           />
         )}
       </Region>
-
-      {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
-      {intake ? <IntakeDialog onClose={() => setIntake(false)} onSource={setSource} /> : null}
+      {intake ? <IntakeDialog onClose={() => setIntake(false)} /> : null}
     </AppFrame>
   );
 }

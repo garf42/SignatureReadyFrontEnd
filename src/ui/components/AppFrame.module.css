@@ -33,9 +33,12 @@
 
 /* Both tracks are minmax(0, …): without it a grid child keeps its intrinsic
    width, and the collapsed pane's rules run on under the page beside it. */
+/* Wide enough for the longest section name and no wider: "Reference" ends at
+   101px from the pane's edge, so 116px gives it the same 12px gutter on the
+   right that the icon has on the left. */
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 116px) minmax(0, 1fr);
   align-items: start;
 }
 

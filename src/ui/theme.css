@@ -220,7 +220,10 @@ textarea.bp6-input {
   border-radius: var(--radius-overlay);
   box-shadow: var(--shadow-overlay);
   padding-bottom: 0;
-  max-height: calc(100vh - 64px);
+  /* A fixed ceiling as well as a viewport one. The app is embedded, and in a
+     frame taller than the reader's view a viewport-relative cap is no cap at
+     all — the dialog centres in the frame and its top sits above the view. */
+  max-height: min(520px, calc(100vh - 64px));
   overflow-y: auto;
   overscroll-behavior: contain;
 }

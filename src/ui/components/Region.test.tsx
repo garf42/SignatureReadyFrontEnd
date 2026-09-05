@@ -6,8 +6,6 @@ import { absent, blocked, filled, unresolved } from "@/ui/data/fixtures";
 
 afterEach(cleanup);
 
-const nothing = () => undefined;
-
 /** The distinction the whole application rests on. absent is an answer about
  *  the world; blocked is a precondition; unresolved is a defect. A component
  *  that collapses them is the signature defect §1 names, so it is checked
@@ -15,7 +13,7 @@ const nothing = () => undefined;
 describe("the four states", () => {
   it("carries the state in data-state and never in words on the screen", () => {
     const { container } = render(
-      <Region region={absent<string>("Nothing found", "⟨query⟩")} onSource={nothing}>
+      <Region region={absent<string>("Nothing found", "⟨query⟩")}>
         {(v) => <p>{v}</p>}
       </Region>
     );
@@ -27,7 +25,7 @@ describe("the four states", () => {
 
   it("renders a filled value through the child, and nothing else", () => {
     const { container } = render(
-      <Region region={filled("⟨value⟩")} onSource={nothing}>
+      <Region region={filled("⟨value⟩")}>
         {(v) => <p>{v}</p>}
       </Region>
     );
@@ -37,7 +35,7 @@ describe("the four states", () => {
 
   it("shows the query an absent region ran, because that is the answer", () => {
     render(
-      <Region region={absent<string>("Nothing found in the project record", "⟨record.query⟩")} onSource={nothing}>
+      <Region region={absent<string>("Nothing found in the project record", "⟨record.query⟩")}>
         {(v) => <p>{v}</p>}
       </Region>
     );
@@ -46,7 +44,7 @@ describe("the four states", () => {
 
   it("names what a blocked region waits on", () => {
     render(
-      <Region region={blocked<string>("Not ready yet", "an earlier answer")} onSource={nothing}>
+      <Region region={blocked<string>("Not ready yet", "an earlier answer")}>
         {(v) => <p>{v}</p>}
       </Region>
     );
@@ -55,7 +53,7 @@ describe("the four states", () => {
 
   it("names the defect behind an unresolved region", () => {
     render(
-      <Region region={unresolved<string>("No answer came back", "the lane could not run")} onSource={nothing}>
+      <Region region={unresolved<string>("No answer came back", "the lane could not run")}>
         {(v) => <p>{v}</p>}
       </Region>
     );
@@ -64,13 +62,13 @@ describe("the four states", () => {
 
   it("tells absent and blocked apart in the markup, not only in the copy", () => {
     const a = render(
-      <Region region={absent<string>("Nothing found", "⟨q⟩")} onSource={nothing}>
+      <Region region={absent<string>("Nothing found", "⟨q⟩")}>
         {(v) => <p>{v}</p>}
       </Region>
     ).container.querySelector("[data-state]")?.getAttribute("data-state");
     cleanup();
     const b = render(
-      <Region region={blocked<string>("Not ready yet", "⟨earlier⟩")} onSource={nothing}>
+      <Region region={blocked<string>("Not ready yet", "⟨earlier⟩")}>
         {(v) => <p>{v}</p>}
       </Region>
     ).container.querySelector("[data-state]")?.getAttribute("data-state");

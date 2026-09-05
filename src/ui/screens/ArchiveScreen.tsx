@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { Button, Dialog } from "@blueprintjs/core";
+import { Button } from "@blueprintjs/core";
 
-import type { SourceKind } from "@/ui/data/port";
 import { ARCHIVE_NOTE, PAGES, useArchive } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
+import { Overlay } from "@/ui/components/Overlay";
 import { PageHead } from "@/ui/components/PageHead";
 import { RecordTable } from "@/ui/components/RecordTable";
 import type { RecordRow } from "@/ui/components/RecordTable";
 import { Region } from "@/ui/components/Region";
-import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/Support.module.css";
 import table from "@/ui/components/RecordTable.module.css";
@@ -23,7 +22,6 @@ import table from "@/ui/components/RecordTable.module.css";
  *  until an archived state on `project` exists to read. */
 export function ArchiveScreen() {
   const archive = useArchive();
-  const [source, setSource] = useState<SourceKind | null>(null);
   const [purging, setPurging] = useState<string | null>(null);
 
   return (
@@ -36,7 +34,7 @@ export function ArchiveScreen() {
           notes={[ARCHIVE_NOTE]}
         />
 
-        <Region region={archive} onSource={setSource} variant="page">
+        <Region region={archive} variant="page">
           {(page) => (
             <RecordTable
               heads={["Project", "Archived", "Where it was", "Status"]}
@@ -69,7 +67,8 @@ export function ArchiveScreen() {
 
       </div>
 
-      <Dialog isOpen={purging !== null} title="Delete permanently" onClose={() => setPurging(null)}>
+      {purging !== null ? (
+        <Overlay title="Delete permanently" onClose={() => setPurging(null)}>
         <div className={css.dialogBody}>
           <p className={css.note}>
             This removes the project and everything recorded against it. It cannot be undone, and no
@@ -87,9 +86,8 @@ export function ArchiveScreen() {
             </Button>
           </div>
         </div>
-      </Dialog>
-
-      {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
+        </Overlay>
+      ) : null}
     </AppFrame>
   );
 }

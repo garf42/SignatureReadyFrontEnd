@@ -9,14 +9,11 @@
  */
 export type RegionState = "filled" | "absent" | "blocked" | "unresolved";
 
-export type SourceKind = "rule" | "record" | "document" | "person" | "inputs";
-
-/** Every reference to a source is a link that opens the primary source. */
+/** Where a value came from, stated on the line under it. */
 export interface SourceRef {
-  kind: SourceKind;
-  /** Plain words before the link, e.g. "Retrieved from the project record · ". */
+  /** Plain words first, e.g. "Retrieved from the project record · ". */
   lead: string;
-  /** The link text, always a register-supplied marker. */
+  /** The address itself, always a register-supplied marker. */
   label: string;
 }
 
@@ -144,12 +141,6 @@ export interface Inbox {
   filters: string[];
   sorts: string[];
   projects: ProjectRow[];
-}
-
-export interface SourceDocument {
-  reference: string;
-  primary: string;
-  full: Destination;
 }
 
 export interface Session {

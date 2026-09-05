@@ -1,12 +1,10 @@
-import { useState } from "react";
 import type { ReactNode } from "react";
 
-import type { LearningTile, SourceKind } from "@/ui/data/port";
+import type { LearningTile } from "@/ui/data/port";
 import { PAGES, useLearning, useUnresolved } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
 import { Region } from "@/ui/components/Region";
-import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/LearningScreen.module.css";
 import shared from "@/ui/screens/Support.module.css";
@@ -22,7 +20,6 @@ import shared from "@/ui/screens/Support.module.css";
 export function LearningScreen() {
   const learning = useLearning();
   const lanes = useUnresolved();
-  const [source, setSource] = useState<SourceKind | null>(null);
 
   return (
     <AppFrame current="learning">
@@ -33,14 +30,14 @@ export function LearningScreen() {
           notes={learning.state === "filled" ? [learning.value.notBuilt] : undefined}
         />
 
-        <Region region={learning} onSource={setSource}>
+        <Region region={learning}>
           {(page) => (
             <>
               <div className={css.rows}>
                 {[...page.status, ...page.tiles].map((tile) => (
                   <Row key={tile.id} tile={tile}>
                     {tile.id === "unresolved" ? (
-                      <Region region={lanes} onSource={setSource}>
+                      <Region region={lanes}>
                         {(rows) => (
                           <div className={css.lanes}>
                             {rows.map((lane) => (
@@ -66,8 +63,6 @@ export function LearningScreen() {
           )}
         </Region>
       </div>
-
-      {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
     </AppFrame>
   );
 }

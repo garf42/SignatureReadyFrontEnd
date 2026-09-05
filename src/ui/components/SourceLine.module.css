@@ -4,3 +4,7 @@
   color: var(--ink-soft);
   overflow-wrap: anywhere;
 }
+
+.label {
+  color: var(--ink);
+}

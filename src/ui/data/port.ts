@@ -45,8 +45,6 @@ export type {
   RowSpec,
   SectionIcon,
   Session,
-  SourceDocument,
-  SourceKind,
   SourceRef,
   StepEntry,
   StepMark,
@@ -75,13 +73,11 @@ import type {
   Region,
   Regulation,
   Session,
-  SourceDocument,
-  SourceKind,
   StepEntry,
   UnresolvedLane
 } from "@/ui/data/types";
 
-export { sourceTitle, sectionsFor } from "@/ui/data/fixtures";
+export { sectionsFor } from "@/ui/data/fixtures";
 export {
   ARCHIVE_NOTE,
   PAGES,
@@ -226,14 +222,6 @@ export function useElement(tabId: string): Region<ElementPanel> {
   if (state === "blocked") return pj.elementBlockedSpec;
   if (state === "unresolved") return pj.elementUnresolvedSpec;
   return pj.panelRegion(pathway, params.stepId ?? "0", tabId, held, retrievalUp);
-}
-
-export function useSource(kind: SourceKind): Region<SourceDocument> {
-  const state = useScreenKey();
-  if (state === "absent") return fx.sourceAbsent;
-  if (state === "blocked") return fx.sourceBlocked;
-  if (state === "unresolved") return fx.sourceUnresolved;
-  return fx.sourceFilled(kind);
 }
 
 /* --- §6, the four supporting pages --- */

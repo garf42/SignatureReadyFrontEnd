@@ -181,23 +181,6 @@ export const BINDINGS: Record<string, Binding> = {
     ]
   },
 
-  useSource: {
-    serves: "the overlay that opens the primary source behind any value",
-    objectTypes: ["corpusArtifact", "proposalRecordItem", "incorporatedByReference"],
-    properties: ["documentId", "page", "sha256", "byteLength"],
-    acts: [],
-    datasets: ["corpus.census", "corpus.text"],
-    requires: ["§5 document production", "§6.6 the viewer"],
-    status: "partial",
-    needed: [
-      "a media-set read route, so the overlay can show the cited page rather than its metadata"
-    ],
-    notes: [
-      "corpus.text holds 17 rows and zero PDF body text, so an excerpt cannot be quoted from a dataset today.",
-      "proposalRecordItem.documentId and incorporatedByReference.documentId refer to a pinned corpus artifact and never to a document object — a link there would be wrong, not merely empty (§1)."
-    ]
-  },
-
   useArchive: {
     serves: "recently-deleted projects, ordered by archived date, with restore and purge",
     objectTypes: ["project"],

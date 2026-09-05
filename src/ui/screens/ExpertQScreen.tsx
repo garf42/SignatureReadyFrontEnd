@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Button, Dialog, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
+import { Button, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
 
-import type { ExpertStatus, SourceKind } from "@/ui/data/port";
-import { EXPERT_TRIGGER, PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
+import type { ExpertStatus } from "@/ui/data/port";
+import { EXPERT_RETURN, EXPERT_TRIGGER, PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { ListControls } from "@/ui/components/ListControls";
 import { PageHead } from "@/ui/components/PageHead";
+import { Overlay } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 import { SourceLine } from "@/ui/components/SourceLine";
-import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/Support.module.css";
 
@@ -24,7 +24,6 @@ const STATUS: Record<ExpertStatus, string> = {
  *  above the queue, and closing it returns to the table. */
 export function ExpertQScreen() {
   const queue = useExpertQueue();
-  const [source, setSource] = useState<SourceKind | null>(null);
   const [composing, setComposing] = useState<string | null>(null);
 
   return (
@@ -34,14 +33,18 @@ export function ExpertQScreen() {
           title={PAGES.experts.title}
           count={queue.state === "filled" ? queue.value.count : undefined}
           help={PAGES.experts.help}
-          notes={queue.state === "filled" ? [...queue.value.limits, EXPERT_TRIGGER] : [EXPERT_TRIGGER]}
+          notes={
+            queue.state === "filled"
+              ? [...queue.value.limits, EXPERT_TRIGGER, EXPERT_RETURN]
+              : [EXPERT_TRIGGER, EXPERT_RETURN]
+          }
         >
           {queue.state === "filled" ? (
             <ListControls filters={queue.value.filters} sorts={queue.value.sorts} />
           ) : null}
         </PageHead>
 
-        <Region region={queue} onSource={setSource} variant="page">
+        <Region region={queue} variant="page">
           {(page) => (
             <>
               <HTMLTable className={css.table + " " + css.queueTable}>
@@ -65,7 +68,7 @@ export function ExpertQScreen() {
                         {row.expert}
                         <p className={css.meta}>{row.qualification}</p>
                         {row.sentBy ? (
-                          <SourceLine source={row.sentBy} onOpen={setSource} />
+                          <SourceLine source={row.sentBy} />
                         ) : (
                           <p className={css.cell + " " + css.faint}>Sender not recorded</p>
                         )}
@@ -110,9 +113,8 @@ export function ExpertQScreen() {
       </div>
 
       {composing ? (
-        <ComposeOverlay onClose={() => setComposing(null)} onSource={setSource} />
+        <ComposeOverlay onClose={() => setComposing(null)} />
       ) : null}
-      {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
     </AppFrame>
   );
 }
@@ -120,45 +122,45 @@ export function ExpertQScreen() {
 /** Mounted only while a request is open, so the hook below runs unconditionally. */
 function ComposeOverlay({
   onClose,
-  onSource
 }: {
   onClose: () => void;
-  onSource: (kind: SourceKind) => void;
 }) {
   const draft = useExpertRequest();
   const [body, setBody] = useState("");
 
   return (
-    <Dialog isOpen title="Request from a specialist" onClose={onClose}>
-      <Region region={draft} onSource={onSource}>
+    <Overlay title="Request from a specialist" onClose={onClose}>
+      <Region region={draft}>
         {(request) => (
           <>
             <div className={css.dialogBody}>
               <p className={css.meta}>
                 {request.project} · {request.uniqueIdentificationNumber}
               </p>
-              <FormGroup className={css.field} label="Trigger">
-                <InputGroup readOnly value={request.trigger} />
-              </FormGroup>
-              <FormGroup className={css.field} label="Artifact awaited">
-                <InputGroup readOnly value={request.artifactAwaited} />
-              </FormGroup>
-              <FormGroup className={css.field} label="Expected return">
-                <InputGroup readOnly value={request.expectedReturn} />
-              </FormGroup>
+              {/* The three facts the request is assembled from are read, not
+                  edited, so they are a list rather than three disabled fields
+                  taking a form row each. */}
+              <dl className={css.facts}>
+                <dt>Trigger</dt>
+                <dd>{request.trigger}</dd>
+                <dt>Artifact awaited</dt>
+                <dd>{request.artifactAwaited}</dd>
+                <dt>Expected return</dt>
+                <dd>{request.expectedReturn}</dd>
+              </dl>
               <FormGroup className={css.field} label="Proposed recipient">
                 <InputGroup defaultValue={request.proposedRecipient} />
               </FormGroup>
               <p className={css.meta}>{request.recipientNote}</p>
               <FormGroup className={css.field} label="Request">
                 <TextArea
-                  rows={6}
+                  rows={5}
                   placeholder={request.body}
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
                 />
               </FormGroup>
-              <SourceLine source={request.regulatoryBasis} onOpen={onSource} />
+              <SourceLine source={request.regulatoryBasis} />
             </div>
             <div className={css.dialogFooter}>
               <span className={css.meta}>
@@ -176,6 +178,6 @@ function ComposeOverlay({
           </>
         )}
       </Region>
-    </Dialog>
+    </Overlay>
   );
 }

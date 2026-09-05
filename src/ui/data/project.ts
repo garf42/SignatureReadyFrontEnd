@@ -372,20 +372,5 @@ export const elementUnresolvedSpec: Region<ElementPanel> = unresolved(
   "the lane could not have answered — element and slot both hold zero rows and nothing creates either"
 );
 
-/* Kept because the design draws them: a request that cannot be raised, and a
- * document that is not on file. Both are answers about the world; neither is
- * a lane failure, and neither may be collapsed into the other. */
-export const elementRefusals = {
-  noDocument: absent<ElementPanel>(
-    "No document on file",
-    "⟨corpusArtifact.byReference⟩",
-    [{ id: "upload", label: "Upload the document", look: "link", enabled: true }]
-  ),
-  noReviewer: blocked<ElementPanel>("Not ready to request", "an earlier answer", STEP_LINK, [
-    { id: "request", label: "Request review", look: "primary", enabled: false }
-  ]),
-  draftingDown: elementUnresolvedSpec
-};
-
 export const FIRST_STEP = SHARED_STEPS[0];
 export const FIRST_TAB_ID = SHARED_STEPS[0].tabs[0].id;

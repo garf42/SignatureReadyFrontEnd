@@ -11,7 +11,7 @@ export function SignedOutScreen({ session }: { session: RegionData<Session> }) {
     <main className={css.screen}>
       <div className={css.inner}>
         <NonIdealState icon="log-in" title="You are signed out" />
-        <Region region={session} onSource={() => undefined}>
+        <Region region={session}>
           {() => null}
         </Region>
       </div>

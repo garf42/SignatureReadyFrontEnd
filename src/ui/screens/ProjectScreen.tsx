@@ -2,11 +2,10 @@ import { useState } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, MenuItem } from "@blueprintjs/core";
 
-import type { SourceKind, StepEntry } from "@/ui/data/port";
+import type { StepEntry } from "@/ui/data/port";
 import { CROSS_CUTTING, usePathway, useProject, useSteps } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
-import { SourceOverlay } from "@/ui/components/SourceOverlay";
 import { TabStrip } from "@/ui/components/TabStrip";
 import { CROSS_STEP, crossPath, tabPath, withSearch } from "@/ui/routes";
 
@@ -30,7 +29,6 @@ export function ProjectScreen() {
   const pathway = usePathway();
   const steps = useSteps();
   const [railShut, setRailShut] = useState(false);
-  const [source, setSource] = useState<SourceKind | null>(null);
 
   const go = (path: string) => navigate(withSearch(path, search));
   const onCross = stepId === CROSS_STEP;
@@ -38,7 +36,7 @@ export function ProjectScreen() {
   return (
     <AppFrame current="inbox" padded={false}>
       <div className={css.band}>
-        <Region region={project} onSource={setSource}>
+        <Region region={project}>
           {(header) => (
             <>
               <div className={css.bandHead}>
@@ -51,7 +49,7 @@ export function ProjectScreen() {
             </>
           )}
         </Region>
-        <Region region={pathway} onSource={setSource}>
+        <Region region={pathway}>
           {(state) => (
             <p className={css.pathway} data-pathway={state.pathway ?? "none"}>
               <span className={css.pathwayName}>{state.note}</span>
@@ -75,7 +73,7 @@ export function ProjectScreen() {
             <span>{railShut ? "" : "Steps"}</span>
             <span className={css.railGlyph}>{railShut ? "+" : "−"}</span>
           </button>
-          <Region region={steps} onSource={setSource}>
+          <Region region={steps}>
             {(list) => (
               <Menu>
                 {list.map((step) => (
@@ -116,7 +114,7 @@ export function ProjectScreen() {
         </aside>
 
         <section className={css.panel}>
-          <Region region={steps} onSource={setSource}>
+          <Region region={steps}>
             {(list) => (
               <TabStrip
                 id="element-tabs"
@@ -133,8 +131,6 @@ export function ProjectScreen() {
           </div>
         </section>
       </div>
-
-      {source ? <SourceOverlay kind={source} onClose={() => setSource(null)} /> : null}
     </AppFrame>
   );
 }

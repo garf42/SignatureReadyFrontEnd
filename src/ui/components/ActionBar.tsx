@@ -1,6 +1,6 @@
 import { Button } from "@blueprintjs/core";
 
-import type { SourceKind, SubmitBar } from "@/ui/data/port";
+import type { SubmitBar } from "@/ui/data/port";
 import { SourceLine } from "@/ui/components/SourceLine";
 
 import css from "@/ui/components/ActionBar.module.css";
@@ -11,17 +11,15 @@ export function ActionBar({
   bar,
   submitted,
   onToggle,
-  onSource
 }: {
   bar: SubmitBar;
   submitted: boolean;
   onToggle: () => void;
-  onSource: (kind: SourceKind) => void;
 }) {
   return (
     <div className={css.bar}>
       <div className={css.left}>
-        {bar.source ? <SourceLine source={bar.source} onOpen={onSource} /> : null}
+        {bar.source ? <SourceLine source={bar.source} /> : null}
         {bar.note ? (
           <p className={css.meta}>
             {bar.note}

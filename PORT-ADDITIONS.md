@@ -11,7 +11,7 @@ Where the front end needs something the ontology does not yet support, the
 ontology is what changes. A declared gap is a note for the FDE, never a
 reason to redesign the screen.
 
-18 hooks declared · 16 with gaps · 2 answerable today.
+17 hooks declared · 15 with gaps · 2 answerable today.
 
 ## What each surface needs
 
@@ -30,7 +30,6 @@ reason to redesign the screen.
 | `useReference` — the corpus, faceted and searchable — the only page in the application with real data in it | answerable | a decision on what add means — upload, or recording an intent to add. No act adds or removes a corpus artifact, nothing syncs, and the build account is Viewer-only and permanently so |
 | `useReferenceArtifact` — one artifact in the viewer, opened at a cited page range | partial | a media-set read route for the viewer. Whether an OSDK front end can read those bytes, and by what route, is not answerable from the interface side; until it is, the card carries metadata, digest and page-range citation and the viewer is a slot that lights up later |
 | `useSession` — the signed-in officer, and the signed-out case | partial | a caller identity from the shell's OSDK provider; the officer's name and title are not on any object type |
-| `useSource` — the overlay that opens the primary source behind any value | partial | a media-set read route, so the overlay can show the cited page rather than its metadata |
 | `useSteps` — the step list for the determined pathway, and each step's tabs | backlog | anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1); element rows; the document → element → slot → claim spine traverses and all four types hold zero rows; per-step completion state, which is the same pathway state usePathway waits on; a lock signal per step: which steps the officer may open given what has been established. The front end derives it from intake completion alone today, which is the coarsest correct rule and not the intended one |
 | `useUnresolved` — every unresolved lane in the application, grouped by lane | partial | an ontology-side record of why a query returned nothing; the four-state contract is held by a repository artifact and nothing in the ontology records it |
 
@@ -362,26 +361,6 @@ Rendered rather than hidden:
 
 - Four acts write actorPrincipal from current_user_id, which makes the actor decidable against Multipass rather than trusted at write time (§1).
 - No platform predicate marks a user's class, so the session cannot answer whether this caller is the responsible official.
-
-### `useSource`
-
-the overlay that opens the primary source behind any value. Verdict: **partial**. Required by §5 document production; §6.6 the viewer.
-
-| | |
-| --- | --- |
-| object types | corpusArtifact; proposalRecordItem; incorporatedByReference |
-| properties | documentId; page; sha256; byteLength |
-| acts | — |
-| datasets | signatureReady.corpus.census; signatureReady.corpus.text |
-
-Needed:
-
-- a media-set read route, so the overlay can show the cited page rather than its metadata
-
-Rendered rather than hidden:
-
-- corpus.text holds 17 rows and zero PDF body text, so an excerpt cannot be quoted from a dataset today.
-- proposalRecordItem.documentId and incorporatedByReference.documentId refer to a pinned corpus artifact and never to a document object — a link there would be wrong, not merely empty (§1).
 
 ### `useSteps`
 
