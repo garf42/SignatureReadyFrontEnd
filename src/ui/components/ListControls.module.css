@@ -16,6 +16,13 @@
   gap: 6px;
 }
 
+/* One width for both, so Filter and Sort read as a pair rather than as two
+   controls that happen to sit together. A select sizes itself to its longest
+   option, which made the two different widths on every page. */
+.control :global(.bp6-html-select) {
+  width: 184px;
+}
+
 .controlLabel {
   font-family: var(--mono);
   font-size: var(--t-micro);
