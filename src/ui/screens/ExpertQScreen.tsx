@@ -40,10 +40,10 @@ export function ExpertQScreen() {
           ) : null}
         </PageHead>
 
-        <Region region={queue} onSource={setSource}>
+        <Region region={queue} onSource={setSource} variant="page">
           {(page) => (
             <>
-              <HTMLTable className={css.table}>
+              <HTMLTable className={css.table + " " + css.queueTable}>
                 <thead>
                   <tr>
                     <th>Expert</th>
@@ -59,9 +59,15 @@ export function ExpertQScreen() {
                 </thead>
                 {page.rows.map((row) => (
                   <tbody key={row.id} className={css.group} data-status={row.status}>
-                    <tr>
+                    <tr className={css.clickable} onClick={() => setComposing(row.id)}>
                       <td className={css.name}>
-                        <SourceLine source={row.expert} onOpen={setSource} />
+                        {row.expert}
+                        <p className={css.meta}>{row.qualification}</p>
+                        {row.sentBy ? (
+                          <SourceLine source={row.sentBy} onOpen={setSource} />
+                        ) : (
+                          <p className={css.cell + " " + css.faint}>Sender not recorded</p>
+                        )}
                       </td>
                       <td className={css.cell}>{row.discipline}</td>
                       <td className={css.cell}>{row.project}</td>
@@ -80,7 +86,13 @@ export function ExpertQScreen() {
                       </td>
                       <td>
                         <div className={css.rowActions}>
-                          <Button className={css.secondary} onClick={() => setComposing(row.id)}>
+                          <Button
+                            className={css.secondary}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setComposing(row.id);
+                            }}
+                          >
                             Open request
                           </Button>
                         </div>

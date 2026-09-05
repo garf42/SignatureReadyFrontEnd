@@ -1,8 +1,6 @@
 import {
   DRAFTED,
   RECORD,
-  REQUESTED,
-  RETURNED,
   RULE,
   STARTED_BY,
   STEP_LINK,
@@ -136,47 +134,55 @@ export const expertQueueFilled: Region<ExpertQueue> = filled<ExpertQueue>({
   rows: [
     {
       id: "q1",
-      expert: REQUESTED,
-      discipline: "⟨discipline.name⟩",
+      expert: "⟨expert.name⟩",
+      qualification: "⟨expert.qualification⟩",
+      discipline: "⟨discipline⟩",
       project: "⟨project.name⟩",
-      awaiting: "⟨slot.artifactAwaited⟩",
-      sent: "⟨assignment.sentAt⟩",
-      expectedReturn: "⟨assignment.expectedReturnDate⟩",
+      awaiting: "⟨artifactAwaited⟩",
+      sent: "⟨sentAt⟩",
+      expectedReturn: "⟨expectedReturnDate⟩",
       status: "overdue",
-      gapsFound: null
+      gapsFound: null,
+      sentBy: null
     },
     {
       id: "q2",
-      expert: REQUESTED,
-      discipline: "⟨discipline.name⟩",
+      expert: "⟨expert.name⟩",
+      qualification: "⟨expert.qualification⟩",
+      discipline: "⟨discipline⟩",
       project: "⟨project.name⟩",
-      awaiting: "⟨slot.artifactAwaited⟩",
-      sent: "⟨assignment.sentAt⟩",
-      expectedReturn: "⟨assignment.expectedReturnDate⟩",
+      awaiting: "⟨artifactAwaited⟩",
+      sent: "⟨sentAt⟩",
+      expectedReturn: "⟨expectedReturnDate⟩",
       status: "awaiting",
-      gapsFound: null
+      gapsFound: null,
+      sentBy: null
     },
     {
       id: "q3",
-      expert: RETURNED,
-      discipline: "⟨discipline.name⟩",
+      expert: "⟨expert.name⟩",
+      qualification: "⟨expert.qualification⟩",
+      discipline: "⟨discipline⟩",
       project: "⟨project.name⟩",
-      awaiting: "⟨receivedArtifact.artifactType⟩",
-      sent: "⟨assignment.sentAt⟩",
-      expectedReturn: "⟨assignment.expectedReturnDate⟩",
+      awaiting: "⟨artifactType⟩",
+      sent: "⟨sentAt⟩",
+      expectedReturn: "⟨expectedReturnDate⟩",
       status: "returned",
-      gapsFound: "⟨engagement.gapsFound⟩"
+      gapsFound: "⟨gapsFound⟩",
+      sentBy: null
     },
     {
       id: "q4",
-      expert: RETURNED,
-      discipline: "⟨discipline.name⟩",
+      expert: "⟨expert.name⟩",
+      qualification: "⟨expert.qualification⟩",
+      discipline: "⟨discipline⟩",
       project: "⟨project.name⟩",
-      awaiting: "⟨receivedArtifact.artifactType⟩",
-      sent: "⟨assignment.sentAt⟩",
-      expectedReturn: "⟨assignment.expectedReturnDate⟩",
+      awaiting: "⟨artifactType⟩",
+      sent: "⟨sentAt⟩",
+      expectedReturn: "⟨expectedReturnDate⟩",
       status: "accepted",
-      gapsFound: "⟨engagement.gapsFound⟩"
+      gapsFound: "⟨gapsFound⟩",
+      sentBy: null
     }
   ]
 });
@@ -195,8 +201,8 @@ export const expertDraftFilled: Region<ExpertDraft> = filled<ExpertDraft>({
   project: "⟨project.name⟩",
   uniqueIdentificationNumber: "⟨project.uniqueIdentificationNumber⟩",
   trigger: "Extraordinary-circumstance finding returned present or undetermined — 1b.3(f)(2)",
-  artifactAwaited: "⟨slot.artifactAwaited⟩",
-  expectedReturn: "⟨assignment.expectedReturnDate⟩",
+  artifactAwaited: "⟨artifactAwaited⟩",
+  expectedReturn: "⟨expectedReturnDate⟩",
   regulatoryBasis: RULE,
   proposedRecipient: "⟨holder.name, qualification⟩",
   recipientNote:

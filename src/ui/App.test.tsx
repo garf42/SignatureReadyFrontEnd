@@ -34,8 +34,8 @@ describe("routes", () => {
   });
 
   it.each([
-    ["/archive", "Nothing has been archived"],
-    ["/experts", "No expert requests are open"],
+    ["/archive", "Archive"],
+    ["/experts", "Expert Q"],
     ["/learning", "Learning"],
     ["/reference", "Reference"]
   ])("opens %s", (path, heading) => {
@@ -89,13 +89,13 @@ describe("routes", () => {
 
 describe("the supporting pages render empty by design — §6.1", () => {
   it("says nothing has been archived, and what it searched for", () => {
-    at("/archive");
+    at("/archive?state=absent");
     expect(screen.getByText("Nothing has been archived")).toBeTruthy();
     expect(screen.getByText(/project.archived/)).toBeTruthy();
   });
 
   it("says the expert queue is open and empty, not that it failed", () => {
-    const { container } = at("/experts");
+    const { container } = at("/experts?state=absent");
     expect(screen.getByText("No expert requests are open")).toBeTruthy();
     expect(container.querySelector("[data-state='absent']")).not.toBeNull();
     expect(container.querySelector("[data-state='unresolved']")).toBeNull();
@@ -189,13 +189,13 @@ describe("a supporting page says what it holds in every state — §6.1", () => 
 
 describe("Archive carries the inbox row, not a lookalike — §6.3", () => {
   it("shows the same fields, with archived in place of changed", () => {
-    const { container } = at("/archive?state=filled");
+    const { container } = at("/archive");
     const heads = [...container.querySelectorAll("th")].map((th) => th.textContent);
     expect(heads).toEqual(["Project", "Archived", "Where it was", "Status", ""]);
   });
 
   it("opens a row into itself and offers restore and delete on the row", () => {
-    const { container } = at("/archive?state=filled");
+    const { container } = at("/archive");
     const group = container.querySelector("tbody") as HTMLElement;
     fireEvent.click(within(group).getByLabelText("Show the details"));
     expect(group.getAttribute("data-open")).toBe("yes");
@@ -204,7 +204,7 @@ describe("Archive carries the inbox row, not a lookalike — §6.3", () => {
   });
 
   it("says so where no act records who archived it", () => {
-    const { container } = at("/archive?state=filled");
+    const { container } = at("/archive");
     const groups = container.querySelectorAll("tbody");
     fireEvent.click(within(groups[1] as HTMLElement).getByLabelText("Show the details"));
     expect(screen.getByText(/Who archived it is not recorded/)).toBeTruthy();
@@ -246,7 +246,7 @@ describe("a tab is one object across the application", () => {
 describe("filter and sort are one control across the application", () => {
   it.each([
     ["/", "All projects"],
-    ["/experts?state=filled", "All requests"],
+    ["/experts", "All requests"],
     ["/reference", "All artifacts"]
   ])("%s carries a labelled Filter and Sort", (path, firstFilter) => {
     const { container } = at(path);
@@ -254,5 +254,69 @@ describe("filter and sort are one control across the application", () => {
     expect(within(section).getAllByText("Filter").length).toBeGreaterThan(0);
     expect(within(section).getAllByText("Sort").length).toBeGreaterThan(0);
     expect(within(section).getAllByText(firstFilter).length).toBeGreaterThan(0);
+  });
+});
+
+describe("Expert Q shows the queue and its compose overlay — §6.4", () => {
+  it("names the expert, not a provenance line", () => {
+    const { container } = at("/experts");
+    const first = container.querySelector("tbody td") as HTMLElement;
+    expect(first.textContent).toContain("⟨expert.name⟩");
+    expect(first.textContent).toContain("⟨expert.qualification⟩");
+  });
+
+  it("carries every column §6.4 asks for", () => {
+    const { container } = at("/experts");
+    const heads = [...container.querySelectorAll("th")].map((th) => th.textContent);
+    expect(heads).toEqual([
+      "Expert",
+      "Discipline",
+      "Project",
+      "Awaited",
+      "Sent",
+      "Expected",
+      "Status",
+      "Gaps found",
+      ""
+    ]);
+  });
+
+  it("opens the compose overlay from the row and closes back to the table", () => {
+    const { container } = at("/experts");
+    fireEvent.click(container.querySelector("tbody tr") as HTMLElement);
+    expect(screen.getByText("Request from a specialist")).toBeTruthy();
+    expect(screen.getByText(/signature-ready-package-expert-request/)).toBeTruthy();
+    expect(
+      screen.getByDisplayValue(/Extraordinary-circumstance finding returned present/)
+    ).toBeTruthy();
+    fireEvent.click(screen.getByText("Cancel"));
+    expect(screen.queryByText("Request from a specialist")).toBeNull();
+  });
+
+  it("says the sender is not recorded, because no expert act writes one", () => {
+    at("/experts");
+    expect(screen.getAllByText("Sender not recorded").length).toBe(4);
+  });
+});
+
+describe("an empty list surface centres its answer", () => {
+  it("says No current projects, in the middle of the space the list would fill", () => {
+    const { container } = at("/?state=absent");
+    const region = container.querySelector("[data-state='absent']") as HTMLElement;
+    expect(region.className).toMatch(/page/);
+    expect(within(region).getByText("No current projects")).toBeTruthy();
+  });
+
+  it("still carries the query it ran, so absent stays an answer and not a blank", () => {
+    at("/?state=absent");
+    expect(screen.getByText(/register.inbox.query/)).toBeTruthy();
+  });
+
+  it("does not centre a region inside a question row", () => {
+    const { container } = at("/projects/p1/steps/0/authority");
+    fireEvent.click(within(container).getAllByRole("button", { expanded: false })[1]);
+    for (const region of container.querySelectorAll("[data-state]")) {
+      expect(region.className).not.toMatch(/page/);
+    }
   });
 });

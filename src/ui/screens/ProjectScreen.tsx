@@ -69,6 +69,7 @@ export function ProjectScreen() {
             type="button"
             className={css.railHead}
             aria-expanded={!railShut}
+            aria-label={railShut ? "Show the steps" : "Hide the steps"}
             onClick={() => setRailShut((v) => !v)}
           >
             <span>{railShut ? "" : "Steps"}</span>

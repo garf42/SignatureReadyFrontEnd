@@ -77,7 +77,7 @@ export function ReferenceScreen() {
         />
 
         {group === "corpus" ? (
-          <Region region={reference} onSource={setSource}>
+          <Region region={reference} onSource={setSource} variant="page">
             {(page) => (
               <>
                 <p className={css.hazard}>{page.hazard}</p>

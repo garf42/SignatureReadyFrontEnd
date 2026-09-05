@@ -35,7 +35,7 @@ export function ArchiveScreen() {
           help={PAGES.archive.help}
         />
 
-        <Region region={archive} onSource={setSource}>
+        <Region region={archive} onSource={setSource} variant="page">
           {(page) => (
             <RecordTable
               heads={["Project", "Archived", "Where it was", "Status"]}

@@ -212,7 +212,10 @@ export type ExpertStatus = "overdue" | "awaiting" | "returned" | "accepted";
 
 export interface ExpertRow {
   id: string;
-  expert: SourceRef;
+  /** The holder's own placeholder, not a provenance line: this column is a
+   *  name, the way the inbox's first column is a project name. */
+  expert: string;
+  qualification: string;
   discipline: string;
   project: string;
   awaiting: string;
@@ -221,6 +224,8 @@ export interface ExpertRow {
   status: ExpertStatus;
   /** Written by accept-artifact, and shown on the row rather than buried. */
   gapsFound: string | null;
+  /** Who sent it. Null because no expert act writes an actor — §6.4. */
+  sentBy: SourceRef | null;
 }
 
 export interface ExpertQueue {

@@ -7,13 +7,13 @@ import { useInbox } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { IntakeDialog } from "@/ui/components/IntakeDialog";
 import { ListControls } from "@/ui/components/ListControls";
+import { PageHead } from "@/ui/components/PageHead";
 import { RecordTable } from "@/ui/components/RecordTable";
 import type { RecordRow } from "@/ui/components/RecordTable";
 import { Region } from "@/ui/components/Region";
 import { SourceOverlay } from "@/ui/components/SourceOverlay";
 import { FIRST_TAB, projectPath, withSearch } from "@/ui/routes";
 
-import css from "@/ui/screens/InboxScreen.module.css";
 import table from "@/ui/components/RecordTable.module.css";
 
 export function InboxScreen() {
@@ -25,53 +25,52 @@ export function InboxScreen() {
 
   return (
     <AppFrame current="inbox">
-      <Region region={inbox} onSource={setSource} onAction={() => setIntake(true)}>
-        {(list) => (
-          <>
-            <div className={css.listHead}>
-              <div className={css.heading}>
-                <h1 className={css.title}>{list.heading}</h1>
-                <p className={css.count}>{list.count}</p>
-              </div>
-              <ListControls filters={list.filters} sorts={list.sorts}>
-                <Button className={table.primary} onClick={() => setIntake(true)}>
-                  Initiate project
-                </Button>
-              </ListControls>
-            </div>
+      <PageHead
+        title="Your projects"
+        count={inbox.state === "filled" ? inbox.value.count : undefined}
+      >
+        {inbox.state === "filled" ? (
+          <ListControls filters={inbox.value.filters} sorts={inbox.value.sorts}>
+            <Button className={table.primary} onClick={() => setIntake(true)}>
+              Initiate project
+            </Button>
+          </ListControls>
+        ) : null}
+      </PageHead>
 
-            <RecordTable
-              heads={["Project", "Changed", "Where it is", "Status"]}
-              onSource={setSource}
-              records={list.projects.map(
-                (project): RecordRow => ({
-                  id: project.id,
-                  name: project.name,
-                  mark: project.mark,
-                  cells: [
-                    { id: "changed", text: project.changed, faint: true },
-                    { id: "position", text: project.position }
-                  ],
-                  summary: project.summary,
-                  meta: project.meta,
-                  source: project.startedBy
-                })
-              )}
-              actions={(project) => (
-                <>
-                  <Button
-                    className={table.primary}
-                    onClick={() =>
-                      navigate(withSearch(projectPath(project.id) + "/" + FIRST_TAB, search))
-                    }
-                  >
-                    Open project
-                  </Button>
-                  <Button className={table.secondary}>Archive</Button>
-                </>
-              )}
-            />
-          </>
+      <Region region={inbox} onSource={setSource} onAction={() => setIntake(true)} variant="page">
+        {(list) => (
+          <RecordTable
+            heads={["Project", "Changed", "Where it is", "Status"]}
+            onSource={setSource}
+            records={list.projects.map(
+              (project): RecordRow => ({
+                id: project.id,
+                name: project.name,
+                mark: project.mark,
+                cells: [
+                  { id: "changed", text: project.changed, faint: true },
+                  { id: "position", text: project.position }
+                ],
+                summary: project.summary,
+                meta: project.meta,
+                source: project.startedBy
+              })
+            )}
+            actions={(project) => (
+              <>
+                <Button
+                  className={table.primary}
+                  onClick={() =>
+                    navigate(withSearch(projectPath(project.id) + "/" + FIRST_TAB, search))
+                  }
+                >
+                  Open project
+                </Button>
+                <Button className={table.secondary}>Archive</Button>
+              </>
+            )}
+          />
         )}
       </Region>
 

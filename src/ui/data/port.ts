@@ -236,10 +236,12 @@ export function useSource(kind: SourceKind): Region<SourceDocument> {
 
 /* --- §6, the four supporting pages --- */
 
-/** Absent by default, and that is the designed state: §1 lists 17 acts and
- *  none deletes or restores, and no archived property exists on project. */
+/** Placeholder rows by default, as on the inbox — the page has to show what
+ *  it looks like holding something. `?state=absent` reaches what the backend
+ *  actually holds today: §1 lists 17 acts and none deletes or restores, and
+ *  no archived property exists on project. */
 export function useArchive(): Region<Archive> {
-  switch (useScreenKeyDefault("absent")) {
+  switch (useScreenKeyDefault("filled")) {
     case "filled":
       return sp.archiveFilled;
     case "blocked":
@@ -251,10 +253,12 @@ export function useArchive(): Region<Archive> {
   }
 }
 
-/** Also absent by default: both expert acts key on a slot and nothing creates
- *  one, so the queue is built and empty until that changes. */
+/** Placeholder rows by default, so the queue and its compose overlay can be
+ *  seen. `?state=absent` is the real state: both expert acts key on a slot
+ *  and nothing creates one, so the queue is built and empty until that
+ *  changes. */
 export function useExpertQueue(): Region<ExpertQueue> {
-  switch (useScreenKeyDefault("absent")) {
+  switch (useScreenKeyDefault("filled")) {
     case "filled":
       return sp.expertQueueFilled;
     case "blocked":

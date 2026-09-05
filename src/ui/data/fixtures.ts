@@ -205,7 +205,7 @@ export const inboxFilled: Region<Inbox> = filled({
 });
 
 export const inboxAbsent: Region<Inbox> = absent(
-  "You do not hold any projects yet",
+  "No current projects",
   "⟨register.inbox.query⟩",
   [{ id: "initiate", label: "Initiate project", look: "primary", enabled: true }]
 );

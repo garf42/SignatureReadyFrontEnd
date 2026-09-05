@@ -17,14 +17,20 @@ interface Props<T> {
   region: RegionData<T>;
   onSource: (kind: SourceKind) => void;
   onAction?: (id: string) => void;
+  /** "page" centres the three non-filled states in the space the list would
+   *  have occupied. The states themselves are unchanged — an empty list still
+   *  carries the query it ran, because that is what makes absent an answer
+   *  rather than a blank. */
+  variant?: "inline" | "page";
   children: (value: T) => ReactNode;
 }
 
-export function Region<T>({ region, onSource, onAction, children }: Props<T>) {
+export function Region<T>({ region, onSource, onAction, variant, children }: Props<T>) {
+  const box = css.region + (variant === "page" && region.state !== "filled" ? " " + css.page : "");
   switch (region.state) {
     case "filled":
       return (
-        <div className={css.region} data-state="filled">
+        <div className={box} data-state="filled">
           {children(region.value)}
           <Notes sources={region.sources} onSource={onSource} />
           <Actions actions={region.actions} onAction={onAction} />
@@ -33,7 +39,7 @@ export function Region<T>({ region, onSource, onAction, children }: Props<T>) {
 
     case "absent":
       return (
-        <div className={css.region} data-state="absent">
+        <div className={box} data-state="absent">
           <Callout className={css.box} icon={null}>
             {region.message}
           </Callout>
@@ -45,7 +51,7 @@ export function Region<T>({ region, onSource, onAction, children }: Props<T>) {
 
     case "blocked":
       return (
-        <div className={css.region} data-state="blocked">
+        <div className={box} data-state="blocked">
           <Callout className={css.box + " " + css.faint} icon={null}>
             {region.message}
           </Callout>
@@ -65,7 +71,7 @@ export function Region<T>({ region, onSource, onAction, children }: Props<T>) {
 
     case "unresolved":
       return (
-        <div className={css.region} data-state="unresolved">
+        <div className={box} data-state="unresolved">
           <Callout className={css.box + " " + css.error} icon={null}>
             {region.message}
           </Callout>

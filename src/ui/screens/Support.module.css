@@ -197,3 +197,47 @@
   color: var(--ink);
   overflow-wrap: anywhere;
 }
+
+/* §6.4: selecting a row opens the compose overlay. The explicit button stays
+   for the keyboard and for anyone who wants to be told what the row does. */
+.clickable {
+  cursor: pointer;
+}
+
+/* Nine columns. Fixed layout so a long marker cannot steal width from its
+   neighbours, and the cells still wrap — telling them not to break made them
+   overflow into the next column instead, which is worse than a wrap. */
+.queueTable {
+  table-layout: fixed;
+}
+
+.queueTable th:nth-child(1),
+.queueTable td:nth-child(1) {
+  width: 16%;
+}
+
+.queueTable th:nth-child(2),
+.queueTable td:nth-child(2),
+.queueTable th:nth-child(3),
+.queueTable td:nth-child(3),
+.queueTable th:nth-child(4),
+.queueTable td:nth-child(4) {
+  width: 13%;
+}
+
+.queueTable th:nth-child(5),
+.queueTable td:nth-child(5),
+.queueTable th:nth-child(6),
+.queueTable td:nth-child(6) {
+  width: 11%;
+}
+
+.queueTable th:nth-child(7),
+.queueTable td:nth-child(7) {
+  width: 8%;
+}
+
+.queueTable th:last-child,
+.queueTable td:last-child {
+  width: 104px;
+}

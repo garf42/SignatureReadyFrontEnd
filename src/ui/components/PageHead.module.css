@@ -1,3 +1,7 @@
+/* One baseline across the whole row. The heading has the greatest ascent of
+   the text on it, so it sets the line and does not move; the filter and sort
+   labels come to it. The button is a box rather than a line of text, so it
+   centres on the row instead of hanging off the baseline. */
 .head {
   display: flex;
   align-items: baseline;
@@ -30,6 +34,10 @@
   display: flex;
   align-items: baseline;
   gap: var(--s-4);
+}
+
+.controls > :global(.bp6-button) {
+  align-self: center;
 }
 
 .help {

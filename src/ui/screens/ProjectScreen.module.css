@@ -62,9 +62,15 @@
   min-width: 0;
 }
 
+/* Same cause as the section pane, different remedy: a collapsed step keeps its
+   number, so the filling span stays and centres its own text instead. */
 .split[data-rail="closed"] .rail :global(.bp6-menu-item) {
   justify-content: center;
   padding-inline: 0;
+}
+
+.split[data-rail="closed"] .rail :global(.bp6-menu-item) > :global(.bp6-fill) {
+  text-align: center;
 }
 
 .split[data-rail="closed"] .rail .number {

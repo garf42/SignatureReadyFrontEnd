@@ -87,3 +87,26 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* A list surface with nothing in it: centre the answer in the space the list
+   would have had, rather than tucking it into the top-left corner. */
+.page {
+  justify-items: center;
+  align-content: center;
+  min-height: 340px;
+  padding: var(--s-6) var(--s-4);
+  text-align: center;
+}
+
+.page .box {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: var(--t-read);
+  color: var(--ink);
+}
+
+.page .actions {
+  justify-content: center;
+  margin-top: var(--s-3);
+}

@@ -62,13 +62,15 @@ The four state words never appear on screen; they are in `data-state`.
 | `?gate=held` | the caller holds the credential the rule reserves |
 | `?retrieval=down` | the drafting lane could not run |
 
-**Three pages open `absent` rather than `filled`, and that is the claim they are
-making.** Archive, Expert Q and the CE catalogue have no rows to hold — Archive
-has no backend address at all, both expert acts key on a `slot` that nothing
-creates, and `category` holds zero of its 87 rows. §6.1 says empty is the
-expected state at build time and should read as designed, so those three open
-empty and `?state=filled` shows the populated design. Which state a page opens
-in is a claim about the backend, not a preference.
+**Every list surface opens with placeholder rows, and `?state=absent` reaches
+what the backend actually holds.** Archive has no backend address at all, both
+expert acts key on a `slot` that nothing creates, and `category` holds zero of
+its 87 rows — so absent is the true state for those three, and it is one query
+away rather than the default. §6.1 asks that empty read as designed rather than
+as a failed load: an empty list surface centres its answer in the space the
+list would have filled, says what it searched for, and offers the action that
+would populate it. The CE catalogue is the exception that still opens empty,
+because the section exists to say why it is.
 
 ## Three judgements the register did not make for us
 
