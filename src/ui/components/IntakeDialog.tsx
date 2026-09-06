@@ -1,0 +1,88 @@
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Button, FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
+
+import { useSession } from "@/ui/data/port";
+import { Overlay, OverlayActions } from "@/ui/components/Overlay";
+import { Region } from "@/ui/components/Region";
+import { SourceLine } from "@/ui/components/SourceLine";
+import { FIRST_TAB, projectPath, withSearch } from "@/ui/routes";
+
+import css from "@/ui/components/IntakeDialog.module.css";
+
+/** §7.3. General administrative information only, and exactly what
+ *  signature-ready-submit-intake writes: name, the unique identification
+ *  number and its issuer (a closed two-member set), and the anticipated
+ *  implementation start. Submitting creates the project and opens its page;
+ *  these fields display in the project band thereafter, editable there.
+ *
+ *  The overlay and Step 0 are different things and are not merged. Step 0 is
+ *  a step in the step list like any other, and carries the detail the review
+ *  itself needs. */
+export function IntakeDialog({
+  onClose,
+}: {
+  onClose: () => void;
+}) {
+  const session = useSession();
+  const navigate = useNavigate();
+  const { search } = useLocation();
+  const [name, setName] = useState("");
+  const [uin, setUin] = useState("");
+  const [start, setStart] = useState("");
+
+  return (
+    <Overlay
+      title="Start a project"
+      onClose={onClose}
+      footer={
+        <>
+          <Region region={session}>
+            {(who) => <SourceLine source={{ ...who.officer, lead: "Starting as " }} />}
+          </Region>
+          <OverlayActions>
+            <Button className={css.secondary} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              className={css.primary}
+              onClick={() =>
+                navigate(withSearch(projectPath("⟨project.ref⟩") + "/" + FIRST_TAB, search))
+              }
+            >
+              Start project
+            </Button>
+          </OverlayActions>
+        </>
+      }
+    >
+      <FormGroup className={css.field} label="Project name">
+        <InputGroup
+          placeholder="⟨project.name⟩"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+      </FormGroup>
+      <FormGroup className={css.field} label="Unique identification number">
+        <InputGroup
+          placeholder="⟨project.uniqueIdentificationNumber⟩"
+          value={uin}
+          onChange={(e) => setUin(e.target.value)}
+        />
+      </FormGroup>
+      <FormGroup className={css.field} label="Issued by">
+        <HTMLSelect>
+          <option>⟨issuer.1⟩</option>
+          <option>⟨issuer.2⟩</option>
+        </HTMLSelect>
+      </FormGroup>
+      <FormGroup className={css.field} label="Anticipated implementation start">
+        <InputGroup
+          placeholder="⟨project.anticipatedImplementationStart⟩"
+          value={start}
+          onChange={(e) => setStart(e.target.value)}
+        />
+      </FormGroup>
+    </Overlay>
+  );
+}

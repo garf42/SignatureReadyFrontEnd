@@ -1,0 +1,164 @@
+
+
+
+
+.band {
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--rule);
+}
+
+.railHead[aria-expanded] {
+  cursor: pointer;
+}
+
+.bandHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+}
+
+.projectName {
+  font-size: var(--t-read);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.projectMeta {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.projectSummary {
+  font-size: var(--t-meta);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  margin-top: var(--s-2);
+  max-width: 80ch;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  align-items: start;
+}
+
+/* Same rule as the section pane: the collapsed rail keeps the item's own left
+   padding, so a step number does not shift when the rail closes. */
+.split[data-rail="closed"] {
+  grid-template-columns: 46px minmax(0, 1fr);
+}
+
+.rail {
+  overflow: hidden;
+  padding: var(--s-3) 0 var(--s-4);
+  border-right: 1px solid var(--rule);
+}
+
+.rail :global(.bp6-menu) {
+  min-width: 0;
+}
+
+/* Same cause as the section pane, different remedy: a collapsed step keeps its
+   number, so the filling span stays and centres its own text instead. */
+.split[data-rail="closed"] .rail :global(.bp6-menu-item) > :global(.bp6-fill) {
+  text-align: left;
+}
+
+.split[data-rail="closed"] .rail .number {
+  margin-right: 0;
+}
+
+.railHead {
+  display: flex;
+  width: 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  width: 100%;
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0 var(--s-3) var(--s-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  cursor: pointer;
+}
+
+.railGlyph {
+  font-family: var(--sans);
+  font-size: var(--t-read);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.step {
+  border-bottom: 1px solid var(--rule);
+}
+
+.step :global(.bp6-menu-item-label) {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.completed {
+  background: var(--well);
+}
+
+.active {
+  background: var(--well);
+  box-shadow: inset 3px 0 0 var(--link);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.waiting {
+  color: var(--ink-faint);
+}
+
+.waiting :global(.bp6-menu-item-label) {
+  color: var(--ink-faint);
+}
+
+.error :global(.bp6-menu-item-label) {
+  color: var(--unresolved);
+}
+
+.number {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-soft);
+  margin-right: var(--s-2);
+}
+
+.panel {
+  min-width: 0;
+  padding: var(--s-3) var(--s-4) var(--s-6);
+}
+
+
+
+.panelBox {
+  border: 1px solid var(--link);
+  background: var(--paper);
+  padding: var(--s-4);
+}
+
+
+
+.pathway[data-pathway="none"] 
+
+/* The one rail entry that is not a numbered step. It is still a parent, and
+   its parts are tabs like any other step's. */
+.cross {
+  border-top: 1px solid var(--rule);
+}

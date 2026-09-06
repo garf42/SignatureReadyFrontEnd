@@ -1,0 +1,55 @@
+/* The header is one block. Its parts were direct children of the page's stack,
+   so the stack's 20px gap fell between the title rule, the standfirst and the
+   notes as well as around them — three gaps where one was wanted. */
+.wrap {
+  display: grid;
+  gap: var(--s-1);
+}
+
+/* One baseline across the whole row, the button included. The button has the
+   greatest ascent on the row — 9px of padding above a 12.5px label — so it is
+   the thing that sets the line, and the heading, the count and the filter and
+   sort labels all come down to it. Nothing here moves the button. */
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-4);
+  padding-bottom: var(--s-1);
+  border-bottom: 1px solid var(--rule);
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-3);
+}
+
+.title {
+  font-size: var(--t-body);
+  font-weight: 500;
+}
+
+.count {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+}
+
+.controls {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-4);
+}
+
+/* One line where the width allows it. A page's standfirst was taking three
+   lines of column width and a block of air on either side of it. */
+.help {
+  font-size: var(--t-meta);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  margin: 0;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}

@@ -1,0 +1,23 @@
+/* One padding for every overlay in the application. It used to be set in four
+   places — the intake dialog, the source overlay, the supporting-page shared
+   sheet and the theme's header rule — which is why no two matched. */
+.body {
+  display: grid;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-4);
+  border-top: 1px solid var(--rule);
+}
+
+.buttons {
+  display: flex;
+  gap: var(--s-2);
+  margin-left: auto;
+}

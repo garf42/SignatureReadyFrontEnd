@@ -1,0 +1,98 @@
+.screen {
+  min-height: 100vh;
+  background: var(--paper);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-bottom: 1px solid var(--ink);
+  background: var(--well);
+}
+
+.paneToggle {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: var(--mono);
+  font-size: var(--t-read);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.wordmark {
+  font-size: var(--t-read);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Both tracks are minmax(0, …): without it a grid child keeps its intrinsic
+   width, and the collapsed pane's rules run on under the page beside it. */
+/* Wide enough for the longest section name and no wider: "Reference" ends at
+   101px from the pane's edge, so 116px gives it the same 12px gutter on the
+   right that the icon has on the left. */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 116px) minmax(0, 1fr);
+  align-items: start;
+}
+
+/* 12 + 16 + 12: the menu item's own horizontal padding either side of a 16px
+   icon, plus the 1px rule. The collapsed rail is exactly as wide as the icon's
+   gutter, so the icon sits at the same x whether the pane is open or shut and
+   does not appear to move when it closes. */
+.split[data-nav="closed"] {
+  grid-template-columns: 41px minmax(0, 1fr);
+}
+
+.nav {
+  overflow: hidden;
+  padding: var(--s-3) 0 var(--s-4);
+  border-right: 1px solid var(--rule);
+}
+
+/* Blueprint gives .bp6-menu a 180px min-width, so collapsed the items stayed
+   180px and were merely clipped — the icons landed hard against the viewport
+   edge instead of sitting in the rail. Release the min-width and the items
+   centre in the track they are actually in. */
+.nav :global(.bp6-menu) {
+  min-width: 0;
+}
+
+/* Collapsed, the item is a flex row that centres — but Blueprint still renders
+   the (now empty) text span beside the icon, and that span carries .bp6-fill,
+   so it took every spare pixel and left centring nothing to distribute. The
+   icon ended up hard against x=0. Drop the span and the icon centres. */
+.split[data-nav="closed"] .nav :global(.bp6-menu-item) > :global(.bp6-fill) {
+  display: none;
+}
+
+.split[data-nav="closed"] .nav :global(.bp6-menu-item-icon) {
+  margin-right: 0;
+}
+
+.section {
+  color: var(--ink-soft);
+}
+
+/* An inset shadow rather than a border, so marking the current section does
+   not shift its icon out of centre when the rail is collapsed. */
+.current {
+  background: var(--well);
+  box-shadow: inset 3px 0 0 var(--link);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.content {
+  min-width: 0;
+}
+
+.content[data-padded="yes"] {
+  padding: var(--s-3) var(--s-4) var(--s-6);
+}

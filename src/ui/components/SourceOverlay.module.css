@@ -1,0 +1,30 @@
+.reference {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+
+.primary {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  background: var(--well);
+  padding: var(--s-4);
+  font-family: var(--serif);
+  font-size: var(--t-read);
+  line-height: 1.6;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.full {
+  font-size: var(--t-micro);
+}
+
+
+.close,
+.close:hover {
+  background: var(--paper);
+  color: var(--ink-soft);
+  border: 1px solid var(--rule);
+}

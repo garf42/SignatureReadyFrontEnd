@@ -1,0 +1,68 @@
+/* Cards, sized so three or four sit on a row at normal widths. Each holds one
+   measurement and the sentence that says what it measures — no drill-down, so
+   nothing in the row can grow and take its neighbours with it. */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--s-3);
+  align-items: stretch;
+}
+
+.card {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  background: var(--paper);
+}
+
+/* Tiles 1 and 2 are status rather than measurement — §6.5 puts them first. */
+.card[data-tone="warn"] {
+  border-color: var(--blocked);
+  background: var(--well);
+}
+
+.card[data-tone="error"] {
+  border-color: var(--unresolved);
+  background: var(--well);
+}
+
+.title {
+  font-size: var(--t-body);
+  font-weight: 500;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.figure {
+  font-family: var(--mono);
+  font-size: var(--t-count);
+  line-height: 1.15;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.card[data-tone="warn"] .figure {
+  color: var(--blocked);
+}
+
+.card[data-tone="error"] .figure {
+  color: var(--unresolved);
+}
+
+.unit {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  overflow-wrap: anywhere;
+}
+
+.note {
+  font-size: var(--t-meta);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}

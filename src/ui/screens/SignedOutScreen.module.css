@@ -1,0 +1,13 @@
+.screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--s-6);
+  background: var(--paper);
+}
+
+.inner {
+  display: grid;
+  gap: var(--s-4);
+  width: min(520px, 100%);
+}

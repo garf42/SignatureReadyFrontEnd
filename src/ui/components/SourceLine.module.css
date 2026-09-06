@@ -1,0 +1,10 @@
+.line {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+.label {
+  color: var(--ink);
+}
