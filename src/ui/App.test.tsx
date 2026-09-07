@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "@/ui/App";
 
-import generated from "../../PORT-ADDITIONS.md?raw";
+import generated from "@/ui/data/PORT-ADDITIONS.generated.md?raw";
 
 afterEach(cleanup);
 
