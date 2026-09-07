@@ -110,3 +110,46 @@
   justify-content: center;
   margin-top: var(--s-3);
 }
+
+/* --- pending ---------------------------------------------------------------
+
+   A question still out. Deliberately the one state with no hue: --absent,
+   --blocked and --unresolved each carry a claim about an answer, and pending
+   has no answer to make a claim about. It is told apart by ROOM, not colour,
+   which survives greyscale and a screenshot.
+
+   Not Blueprint's skeleton: that carries !important into a repository whose
+   porting contract is that no rule needs one, hard-codes greys outside the
+   palette, animates on a loop in an application that animates once, and hides
+   every descendant — including the provenance line, which is the only content
+   pending has.
+
+   Two shapes ship here, because Region knows only two things about its
+   surface: whether it is a list (variant="page") or inline. Every other
+   surface — panel, card, band — sizes the room from its OWN module by
+   selecting [data-room], so a new surface needs no new prop and no edit to
+   this file. That is why the room carries a bare data attribute and not a
+   size passed through the data. */
+
+.room {
+  display: block;
+  background: var(--well);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  /* Inline: one filled region's opening height, so nothing jumps. */
+  min-height: calc(var(--t-body) * 3);
+}
+
+/* A list surface. absent CENTRES its answer in the space the rows would have
+   filled; pending FILLS that same space, because a centred sentence reads as
+   an answer and pending has none. Same 340px either way, so the page does not
+   resize when the rows land. */
+.wide {
+  min-height: 340px;
+}
+
+/* The room is never the whole story: the query it is asking sits under it in
+   the same line absent uses, so a reader watches one line change tense. */
+.pending .meta {
+  color: var(--ink-faint);
+}

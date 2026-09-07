@@ -54,6 +54,18 @@ export const STEP_LINK: Destination = { label: "Step ⟨n⟩ · ⟨tab⟩ ›", 
 
 /* --- region constructors: the only place a state is named --- */
 
+/** A request is out. No message argument and no default query: a pending
+ *  region that cannot name what it is asking is not pending, it is a
+ *  component that forgot to ask. Pass the SAME marker the absent fixture for
+ *  this surface passes — that identity is the design. */
+export function pending<T>(
+  query: string,
+  sources: SourceRef[] = [],
+  actions: Action[] = []
+): Region<T> {
+  return { state: "pending", query, sources, actions };
+}
+
 export function filled<T>(value: T, sources: SourceRef[] = [], actions: Action[] = []): Region<T> {
   return { state: "filled", value, sources, actions };
 }

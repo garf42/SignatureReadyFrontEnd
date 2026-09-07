@@ -6,7 +6,7 @@ import { SourceLine } from "@/ui/components/SourceLine";
 
 import css from "@/ui/components/Region.module.css";
 
-/** The one component that knows the four states, and the only place any of
+/** The one component that knows the five states, and the only place any of
  *  them is rendered. Use it for every region on every screen — a new page
  *  inherits the distinction by using this, not by remembering a rule.
  *
@@ -19,17 +19,40 @@ interface Props<T> {
    *  lines are text. */
   onSource?: (kind: SourceKind) => void;
   onAction?: (id: string) => void;
-  /** "page" centres the three non-filled states in the space the list would
-   *  have occupied. The states themselves are unchanged — an empty list still
-   *  carries the query it ran, because that is what makes absent an answer
-   *  rather than a blank. */
+  /** "page" centres absent, blocked and unresolved in the space the list
+   *  would have occupied. The states themselves are unchanged — an empty list
+   *  still carries the query it ran, because that is what makes absent an
+   *  answer rather than a blank. Pending is the exception and fills that space
+   *  instead: a centred sentence reads as an answer, and pending has none. */
   variant?: "inline" | "page";
   children: (value: T) => ReactNode;
 }
 
 export function Region<T>({ region, onSource, onAction, variant, children }: Props<T>) {
-  const box = css.region + (variant === "page" && region.state !== "filled" ? " " + css.page : "");
+  // "page" centres the answer in the space the list would have filled. Pending
+  // has no answer to centre, so it fills that space instead — a distinction
+  // that survives greyscale and needs no colour, because colour is a claim.
+  const centres = variant === "page" && region.state !== "filled" && region.state !== "pending";
+  const box = css.region + (centres ? " " + css.page : "");
   switch (region.state) {
+    // A question still out. It carries no message, because the only sentence
+    // it has is its own state word. It draws no spinner and no skeleton: the
+    // room is held so nothing jumps when the value lands, and the query it is
+    // asking is on the page in the same line absent will use once it answers.
+    case "pending":
+      return (
+        <div className={box + " " + css.pending} data-state="pending" aria-busy="true">
+          <span
+            className={css.room + (variant === "page" ? " " + css.wide : "")}
+            data-room
+            aria-hidden="true"
+          />
+          <p className={css.meta}>Asking: {region.query}</p>
+          <Notes sources={region.sources} onSource={onSource} />
+          <Actions actions={region.actions} onAction={onAction} />
+        </div>
+      );
+
     case "filled":
       return (
         <div className={box} data-state="filled">
