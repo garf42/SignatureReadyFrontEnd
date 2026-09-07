@@ -19,6 +19,11 @@ import css from "@/ui/components/IntakeDialog.module.css";
  *  The overlay and Step 0 are different things and are not merged. Step 0 is
  *  a step in the step list like any other, and carries the detail the review
  *  itself needs. */
+/** Returned by the act, once there is an act. Named rather than inline so the
+ *  one place the route is built from something that is not yet a key is
+ *  findable. */
+const NEW_PROJECT_KEY = "⟨project.ref⟩";
+
 export function IntakeDialog({
   onClose,
 }: {
@@ -46,8 +51,14 @@ export function IntakeDialog({
             </Button>
             <Button
               className={css.primary}
+              // The marker stands in for the key signature-ready-submit-intake
+              // returns, which is why acts.ts declares that act's onSuccess as
+              // a refetch rather than an optimistic write: the route cannot be
+              // built until the created row's primary key comes back. The
+              // inbox already routes on a real key, so this is the one call
+              // site that changes when the act is wired.
               onClick={() =>
-                navigate(withSearch(projectPath("⟨project.ref⟩") + "/" + FIRST_TAB, search))
+                navigate(withSearch(projectPath(NEW_PROJECT_KEY) + "/" + FIRST_TAB, search))
               }
             >
               Start project
