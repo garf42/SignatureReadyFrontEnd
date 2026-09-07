@@ -1,5 +1,5 @@
 import type { LearningTile } from "@/ui/data/port";
-import { PAGES, useLearning } from "@/ui/data/port";
+import { PAGES, usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
 import { Region } from "@/ui/components/Region";
@@ -11,7 +11,7 @@ import shared from "@/ui/screens/Support.module.css";
  *  sentence saying what it measures. Nothing collapses and nothing is hidden —
  *  these are eight facts about the build and they all fit on the page. */
 export function LearningScreen() {
-  const learning = useLearning();
+  const learning = usePort().useLearning();
 
   return (
     <AppFrame current="learning">

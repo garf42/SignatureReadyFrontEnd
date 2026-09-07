@@ -1,9 +1,7 @@
-import { useParams, useSearchParams } from "react-router-dom";
+import { createContext, createElement, useContext, useMemo } from "react";
+import type { ReactNode } from "react";
 
-import * as fx from "@/ui/data/fixtures";
-import * as pj from "@/ui/data/project";
-import * as sp from "@/ui/data/support";
-import { PATHWAY_IDS } from "@/ui/data/pathways";
+import { fixturePort } from "@/ui/data/fixturePort";
 
 export type {
   Action,
@@ -66,7 +64,6 @@ import type {
   Gate,
   Inbox,
   Learning,
-  PathwayId,
   ProjectHeader,
   Reference,
   Region,
@@ -82,217 +79,95 @@ export { PAGES } from "@/ui/data/support";
 export { CROSS_CUTTING, DOCUMENT_AUTHORITY, RETRIEVAL_PUSHES, TRIGGERS } from "@/ui/data/project";
 export { DISCRETIONS, PATHWAYS, PATHWAY_IDS, stepsFor } from "@/ui/data/pathways";
 
-/** The one seam. Screens read data only through the hooks below; swapping
- *  fixtures for OSDK queries happens here and nowhere else. Every hook is
- *  declared in `bindings.ts` — object type, properties, act and the section
- *  that requires it — and `port.bindings.test.ts` fails on one that is not.
+/** The one seam, and from here on it is a CONTRACT rather than an
+ *  implementation.
  *
- *  Hooks take a parameter only where the fixture varies by it; the rest read
- *  the route through the router, and will take ids when the real queries land.
+ *  Screens read data only through `usePort()`. The fixture implementation in
+ *  `fixturePort.ts` is the default, so nothing has to be provided for the tree
+ *  to run; a shell that has a backend supplies its own implementation over the
+ *  top, surface by surface, and NO FILE UNDER `src/ui/` IS EDITED to do it.
+ *  That matters most during the long incremental period when some surfaces are
+ *  live and others are still fixtures — `composePort` makes mixing one line
+ *  per surface.
+ *
+ *  Every member is declared in `bindings.ts` — object type, properties, act
+ *  and the section that requires it — and `port.bindings.test.ts` fails on one
+ *  that is not.
+ *
+ *  TWO CONSTRAINTS ON ANY IMPLEMENTATION, because an async one depends on
+ *  them:
+ *
+ *  1. Every member must be callable unconditionally during render. A caller
+ *     invokes it before it knows whether it needs the value.
+ *  2. No member may call a hook inside a branch, or take an early return
+ *     before its last hook call. A query behind a branch is a rules-of-hooks
+ *     violation the moment that surface goes async.
+ *
+ *  Members take the ids they address rather than reading the router, so an
+ *  implementation is not tied to a route shape and cannot depend on which
+ *  route a parameter was declared on. The parameters ARE the contract: a live
+ *  `useProject` with no project reference cannot run.
  */
-
-const STATES = ["filled", "absent", "blocked", "unresolved"] as const;
-export type StateKey = (typeof STATES)[number];
-
-function key(raw: string | null): StateKey {
-  const found = STATES.find((s) => s === raw);
-  return found ?? "filled";
+export interface DataPort {
+  /** The signed-in officer, and the signed-out case. Real auth lives in the
+   *  shell, so this is the member an integration replaces first — see the
+   *  `session` prop on `DataPortProvider`. */
+  useSession(): Region<Session>;
+  useInbox(): Region<Inbox>;
+  useProject(projectRef: string): Region<ProjectHeader>;
+  useSteps(projectRef: string, stepId: string): Region<StepEntry[]>;
+  useGate(): Region<Gate>;
+  useElement(projectRef: string, stepId: string, tabId: string): Region<ElementPanel>;
+  useSource(kind: SourceKind): Region<SourceDocument>;
+  useArchive(): Region<Archive>;
+  useExpertQueue(): Region<ExpertQueue>;
+  useExpertRequest(): Region<ExpertDraft>;
+  useLearning(): Region<Learning>;
+  useReference(): Region<Reference>;
+  useReferenceArtifact(id: string): Region<ArtifactView>;
+  useRegulation(): Region<Regulation>;
+  useCatalogue(): Region<Catalogue>;
 }
 
-/** ?state= drives the screen's own region; ?shell= drives the project band and
- *  the step list; ?session=out signs the officer out; ?pathway= fixes the
- *  pathway Step 2 would have determined; ?gate=held gives the caller the
- *  credential the rule reserves; ?retrieval=down takes the drafting lane out.
- *  The four state words never appear on screen: they are in data-state. */
-function useScreenKey(): StateKey {
-  const [params] = useSearchParams();
-  return key(params.get("state"));
+/** The fixture port is the DEFAULT and not merely the usual choice. A required
+ *  provider would make the fixture path opt-in, so a screen mounted in
+ *  isolation — or a test that forgets the wrapper — would get nothing instead
+ *  of fixtures. A default value makes fixtures the floor: you have to work to
+ *  get anything else. */
+const PortContext = createContext<DataPort>(fixturePort);
+
+export function usePort(): DataPort {
+  return useContext(PortContext);
 }
 
-/** Same parameter, different default. §6.1 says empty is the expected state at
- *  build time and should read as designed, so the pages with no backend
- *  address open absent and `?state=filled` shows the populated design. Which
- *  state a page opens in is a claim about the backend, not a preference. */
-function useScreenKeyDefault(fallback: StateKey): StateKey {
-  const [params] = useSearchParams();
-  const raw = params.get("state");
-  return STATES.find((s) => s === raw) ?? fallback;
+/** Mix a live implementation into the fixtures, one surface at a time:
+ *
+ *    composePort({ useInbox: live.useInbox })
+ *
+ *  Anything not named keeps its fixture, so a half-wired application is a
+ *  normal state rather than a broken one — and a surface that goes live loses
+ *  its URL knob automatically, because the knobs live in the fixture members
+ *  that were replaced. */
+export function composePort(over: Partial<DataPort>): DataPort {
+  return { ...fixturePort, ...over };
 }
 
-function useShellKey(): StateKey {
-  const [params] = useSearchParams();
-  return key(params.get("shell"));
+interface ProviderProps {
+  /** Omit it and the tree runs on fixtures. */
+  port?: DataPort;
+  /** The shell's own session, which is where real auth lives. Supplying it
+   *  overrides `useSession` on whatever port is in force, so an integration
+   *  that has authentication and no ontology yet needs one prop and no port.
+   *  It is read on every render, so a session that is still `pending` becomes
+   *  `filled` without remounting anything. */
+  session?: Region<Session>;
+  children: ReactNode;
 }
 
-function usePathwayParam(): PathwayId | null {
-  const [params] = useSearchParams();
-  const raw = params.get("pathway");
-  return PATHWAY_IDS.find((id) => id === raw) ?? null;
-}
-
-function useCredential(): boolean {
-  const [params] = useSearchParams();
-  return params.get("gate") === "held";
-}
-
-function useRetrievalUp(): boolean {
-  const [params] = useSearchParams();
-  return params.get("retrieval") !== "down";
-}
-
-
-export function useSession(): Region<Session> {
-  const [params] = useSearchParams();
-  return params.get("session") === "out" ? fx.sessionOut : fx.sessionIn;
-}
-
-export function useInbox(): Region<Inbox> {
-  switch (useScreenKey()) {
-    case "absent":
-      return fx.inboxAbsent;
-    case "blocked":
-      return fx.inboxBlocked;
-    case "unresolved":
-      return fx.inboxUnresolved;
-    default:
-      return fx.inboxFilled;
-  }
-}
-
-export function useProject(): Region<ProjectHeader> {
-  switch (useShellKey()) {
-    case "absent":
-      return fx.projectAbsent;
-    case "blocked":
-      return fx.projectBlocked;
-    case "unresolved":
-      return fx.projectUnresolved;
-    default:
-      return fx.projectFilled;
-  }
-}
-
-export function useSteps(): Region<StepEntry[]> {
-  const state = useShellKey();
-  const pathway = usePathwayParam();
-  const params = useParams();
-  if (state === "absent") return pj.stepsAbsentSpec;
-  if (state === "blocked") return pj.stepsBlockedSpec;
-  if (state === "unresolved") return pj.stepsUnresolvedSpec;
-  return pj.stepEntries(pathway, params.stepId ?? "0");
-}
-
-/** The three surfaces the rule reserves to the responsible official. The
- *  interface presents the gate and cannot verify a credential: a gate held
- *  only in the client is not a gate. */
-export function useGate(): Region<Gate> {
-  const state = useScreenKey();
-  const held = useCredential();
-  if (state === "unresolved") return pj.gateUnresolved;
-  return pj.gateFor(held);
-}
-
-export function useElement(tabId: string): Region<ElementPanel> {
-  const state = useScreenKey();
-  const pathway = usePathwayParam();
-  const held = useCredential();
-  const retrievalUp = useRetrievalUp();
-  const params = useParams();
-  if (state === "absent") return pj.elementAbsentSpec;
-  if (state === "blocked") return pj.elementBlockedSpec;
-  if (state === "unresolved") return pj.elementUnresolvedSpec;
-  return pj.panelRegion(pathway, params.stepId ?? "0", tabId, held, retrievalUp);
-}
-
-export function useSource(kind: SourceKind): Region<SourceDocument> {
-  const state = useScreenKey();
-  if (state === "absent") return fx.sourceAbsent;
-  if (state === "blocked") return fx.sourceBlocked;
-  if (state === "unresolved") return fx.sourceUnresolved;
-  return fx.sourceFilled(kind);
-}
-
-/* --- §6, the four supporting pages --- */
-
-/** Placeholder rows by default, as on the inbox — the page has to show what
- *  it looks like holding something. `?state=absent` reaches what the backend
- *  actually holds today: §1 lists 17 acts and none deletes or restores, and
- *  no archived property exists on project. */
-export function useArchive(): Region<Archive> {
-  switch (useScreenKeyDefault("filled")) {
-    case "filled":
-      return sp.archiveFilled;
-    case "blocked":
-      return sp.archiveBlocked;
-    case "unresolved":
-      return sp.archiveUnresolved;
-    default:
-      return sp.archiveAbsent;
-  }
-}
-
-/** Placeholder rows by default, so the queue and its compose overlay can be
- *  seen. `?state=absent` is the real state: both expert acts key on a slot
- *  and nothing creates one, so the queue is built and empty until that
- *  changes. */
-export function useExpertQueue(): Region<ExpertQueue> {
-  switch (useScreenKeyDefault("filled")) {
-    case "filled":
-      return sp.expertQueueFilled;
-    case "blocked":
-      return sp.expertQueueBlocked;
-    case "unresolved":
-      return sp.expertQueueUnresolved;
-    default:
-      return sp.expertQueueAbsent;
-  }
-}
-
-export function useExpertRequest(): Region<ExpertDraft> {
-  const retrievalUp = useRetrievalUp();
-  return retrievalUp ? sp.expertDraftFilled : sp.expertDraftUnresolved;
-}
-
-export function useLearning(): Region<Learning> {
-  switch (useScreenKey()) {
-    case "absent":
-      return sp.learningAbsent;
-    case "blocked":
-      return sp.learningBlocked;
-    case "unresolved":
-      return sp.learningUnresolved;
-    default:
-      return sp.learningFilled;
-  }
-}
-
-export function useReference(): Region<Reference> {
-  switch (useScreenKey()) {
-    case "absent":
-      return sp.referenceAbsent;
-    case "blocked":
-      return sp.referenceBlocked;
-    case "unresolved":
-      return sp.referenceUnresolved;
-    default:
-      return sp.referenceFilled;
-  }
-}
-
-/** The viewer. Blocked by default and it says what on: whether an OSDK front
- *  end can read media-set bytes, and by what route, is not answerable from
- *  the interface side, so the card carries metadata, digest and page-range
- *  citation meanwhile. */
-export function useReferenceArtifact(id: string): Region<ArtifactView> {
-  return useScreenKeyDefault("blocked") === "filled" ? sp.artifactView(id) : sp.artifactBlocked;
-}
-
-export function useRegulation(): Region<Regulation> {
-  return sp.regulationFilled;
-}
-
-/** Empty, and the section says why: category holds zero rows while the 87
- *  sit in ce_categories.json. */
-export function useCatalogue(): Region<Catalogue> {
-  return useScreenKeyDefault("absent") === "filled" ? sp.catalogueFilled : sp.catalogueAbsent;
+export function DataPortProvider({ port, session, children }: ProviderProps) {
+  const value = useMemo<DataPort>(() => {
+    const base = port ?? fixturePort;
+    return session === undefined ? base : { ...base, useSession: () => session };
+  }, [port, session]);
+  return createElement(PortContext.Provider, { value }, children);
 }

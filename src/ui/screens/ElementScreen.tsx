@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 import type { ElementPanel, SourceKind } from "@/ui/data/port";
-import { useElement, useGate } from "@/ui/data/port";
+import { usePort } from "@/ui/data/port";
 import { ActionBar } from "@/ui/components/ActionBar";
 import { QuestionRow } from "@/ui/components/QuestionRow";
 import { Region } from "@/ui/components/Region";
@@ -14,8 +14,13 @@ import css from "@/ui/screens/ElementScreen.module.css";
  *  On submit the rows above lock and the button becomes an undo. */
 export function ElementScreen() {
   const params = useParams();
-  const panel = useElement(params.tabId ?? "");
-  const gate = useGate();
+  const port = usePort();
+  const panel = port.useElement(
+    params.projectRef ?? "",
+    params.stepId ?? "",
+    params.tabId ?? ""
+  );
+  const gate = port.useGate();
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
   const [source, setSource] = useState<SourceKind | null>(null);

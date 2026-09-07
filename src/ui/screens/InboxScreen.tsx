@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@blueprintjs/core";
 
-import { useInbox } from "@/ui/data/port";
+import { usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { IntakeDialog } from "@/ui/components/IntakeDialog";
 import { ListControls } from "@/ui/components/ListControls";
@@ -15,7 +15,7 @@ import { FIRST_TAB, projectPath, withSearch } from "@/ui/routes";
 import table from "@/ui/components/RecordTable.module.css";
 
 export function InboxScreen() {
-  const inbox = useInbox();
+  const inbox = usePort().useInbox();
   const navigate = useNavigate();
   const { search } = useLocation();
   const [intake, setIntake] = useState(false);

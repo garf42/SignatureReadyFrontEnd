@@ -10,7 +10,7 @@ import "@fontsource/spectral/500.css";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { BlueprintProvider } from "@blueprintjs/core";
 
-import { useSession } from "@/ui/data/port";
+import { usePort } from "@/ui/data/port";
 import { ArchiveScreen } from "@/ui/screens/ArchiveScreen";
 import { ElementScreen } from "@/ui/screens/ElementScreen";
 import { ExpertQScreen } from "@/ui/screens/ExpertQScreen";
@@ -25,7 +25,7 @@ import { ARCHIVE, EXPERTS, FIRST_TAB, LEARNING, REFERENCE } from "@/ui/routes";
 /** Everything that ports starts here: fonts, tokens, routes, screens.
  *  The router itself is supplied above this file. */
 export function App() {
-  const session = useSession();
+  const session = usePort().useSession();
 
   if (session.state !== "filled") {
     return (

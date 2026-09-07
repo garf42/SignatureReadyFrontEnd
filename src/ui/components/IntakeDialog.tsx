@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button, FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
 
-import { useSession } from "@/ui/data/port";
+import { usePort } from "@/ui/data/port";
 import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 import { SourceLine } from "@/ui/components/SourceLine";
@@ -24,7 +24,7 @@ export function IntakeDialog({
 }: {
   onClose: () => void;
 }) {
-  const session = useSession();
+  const session = usePort().useSession();
   const navigate = useNavigate();
   const { search } = useLocation();
   const [name, setName] = useState("");

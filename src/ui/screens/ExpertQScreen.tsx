@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
 
 import type { ExpertStatus } from "@/ui/data/port";
-import { PAGES, useExpertQueue, useExpertRequest } from "@/ui/data/port";
+import { PAGES, usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { ListControls } from "@/ui/components/ListControls";
 import { PageHead } from "@/ui/components/PageHead";
@@ -23,7 +23,7 @@ const STATUS: Record<ExpertStatus, string> = {
  *  the request; a person sends it. Selecting a row opens the compose overlay
  *  above the queue, and closing it returns to the table. */
 export function ExpertQScreen() {
-  const queue = useExpertQueue();
+  const queue = usePort().useExpertQueue();
   const [composing, setComposing] = useState<string | null>(null);
 
   return (
@@ -116,7 +116,7 @@ export function ExpertQScreen() {
 
 /** Mounted only while a request is open, so the hook below runs unconditionally. */
 function ComposeOverlay({ onClose }: { onClose: () => void }) {
-  const draft = useExpertRequest();
+  const draft = usePort().useExpertRequest();
   const [body, setBody] = useState("");
 
   return (

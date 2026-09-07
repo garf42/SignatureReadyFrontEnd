@@ -5,16 +5,20 @@ import { describe, expect, it } from "vitest";
 import generated from "../../../PORT-ADDITIONS.md?raw";
 
 import { BINDINGS } from "@/ui/data/bindings";
-import * as port from "@/ui/data/port";
+import { fixturePort } from "@/ui/data/fixturePort";
 
 /** The gate the README asks for: no screen may read data without naming the
- *  backend it needs. The hook list is read off the port itself rather than
- *  maintained here, so the two cannot drift apart. */
+ *  backend it needs. The member list is read off the CONTRACT rather than
+ *  maintained here, so the two cannot drift apart.
+ *
+ *  It is read off `fixturePort` and not off the port module's exports, because
+ *  the module now exports the seam's own machinery (`usePort`, `composePort`,
+ *  `DataPortProvider`) alongside the contract. `fixturePort` is typed as
+ *  `DataPort`, so its key set IS the contract's key set: a member added to the
+ *  interface and not implemented fails to compile, and one implemented and not
+ *  declared here fails below. */
 
-const hooksInPort = Object.keys(port)
-  .filter((name) => name.startsWith("use"))
-  .filter((name) => typeof (port as Record<string, unknown>)[name] === "function")
-  .sort();
+const hooksInPort = Object.keys(fixturePort).sort();
 
 const hooksDeclared = Object.keys(BINDINGS).sort();
 
@@ -23,12 +27,12 @@ describe("port bindings", () => {
     expect(hooksInPort.length).toBeGreaterThan(0);
   });
 
-  it("declares a binding for every hook the port exports", () => {
+  it("declares a binding for every member the contract holds", () => {
     const undeclared = hooksInPort.filter((hook) => !(hook in BINDINGS));
     expect(undeclared).toEqual([]);
   });
 
-  it("declares no binding for a hook the port does not export", () => {
+  it("declares no binding for a member the contract does not hold", () => {
     const orphaned = hooksDeclared.filter((hook) => !hooksInPort.includes(hook));
     expect(orphaned).toEqual([]);
   });

@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Menu, MenuItem } from "@blueprintjs/core";
 
 import type { StepEntry } from "@/ui/data/port";
-import { CROSS_CUTTING, useProject, useSteps } from "@/ui/data/port";
+import { CROSS_CUTTING, usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
@@ -25,8 +25,9 @@ export function ProjectScreen() {
   const tabId = params.tabId ?? "";
   const navigate = useNavigate();
   const { search } = useLocation();
-  const project = useProject();
-  const steps = useSteps();
+  const port = usePort();
+  const project = port.useProject(projectRef);
+  const steps = port.useSteps(projectRef, stepId);
   const [railShut, setRailShut] = useState(false);
 
   const go = (path: string) => navigate(withSearch(path, search));
