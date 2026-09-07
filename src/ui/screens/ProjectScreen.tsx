@@ -118,8 +118,14 @@ export function ProjectScreen() {
                   .filter((band) => band.band.kind !== "cross")
                   .map((band) => {
                     const key = bandId(band.band);
-                    const open = openBands[key] ?? !band.collapsed;
                     const steps = value.steps.filter((s) => bandId(s.band) === key);
+                    /* A superseded band collapses — but never the one holding
+                       the step being read, or the rail would show no entry for
+                       where the reader is standing. */
+                    const holdsActive = steps.some(
+                      (s) => s.key === stepId || s.id === stepId
+                    );
+                    const open = openBands[key] ?? (!band.collapsed || holdsActive);
                     return (
                       <section key={key} className={css.bandGroup} data-status={band.status}>
                         <button

@@ -15,7 +15,8 @@
     "port:additions": "node scripts/port-additions.mjs",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "walk": "node scripts/walk.mjs"
+    "walk": "node scripts/walk.mjs",
+    "preview:artifact": "node scripts/preview.mjs"
   },
   "dependencies": {
     "@blueprintjs/core": "^6.10.0",

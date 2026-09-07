@@ -262,3 +262,15 @@
 .blocked :global(.bp6-menu-item-label) {
   color: var(--ink-soft);
 }
+
+/* Band titles are long by nature — "Level 2 · P4 Environmental impact
+   statement" — and the rail is narrow. They wrap; they are never clipped. */
+/* Band titles are long by nature — "Level 2 · P4 Environmental impact
+   statement" — and the rail is 280px. They wrap onto a second line; they are
+   never clipped, and never broken mid-word. The step rows below them keep the
+   single-line treatment they already had. */
+.bandTitle,
+.bandSummary {
+  white-space: normal;
+  overflow-wrap: break-word;
+}

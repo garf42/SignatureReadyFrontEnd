@@ -128,5 +128,15 @@ export default tseslint.config(
     files: ["scripts/**/*.{js,mjs}", "*.config.{js,ts}"],
     extends: [js.configs.recommended],
     languageOptions: { globals: globals.node }
+  },
+
+  /* The review harness under scripts/preview. It is a build ENTRY — it calls
+     createRoot at module scope — so fast refresh could never apply to it, and
+     the rule that keeps a component file refreshable is asking for something
+     the file cannot be. Everything else stays on, and none of this ships:
+     nothing under src/ui imports it, so the packet is still one rename. */
+  {
+    files: ["scripts/preview/**/*.tsx"],
+    rules: { "react-refresh/only-export-components": "off" }
   }
 );

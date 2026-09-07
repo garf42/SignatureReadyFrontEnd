@@ -1,0 +1,177 @@
+/* The harness chrome. Deliberately NOT the application's chrome: it is dark
+   where the application is paper, so nobody reviewing this mistakes a control
+   for a feature. It uses the application's own faces and its ink hue so the two
+   read as one system, and nothing here is inside src/ui — none of it ships. */
+
+.hshell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.happ {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* AppFrame is sized for a full viewport of its own. Under the harness it gets
+   the viewport minus the bar, so its own floor is released here rather than in
+   the tree — nothing about the application changes to be reviewed. */
+.happ > * {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+}
+
+.hbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: oklch(0.24 0.012 250);
+  color: oklch(0.93 0.006 250);
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  border-bottom: 1px solid oklch(0.34 0.012 250);
+}
+
+.hbarhead {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 8px 16px;
+}
+
+.hbar[data-open="yes"] .hbarhead {
+  border-bottom: 1px solid oklch(0.32 0.012 250);
+}
+
+.hmark {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: oklch(0.8 0.09 72);
+  white-space: nowrap;
+}
+
+.hsay {
+  color: oklch(0.68 0.01 250);
+  font-size: 11.5px;
+  max-width: 74ch;
+}
+
+.hfold {
+  margin-left: auto;
+  flex: 0 0 auto;
+  background: none;
+  border: 1px solid oklch(0.42 0.012 250);
+  border-radius: 3px;
+  color: oklch(0.85 0.008 250);
+  font: inherit;
+  font-size: 11px;
+  padding: 2px 9px;
+  cursor: pointer;
+}
+
+.hfold:hover {
+  border-color: oklch(0.6 0.012 250);
+}
+
+.hrows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px 12px;
+}
+
+.hrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+
+.hgroup {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.hlabel {
+  flex: 0 0 auto;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: oklch(0.62 0.01 250);
+  white-space: nowrap;
+}
+
+.hseg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+
+.hbtn {
+  background: oklch(0.29 0.012 250);
+  border: 1px solid oklch(0.38 0.012 250);
+  border-radius: 3px;
+  color: oklch(0.86 0.008 250);
+  font: inherit;
+  font-size: 11.5px;
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.hbtn:hover {
+  border-color: oklch(0.55 0.012 250);
+}
+
+.hbtn[data-on="yes"] {
+  background: oklch(0.93 0.006 250);
+  border-color: oklch(0.93 0.006 250);
+  color: oklch(0.22 0.012 250);
+  font-weight: 500;
+}
+
+.hbtn:focus-visible {
+  outline: 2px solid oklch(0.74 0.11 252);
+  outline-offset: 1px;
+}
+
+/* The step key, so a reviewer can see the address they are on and quote it. */
+.hkey {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 10px;
+  color: oklch(0.62 0.01 250);
+}
+
+.hbtn[data-on="yes"] .hkey {
+  color: oklch(0.45 0.012 250);
+}
+
+/* What the selected level history means, in the rule's terms. The controls
+   are not self-explanatory and should not pretend to be. */
+.hnote {
+  margin: 2px 0 0;
+  padding: 6px 10px;
+  border-left: 2px solid oklch(0.8 0.09 72);
+  background: oklch(0.27 0.012 250);
+  color: oklch(0.8 0.008 250);
+  font-size: 11.5px;
+  max-width: 96ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
