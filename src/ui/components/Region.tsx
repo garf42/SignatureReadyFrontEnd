@@ -121,7 +121,9 @@ function Notes({
   sources: SourceRef[];
   onSource?: (kind: SourceKind) => void;
 }) {
-  if (sources.length === 0) return null;
+  if (sources.length === 0) {
+    return null;
+  }
   return (
     <>
       {sources.map((source, i) => (
@@ -138,7 +140,9 @@ export function Actions({
   actions: Action[];
   onAction?: (id: string) => void;
 }) {
-  if (actions.length === 0) return null;
+  if (actions.length === 0) {
+    return null;
+  }
   return (
     <div className={css.actions}>
       {actions.map((action) =>

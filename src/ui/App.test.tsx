@@ -19,7 +19,9 @@ const at = (path: string) =>
  *  labels has to open it first. Collapsed it is icons and titles only. */
 function openSections(container: HTMLElement) {
   const toggle = container.querySelector("[aria-label='Show the sections']");
-  if (toggle) fireEvent.click(toggle);
+  if (toggle) {
+    fireEvent.click(toggle);
+  }
   return container;
 }
 

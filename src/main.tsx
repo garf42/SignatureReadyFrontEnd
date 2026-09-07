@@ -8,7 +8,9 @@ import { App } from "@/ui/App";
 // In Foundry the shell owns this level: it supplies the OSDK provider, the
 // /auth/callback route and the dev-server basename. Nothing else belongs here.
 const host = document.getElementById("root");
-if (!host) throw new Error("Missing #root");
+if (!host) {
+  throw new Error("Missing #root");
+}
 
 createRoot(host).render(
   <StrictMode>
