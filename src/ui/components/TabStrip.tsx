@@ -31,7 +31,9 @@ export function TabStrip({
 
   const measure = useCallback(() => {
     const el = scroller.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
     const max = el.scrollWidth - el.clientWidth;
     setEdges({ left: el.scrollLeft > 1, right: el.scrollLeft < max - 1 });
   }, []);
@@ -39,13 +41,17 @@ export function TabStrip({
   useEffect(() => {
     measure();
     const el = scroller.current;
-    if (!el || typeof ResizeObserver === "undefined") return;
+    if (!el || typeof ResizeObserver === "undefined") {
+      return;
+    }
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
   }, [measure, tabs]);
 
-  if (tabs.length < 2) return null;
+  if (tabs.length < 2) {
+    return null;
+  }
 
   return (
     <div

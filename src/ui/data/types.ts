@@ -1,13 +1,30 @@
-/** The four states every region is in. These four words never reach the screen:
+/** The five states every region is in. These five words never reach the screen:
  *  they are told apart by shape, and carried in a data-state attribute.
  *
+ *  pending    — a request is out and no usable value is held. Not an answer,
+ *               so it carries no message; it carries the query it is ASKING,
+ *               the same string it will carry as absent if that query comes
+ *               back empty. One question, two tenses.
  *  filled     — a value arrived.
  *  absent     — a query ran and found nothing. That is an answer, and the
  *               region carries the query it asked.
  *  blocked    — a precondition is unmet; names what it waits on.
  *  unresolved — the lane could not have answered. Always a defect.
+ *
+ *  The mapping from a backend outcome to one of the five is fixed, so an
+ *  adapter is mechanical rather than interpretive:
+ *
+ *    request in flight, no usable cached value        → pending
+ *    query succeeded, zero rows                       → absent
+ *    caller lacks the credential the rule reserves,
+ *      or the surface has no backend address          → blocked
+ *    query or lane failed, or returned a defect       → unresolved
+ *    query succeeded with rows                        → filled
+ *
+ *  A request that outlives its deadline is unresolved, not a slower pending:
+ *  the port owns that deadline, so no component holds a clock.
  */
-export type RegionState = "filled" | "absent" | "blocked" | "unresolved";
+export type RegionState = "pending" | "filled" | "absent" | "blocked" | "unresolved";
 
 /** The kinds of primary source a value can be traced to. A person is not one
  *  of them: an officer's name is a name, and there is nothing to open behind
@@ -45,6 +62,12 @@ export interface Action {
 }
 
 export type Region<T> =
+  /** No message: the only sentence pending could carry is its own state word,
+   *  and the state words never reach the screen. No duration either — see the
+   *  deadline note above. `sources` may cite the rule, which is known before
+   *  any query returns; a record-kind source here would claim retrieval from a
+   *  record that has not answered, and is a defect in the fixture. */
+  | { state: "pending"; query: string; sources: SourceRef[]; actions: Action[] }
   | { state: "filled"; value: T; sources: SourceRef[]; actions: Action[] }
   | { state: "absent"; message: string; query: string; sources: SourceRef[]; actions: Action[] }
   | {

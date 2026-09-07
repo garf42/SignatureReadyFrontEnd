@@ -289,8 +289,12 @@ function ordinaryRow(id: string, spec: RowSpec, i: number): QuestionRow {
 export function rowsFor(tab: TabSpec, held: boolean, retrievalUp: boolean): QuestionRow[] {
   return tab.rows.map((spec, i) => {
     const id = `${tab.id}-${String(i + 1)}`;
-    if (spec.gate) return gatedRow(id, spec, held);
-    if (spec.form === "draft") return draftedRow(id, spec, retrievalUp);
+    if (spec.gate) {
+      return gatedRow(id, spec, held);
+    }
+    if (spec.form === "draft") {
+      return draftedRow(id, spec, retrievalUp);
+    }
     return ordinaryRow(id, spec, i);
   });
 }

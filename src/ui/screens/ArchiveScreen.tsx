@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@blueprintjs/core";
 
-import { PAGES, useArchive } from "@/ui/data/port";
+import { PAGES, usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { PageHead } from "@/ui/components/PageHead";
@@ -21,7 +21,7 @@ import table from "@/ui/components/RecordTable.module.css";
  *  every state — including the empty one, which is the state it will be in
  *  until an archived state on `project` exists to read. */
 export function ArchiveScreen() {
-  const archive = useArchive();
+  const archive = usePort().useArchive();
   const [purging, setPurging] = useState<string | null>(null);
 
   return (

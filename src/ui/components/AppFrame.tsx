@@ -73,7 +73,9 @@ export function AppFrame({
                   title={section.name}
                   href={to}
                   onClick={(event: MouseEvent<HTMLElement>) => {
-                    if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+                    if (event.metaKey || event.ctrlKey || event.shiftKey) {
+                      return;
+                    }
                     event.preventDefault();
                     navigate(to);
                   }}

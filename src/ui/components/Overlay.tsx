@@ -28,7 +28,9 @@ export function Overlay({
   const seen = useRef(false);
 
   useEffect(() => {
-    if (seen.current) return;
+    if (seen.current) {
+      return;
+    }
     seen.current = true;
     const frame = window.requestAnimationFrame(() => {
       document.querySelector(".bp6-dialog")?.scrollIntoView({ block: "center", inline: "nearest" });

@@ -14,6 +14,15 @@ export const FIRST_TAB = `steps/${SHARED_STEPS[0].id}/${SHARED_STEPS[0].tabs[0].
  *  pathway, so they take a step segment of their own. */
 export const CROSS_STEP = "x";
 
+/** `:projectRef` is the project's PRIMARY KEY, not its unique identification
+ *  number. The number is a display value: §1 records a live project row whose
+ *  uniqueIdentificationNumber is null, which on its own settles that the number
+ *  cannot address every project. Where a number has to appear on screen it is
+ *  resolved to a key first — bindings.ts declares that resolver as its own
+ *  binding rather than leaving the route parameter to mean two things.
+ *
+ *  The primary-key PROPERTY is not named anywhere in the register, so the
+ *  binding leaves `primaryKey` null and the FDE fills it in. */
 export function projectPath(projectRef: string): string {
   return "/projects/" + encodeURIComponent(projectRef);
 }

@@ -1,7 +1,7 @@
 import { Button } from "@blueprintjs/core";
 
 import type { SourceKind } from "@/ui/data/port";
-import { sourceTitle, useSource } from "@/ui/data/port";
+import { sourceTitle, usePort } from "@/ui/data/port";
 import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 
@@ -11,7 +11,7 @@ import css from "@/ui/components/SourceOverlay.module.css";
  *  Opens through the same wrapper as every other overlay, so it is capped and
  *  scrolls itself into view like the rest. */
 export function SourceOverlay({ kind, onClose }: { kind: SourceKind; onClose: () => void }) {
-  const source = useSource(kind);
+  const source = usePort().useSource(kind);
 
   return (
     <Overlay

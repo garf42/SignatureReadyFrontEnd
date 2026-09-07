@@ -1,0 +1,166 @@
+{
+  "$comment": "What this tree needs from the application that hosts it. Machine-readable on purpose: src/ui/host-contract.test.ts asserts it against the host it is running in, so an integration that breaks one of these fails in the FDE's terminal on the first `npm run test` rather than in review. HOST-CONTRACT.md is generated from this file by `npm run port:additions` and is its human-readable rendering. Edit this file, never that one.",
+
+  "dependencies": {
+    "react": {
+      "range": "^18.3.1",
+      "why": "React 18. The host template pins 18; 19 changes ref and StrictMode behaviour under the Blueprint components this tree restyles."
+    },
+    "react-dom": {
+      "range": "^18.3.1",
+      "why": "Matches react."
+    },
+    "react-router-dom": {
+      "range": "^6.30.1",
+      "why": "Router 6. The tree mounts a descendant <Routes> under the shell's root splat, and 7 changes how a branch's params are shared between matches."
+    },
+    "@blueprintjs/core": {
+      "range": "^6.10.0",
+      "why": "Blueprint 6 carries the tables, tabs, menus, dialogs, selects and callouts on every screen, restyled through theme.css rather than replaced. The class prefix is bp6-, and theme.css selects on it."
+    },
+    "@blueprintjs/icons": {
+      "range": "^6.7.0",
+      "why": "Blueprint 6's icon set, which core expects to match its own major. The OSDK template ships neither."
+    },
+    "normalize.css": {
+      "range": "^8.0.1",
+      "why": "Loaded by theme.css inside @layer vendor. It must not be loaded a second time anywhere else — see mustNotExist."
+    },
+    "@fontsource/ibm-plex-sans": {
+      "range": "^5.1.0",
+      "why": "Self-hosted. The platform CSP refuses an external font CDN, so every face is a package."
+    },
+    "@fontsource/ibm-plex-mono": {
+      "range": "^5.1.0",
+      "why": "Self-hosted. Carries every provenance line and every micro-type figure."
+    },
+    "@fontsource/spectral": {
+      "range": "^5.1.0",
+      "why": "Self-hosted. The serif that distinguishes an answer of record from a draft."
+    },
+    "vitest": {
+      "range": "^3.2.0",
+      "why": "Aligned to the host's major so this tree cannot be authored against an API the host does not have. The tests here use only run, describe, it, expect and vi, all stable across 3 and later.",
+      "dev": true
+    },
+    "jsdom": {
+      "range": "^30.0.1",
+      "why": "The tests render. See the vitest block: environment must be jsdom.",
+      "dev": true
+    },
+    "@testing-library/react": {
+      "range": "^16.3.3",
+      "why": "Every screen test renders through it.",
+      "dev": true
+    },
+    "@testing-library/dom": {
+      "range": "^10.4.1",
+      "why": "Peer of @testing-library/react.",
+      "dev": true
+    }
+  },
+
+  "tsconfig": {
+    "strict": true,
+    "target": "ES2022",
+    "jsx": "react-jsx",
+    "resolveJsonModule": true,
+    "paths": { "@/*": ["./src/*"] },
+    "include": ["src"]
+  },
+
+  "vitest": {
+    "environment": "jsdom",
+    "globals": false,
+    "include": ["src/**/*.test.{ts,tsx}"],
+    "css": false,
+    "restoreMocks": true,
+    "setupFiles": null
+  },
+
+  "alias": {
+    "@": "/src",
+    "why": "Every file in this tree imports @/ui/…, and nothing imports outside it. The alias must exist in BOTH vite.config.ts (resolve.alias) and tsconfig.json (compilerOptions.paths), or the copy becomes a rewrite."
+  },
+
+  "mustNotExist": [
+    {
+      "path": "src/index.css",
+      "why": "THE HIGHEST-RISK ITEM IN THE PORT, because it yields a plausible-looking wrong app rather than an error. The OSDK template's src/index.css imports normalize.css and blueprint.css UNLAYERED. theme.css deliberately puts those same two in @layer vendor so its own unlayered rules outrank them; a second unlayered copy loading afterwards wins every specificity tie, and buttons, cards, dialogs, tables and selects silently revert to stock Blueprint. Stripping the #root rule is not enough — the file has to go, along with its import from main.tsx. theme.css is the only global stylesheet."
+    },
+    {
+      "path": "src/ui/package.json",
+      "why": "No nested app. A prior attempt carried one and the Foundry build never reached the tree: tsconfig includes src only, and Vite's entry is the root index.html."
+    },
+    { "path": "src/ui/index.html", "why": "No nested app. See above." },
+    { "path": "src/ui/vite.config.ts", "why": "No nested app. Vitest's config lives in the host's root vite.config.ts." },
+    { "path": "src/ui/tsconfig.json", "why": "No nested app. One tsconfig, at the root." },
+    { "path": "src/ui/main.tsx", "why": "The mount is shell-owned: it supplies the OSDK provider, the /auth/callback route and the dev-server basename. Nothing under src/ui/ mounts anything." }
+  ],
+
+  "domRequirements": [
+    {
+      "selector": "#root",
+      "rule": "no max-width, no padding constraint",
+      "why": "theme.css owns #root — min-height 100vh, full bleed. The template's `#root { max-width: 1280px; padding }` boxes the whole application inside a column."
+    },
+    {
+      "selector": "#root-container",
+      "rule": "must not exist",
+      "why": "One mount node, with no wrapper around it. The template's index.html wraps #root in a container div that constrains it."
+    }
+  ],
+
+  "router": {
+    "shape": "createBrowserRouter([\n  { path: \"/auth/callback\", element: <AuthCallback /> },\n  { path: \"*\", element: <App /> }\n])",
+    "why": "The shell mounts App at a SINGLE ROOT SPLAT, which also matches \"/\". Mounting it at both \"/\" and \"*\" — as an earlier version of this contract said — produces a React Router warning and a real defect: with an exact \"/\" route above the descendant <Routes>, App unmounts and remounts on the first navigation away from the inbox, discarding UI state such as the open sections pane, and flashing. Only /auth/callback belongs above App.\n\nApp must also tolerate a non-\"/\" basename: the Code Workspaces preview serves under a long proxy prefix. So nothing in this tree routes off window.location.pathname and nothing hardcodes an absolute asset path."
+  },
+
+  "steps": [
+    {
+      "title": "Move the tree",
+      "why": "src/ui/ is self-contained: every import is @/ui/…, nothing reaches outside it, and nothing outside it is load-bearing — the generated port-gap list lives at src/ui/data/PORT-ADDITIONS.generated.md for that reason.",
+      "how": "`git mv <nested>/src/ui src/ui`. One directory rename, zero content edits."
+    },
+    {
+      "title": "Delete the host's src/index.css and its import from src/main.tsx",
+      "why": "It loads normalize.css and blueprint.css unlayered, which silently outranks theme.css and reverts the whole application to stock Blueprint. theme.css is the only global stylesheet. This is the one step whose failure looks like a working app.",
+      "how": "`rm src/index.css`, then remove `import \"./index.css\"` from src/main.tsx."
+    },
+    {
+      "title": "Put `// @vitest-environment node` at the top of the host's src/env.test.ts",
+      "why": "This tree needs `environment: \"jsdom\"` for the whole project. The template's own env.test.ts imports Vite, and therefore esbuild, which throws `new TextEncoder().encode(\"\") instanceof Uint8Array is incorrectly false` inside jsdom. Without the docblock the first tagged release build fails — ci.yml does set VERIFY_ENV_PRODUCTION=true on tagged builds, so the production env check really does run on release.",
+      "how": "Add the docblock as the file's first line. ci.yml is marked DO NOT MODIFY and does not need to change."
+    },
+    {
+      "title": "Mount App at a single root splat",
+      "why": "See router.why: two routes cause a remount that discards UI state on the first navigation.",
+      "how": "Keep only /auth/callback above App; give App `path: \"*\"`."
+    },
+    {
+      "title": "Unbox the mount node",
+      "why": "theme.css owns #root and expects it full bleed and unwrapped.",
+      "how": "Remove the `#root { max-width … }` rule with index.css, and remove the `<div id=\"root-container\">` wrapper from index.html."
+    },
+    {
+      "title": "Install the dependency delta and set the alias",
+      "why": "The OSDK template ships none of @blueprintjs/icons or the three @fontsource packages, and the tree cannot resolve a single import without the @ alias.",
+      "how": "Install everything in `dependencies` above at those ranges; add `@` → `/src` to vite.config.ts resolve.alias AND tsconfig.json compilerOptions.paths."
+    },
+    {
+      "title": "Set the vitest block",
+      "why": "The tests render, so they need jsdom; `globals: false` because every test imports from vitest explicitly; `css: false` because assertions are on data-state and never on computed style.",
+      "how": "Copy the `vitest` block above into the host's root vite.config.ts."
+    },
+    {
+      "title": "Delete the nested harness",
+      "why": "Everything outside src/ui/ in the packet is a local harness the shell replaces. Leaving any of it behind creates the nested app the build cannot reach.",
+      "how": "Delete the nested package.json, package-lock.json, index.html, vite.config.ts, tsconfig.json, eslint.config.js and src/main.tsx. Move scripts/port-additions.mjs to scripts/, and README.md and MANIFEST.md to docs/signatureready/."
+    },
+    {
+      "title": "Run the suite",
+      "why": "src/ui/host-contract.test.ts asserts every requirement in this file against the host it is now running in. It is the check that the eight steps above actually landed.",
+      "how": "`npm run lint -- --max-warnings 0`, then `npm run test`, then `npm run build`."
+    }
+  ]
+}

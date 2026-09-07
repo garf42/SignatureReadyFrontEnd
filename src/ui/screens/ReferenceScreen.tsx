@@ -2,13 +2,7 @@ import { useState } from "react";
 import { Button, HTMLTable, Icon, InputGroup } from "@blueprintjs/core";
 
 import type { Citable } from "@/ui/data/port";
-import {
-  PAGES,
-  useCatalogue,
-  useReference,
-  useReferenceArtifact,
-  useRegulation
-} from "@/ui/data/port";
+import { PAGES, usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
 import { ListControls } from "@/ui/components/ListControls";
@@ -39,7 +33,7 @@ const CITABLE: Record<Citable, string> = {
 /** §6.6, Levels 0 and 1. A file organiser with a document viewer, and the only
  *  page in the application with real data in it. */
 export function ReferenceScreen() {
-  const reference = useReference();
+  const reference = usePort().useReference();
   const [viewing, setViewing] = useState<string | null>(null);
   const [group, setGroup] = useState("corpus");
 
@@ -157,7 +151,7 @@ export function ReferenceScreen() {
 }
 
 function RegulationPanel() {
-  const regulation = useRegulation();
+  const regulation = usePort().useRegulation();
   const [open, setOpen] = useState<Record<string, boolean>>({});
   return (
     <Region region={regulation}>
@@ -225,7 +219,7 @@ function RegulationPanel() {
 }
 
 function CataloguePanel() {
-  const catalogue = useCatalogue();
+  const catalogue = usePort().useCatalogue();
   return (
     <>
       <Region region={catalogue}>
@@ -265,7 +259,7 @@ function CataloguePanel() {
 /** Mounted only while an artifact is open, so the hook below runs
  *  unconditionally. The addressable unit is a page range, not a document. */
 function ArtifactViewer({ id, onClose }: { id: string; onClose: () => void }) {
-  const view = useReferenceArtifact(id);
+  const view = usePort().useReferenceArtifact(id);
   return (
     <Overlay
       title="Corpus artifact"

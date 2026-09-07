@@ -136,9 +136,13 @@ describe("a tab is a part of its step, never a copy of one", () => {
         // A step with one part renders no strip, so no clone is ever shown;
         // the clash that matters is a tab standing beside its siblings under
         // a name the step list already uses.
-        if (step.tabs.length < 2) continue;
+        if (step.tabs.length < 2) {
+          continue;
+        }
         for (const tab of step.tabs) {
-          if (stepNames.has(tab.name)) clashes.push(`${id} · step ${step.id} · ${tab.name}`);
+          if (stepNames.has(tab.name)) {
+            clashes.push(`${id} · step ${step.id} · ${tab.name}`);
+          }
         }
       }
     }
