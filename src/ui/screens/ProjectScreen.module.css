@@ -162,3 +162,103 @@
 .cross {
   border-top: 1px solid var(--rule);
 }
+
+/* --- the level line -------------------------------------------------------
+   Which level of review this proposal is on, on what authority, and what it
+   ends in — one sentence, under the project name. A person who is never told
+   which review they are doing cannot be driven to the correct one. */
+
+.levelLine {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule);
+}
+
+.levelNote {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  color: var(--ink);
+}
+
+.levelLine[data-level="none"] .levelNote {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.levelDocs {
+  margin: 0.25rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* The eliminated levels, stated once as an elimination. Never a list of lanes
+   a reader might take for choices. */
+.foreclosed {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* --- the banded rail ------------------------------------------------------
+   One band per level of review the proposal has occupied, plus the shared
+   band. Only the live band opens; a superseded band collapses to a summary
+   that still names its step count and its documents. */
+
+.bandGroup {
+  border-top: 1px solid var(--rule);
+}
+
+.bandGroup:first-of-type {
+  border-top: none;
+}
+
+.bandHeader {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.35rem;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.bandTitle {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.bandSummary {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.bandGroup[data-status="superseded"] .bandTitle,
+.bandGroup[data-status="superseded"] .bandSummary {
+  font-style: italic;
+}
+
+/* A superseded step is readable and read-only. It is not an error and not a
+   step that was never started, and before this it had no representation at
+   all — it was removed from the rail instead. */
+.superseded {
+  opacity: 0.72;
+}
+
+.superseded :global(.bp6-menu-item-label) {
+  font-style: italic;
+}
+
+/* A step whose document cannot begin until another exists — 1b.6(a) for a
+   finding, 1b.8(a) for a record of decision. It still opens. */
+.blocked :global(.bp6-menu-item-label) {
+  color: var(--ink-soft);
+}

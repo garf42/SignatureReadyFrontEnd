@@ -326,6 +326,7 @@ export const ACTS: Record<string, ActDecl> = {
     onSuccess: {
       mode: "both",
       invalidates: [
+        "useLevels",
         "useSteps",
         "useElement"
       ],
@@ -399,6 +400,7 @@ export const ACTS: Record<string, ActDecl> = {
     onSuccess: {
       mode: "refetch",
       invalidates: [
+        "useLevels",
         "useSteps",
         "useElement"
       ],
@@ -717,6 +719,7 @@ export const ACTS: Record<string, ActDecl> = {
     onSuccess: {
       mode: "refetch",
       invalidates: [
+        "useLevels",
         "useSteps",
         "useElement"
       ],

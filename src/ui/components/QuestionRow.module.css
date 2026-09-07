@@ -149,3 +149,44 @@
   content: " ·";
   color: var(--ink-faint);
 }
+
+/* The anchor. Monospace, quiet, and always present — it is what a review
+   comment resolves to and what a backend eventually joins per-row state on. */
+.rid {
+  margin: 0 0 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  opacity: 0.7;
+  user-select: all;
+}
+
+/* One note per modality. They differ in what they say, so they differ in how
+   they look: a permission relieves, a duty-to-consider constrains the process
+   and not the answer, a derived consequence is not a choice at all, and an
+   outbound request is somebody else's act. */
+.consider,
+.derived,
+.outbound,
+.echo {
+  margin: 0 0 0.6rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--rule);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.derived {
+  border-left-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+/* A row whose own text is not in the build. It is unresolved rather than
+   absent — the lane could not have answered, because the question has not been
+   written — and the mark says so without the state word reaching the screen. */
+.row[data-text="placeholder"] .label {
+  font-style: italic;
+  opacity: 0.75;
+}

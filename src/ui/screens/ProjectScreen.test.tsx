@@ -145,9 +145,32 @@ describe("the element panel", () => {
     expect(screen.getByText(/the subcomponent only; 1b.10 does not extend to it/)).toBeTruthy();
   });
 
-  it("says nothing was found for a tab that is not on this pathway", () => {
+  /* THE FALSEHOOD THIS TEST USED TO PIN. A tab that is not on any level this
+     proposal has occupied read as `absent` — "Nothing found for this part of
+     the document" — which is the interface making a claim about the world in
+     the one state defined as a real answer. After a level change it would have
+     said it about a document row that exists. `absent` means a query ran and
+     found nothing; a level that was never reached is not a query result. */
+  it("says a tab on another level of review is blocked, and names the level", () => {
     const { container } = at("/projects/p1/steps/8/rod?pathway=P2");
-    expect(container.querySelector("[data-state='absent']")).not.toBeNull();
+    expect(container.querySelector("[data-state='blocked']")).not.toBeNull();
+    expect(container.querySelector("[data-state='absent']")).toBeNull();
+    expect(screen.getAllByText(/P4/).length).toBeGreaterThan(0);
+  });
+
+  /* And the case that made the whole change necessary: after an escalation the
+     superseded level's document is STILL THERE. 1b.9(a) keeps it in the
+     proposal record and 1b.6(b)(1)/1b.8(b)(1) incorporate it into what
+     follows, so the rail may not drop it. */
+  it("keeps the earlier level's document reachable after an escalation", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.4/ea?levels=P3,P4");
+    expect(screen.getByText("Environmental assessment — 7 elements")).toBeTruthy();
+    expect(container.querySelector("[data-state='blocked']")).toBeNull();
+    // Both bands are in the rail, and the superseded one says so.
+    const pane = rail(container);
+    expect(within(pane).getByText(/Level 1 · P3/)).toBeTruthy();
+    expect(within(pane).getByText(/Level 2 · P4/)).toBeTruthy();
+    expect(pane.textContent).toContain("superseded");
   });
 });
 

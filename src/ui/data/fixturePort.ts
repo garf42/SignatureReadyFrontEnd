@@ -10,12 +10,14 @@ import type {
   Archive,
   ArtifactView,
   Catalogue,
+  DocumentType,
   ElementPanel,
   ExpertDraft,
   ExpertQueue,
   Gate,
   Inbox,
   Learning,
+  LevelHistory,
   PathwayId,
   ProjectHeader,
   Reference,
@@ -24,7 +26,8 @@ import type {
   Session,
   SourceDocument,
   SourceKind,
-  StepEntry
+  StepRail,
+  TabSpec
 } from "@/ui/data/types";
 
 /** The default implementation of the port: fixtures, one per state per screen,
@@ -56,7 +59,12 @@ export interface Overrides {
    *  that page's own fallback on another. */
   state: StateKey | null;
   shell: StateKey | null;
-  pathway: PathwayId | null;
+  rail: StateKey | null;
+  /** The levels this proposal has occupied, IN ORDER. `?levels=P3,P4` is a
+   *  whole escalation in one URL: P3 superseded and still readable, P4 live.
+   *  `?pathway=P3` is accepted as the one-level alias so every existing link,
+   *  bookmark and test keeps working. */
+  levels: PathwayId[];
   session: "in" | "out" | "pending";
   held: boolean;
   retrievalUp: boolean;
@@ -76,11 +84,19 @@ function sessionKnob(raw: string | null): Overrides["session"] {
 export function readOverrides(params: URLSearchParams): Overrides {
   const state = params.get("state");
   const shell = params.get("shell");
-  const pathway = params.get("pathway");
+  const rail = params.get("rail");
+  const levels = (params.get("levels") ?? params.get("pathway") ?? "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part): part is PathwayId => PATHWAY_IDS.some((id) => id === part));
   return {
     state: STATES.find((s) => s === state) ?? null,
     shell: STATES.find((s) => s === shell) ?? null,
-    pathway: PATHWAY_IDS.find((id) => id === pathway) ?? null,
+    /* Split out of `shell` so the band and the rail can be in different
+       states. They read the same knob before, so the partial failure a
+       half-wired backend produces most often was unreachable. */
+    rail: STATES.find((s) => s === rail) ?? null,
+    levels,
     session: sessionKnob(params.get("session")),
     held: params.get("gate") === "held",
     retrievalUp: params.get("retrieval") !== "down"
@@ -158,9 +174,25 @@ function useProject(_projectRef: string): Region<ProjectHeader> {
   }
 }
 
-function useSteps(_projectRef: string, stepId: string): Region<StepEntry[]> {
+function useLevels(_projectRef: string): Region<LevelHistory> {
   const o = useOverrides();
   switch (o.shell ?? "filled") {
+    case "pending":
+      return asking(pj.levelsAbsent);
+    case "absent":
+      return pj.levelsAbsent;
+    case "blocked":
+      return pj.levelsBlocked;
+    case "unresolved":
+      return pj.levelsUnresolved;
+    default:
+      return pj.levelHistory(o.levels);
+  }
+}
+
+function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
+  const o = useOverrides();
+  switch (o.rail ?? o.shell ?? "filled") {
     case "pending":
       return asking(pj.stepsAbsentSpec);
     case "absent":
@@ -170,14 +202,29 @@ function useSteps(_projectRef: string, stepId: string): Region<StepEntry[]> {
     case "unresolved":
       return pj.stepsUnresolvedSpec;
     default:
-      return pj.stepEntries(o.pathway, stepId || "0");
+      return pj.stepRail(o.levels, stepKey || "S.0");
   }
+}
+
+/** §7.7's ten tabs, through the port rather than as a static import. */
+function useCrossCutting(_projectRef: string): Region<TabSpec[]> {
+  const o = useOverrides();
+  if (o.state === "pending") {
+    return fx.pending("⟨element.byDocument · the ten cross-cutting surfaces⟩");
+  }
+  if (o.state === "unresolved") {
+    return fx.unresolved(
+      "The cross-cutting tabs could not be read",
+      "no object type carries a cross-cutting surface; they come from the rule and not from data"
+    );
+  }
+  return fx.filled(pj.CROSS_CUTTING);
 }
 
 /** The three surfaces the rule reserves to the responsible official. The
  *  interface presents the gate and cannot verify a credential: a gate held
  *  only in the client is not a gate. */
-function useGate(): Region<Gate> {
+function useGate(documentType: DocumentType | null): Region<Gate> {
   const o = useOverrides();
   if (o.state === "pending") {
     return fx.pending("⟨authority.credential_lookup⟩");
@@ -185,11 +232,14 @@ function useGate(): Region<Gate> {
   if (o.state === "unresolved") {
     return pj.gateUnresolved;
   }
-  return pj.gateFor(o.held);
+  return pj.gateFor(documentType, o.held);
 }
 
-function useElement(_projectRef: string, stepId: string, tabId: string): Region<ElementPanel> {
+function useElement(_projectRef: string, stepKey: string, tabId: string): Region<ElementPanel> {
   const o = useOverrides();
+  /* A step key is `E<seq>.<PathwayId>.<localId>`, or a bare local id from an
+     older link. Both resolve; the bare one resolves against the live level. */
+  const local = stepKey.includes(".") ? stepKey.slice(stepKey.lastIndexOf(".") + 1) : stepKey;
   switch (o.state ?? "filled") {
     case "pending":
       return asking(pj.elementAbsentSpec);
@@ -200,7 +250,7 @@ function useElement(_projectRef: string, stepId: string, tabId: string): Region<
     case "unresolved":
       return pj.elementUnresolvedSpec;
     default:
-      return pj.panelRegion(o.pathway, stepId || "0", tabId, o.held, o.retrievalUp);
+      return pj.panelRegion(o.levels, local || "0", tabId, o.held, o.retrievalUp);
   }
 }
 
@@ -338,8 +388,10 @@ export const fixturePort: DataPort = {
   useSession,
   useInbox,
   useProject,
+  useLevels,
   useSteps,
   useGate,
+  useCrossCutting,
   useElement,
   useSource,
   useArchive,

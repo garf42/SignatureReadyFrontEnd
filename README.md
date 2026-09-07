@@ -15,6 +15,7 @@ npm run lint            # eslint, --max-warnings 0
 npm run test            # vitest
 npm run typecheck       # tsc --noEmit
 npm run port:additions  # regenerate the port-gap list and HOST-CONTRACT.md
+npm run walk            # emit dist-walk/walk.html — the whole spec, one file, no external requests
 npm run build           # tsc --noEmit && vite build -> dist/
 ```
 
@@ -94,7 +95,7 @@ const port = usePort();
 const inbox = port.useInbox();
 ```
 
-`DataPort` declares fifteen members. `fixturePort` implements it from fixtures
+`DataPort` declares seventeen members. `fixturePort` implements it from fixtures
 and is the context's **default**, so nothing has to be provided for the tree to
 run — a required provider would make the fixture path opt-in, and a screen
 mounted in isolation would get nothing instead of fixtures.
@@ -160,21 +161,130 @@ its 87 rows. §6.1 asks that empty read as designed rather than as a failed load
 The packet is mid-build. Read the bindings as a specification for the adapter,
 never as a claim that the screen above them is done.
 
-- **§7's project page has the most left to do.** Pathway state is not built;
-  step and tab completion have no property behind them; the branch set that
-  records which limb of 1b.2(f)(2) answered does not exist; and eleven of the
-  seventeen acts are keyed on a `slot`, `claim`, `manifest`, `adoption`,
-  `factor`, `branch` or `consistencyDetermination` row that nothing creates.
+Run **`npm run walk`** first. It emits one self-contained `dist-walk/walk.html`
+— every level of review, every step, every tab, every row, with its anchor, its
+level, what the rule does with it, and where its own words came from — generated
+from `pathways.ts`, so it cannot drift from what the tree holds. The counts below
+come from it and go stale; the file does not.
+
+- **The rule's own text is not in this repository.** 19 rows carry
+  `text: "placeholder"`, which means their label is their own citation ordinal
+  and no non-specialist can answer them: the ten notice-of-intent contents at
+  1b.7(b)(1)(i)–(x), the three environmental-assessment scope duties at
+  1b.5(b)(1)–(3), the three scoping sub-paragraphs at 1b.7(c)(1)–(3), 1b.7(g)'s
+  unenumerated duties, and two more. 13 rows offer a set whose members are not
+  here either, including the nine subcomponents at 1b.4(a) — where the source
+  sentence names eight services plus a block of general offices and calls the
+  total nine. **Do not build a picker for that until the list is read off the
+  pinned text.** Such a row renders `unresolved`, is excluded from every submit
+  count, and is listed under `owner: "regulation"` in the walk.
+- **Completion still has no property behind it.** `TabEntry.outstanding` is
+  `null` throughout, and null is not zero — a tab with no address must not
+  render as done. Nothing creates a `slot` row and eleven of the seventeen acts
+  are keyed on one.
+- **Every action on the project page is inert.** `onAction` is threaded only on
+  the inbox and submit is local state. There is no write seam on the port.
 - **One act has no surface anywhere.** `record-consistency-finding` is declared
-  with `unplaced` saying so. Placing it is a decision about §7.
-- **Every reserved surface is enforced by nothing.** The regulation reserves six
-  classes of surface to a named holder and no platform predicate marks a
-  caller's class, so the interface's withholding is the only gate there is —
-  which is exactly what §7.2 calls not a gate. `acts.ts` asserts that every
-  reserved act says so.
-- **Eight parameter names and 56 binding names are proposed**, not measured.
+  with `unplaced` saying so. Placing it is still open: it may instead be one of
+  the three unnamed members of `determination.whichDetermination`, which has to
+  be read off Ontology Manager first.
+- **Every reserved surface is enforced by nothing.** No platform predicate marks
+  a caller's class, so the interface's withholding is the only gate there is.
+  `acts.ts` asserts that every reserved act says so.
 - **The screens run on fixtures.** A green preview says nothing about the
   ontology, because the tree makes no OSDK calls at all.
+
+## Levels of review, and how a proposal moves between them
+
+**Part 1b contains no cross-pathway dependency.** P0–P4 are the five mutually
+exclusive outcomes of *one* ordered elimination at 1b.2(f)(2), not a ladder. A
+finding of no significant impact after an environmental assessment — 1b.6(a) —
+and a record of decision after a statement — 1b.8(a) — are ordering *within* a
+level, and either may be one physical document with its predecessor. So neither
+is a level boundary, and neither may be built as one.
+
+Four transitions move a proposal between levels. They are declared in
+`TRANSITIONS`, every one carries its citations, and **their modalities differ**
+— which is the whole point, because reading a duty as a permission is the
+dangerous direction:
+
+| | citations | modality |
+| --- | --- | --- |
+| **T1** reevaluation finds a higher level may be warranted | 1b.9(r), 1b.9(r)(2) | **duty to *consider*.** The only express escalation instruction in part 1b, and its verb is *consider*. Nothing escalates by itself. |
+| **T2** a categorical exclusion cannot be applied because an extraordinary circumstance was not cured | 1b.2(f)(2)(i) → 1b.3(g)(1)(ii) → 1b.3(f)(3) → 1b.2(f)(2)(iv) → 1b.3(f)(2) | **derived.** No single paragraph states it; the chain compels it. Not a choice. |
+| **T3** a substantial update to a filed environmental impact statement | 1b.9(r)(3), 1b.7 | **duty.** Produces a *second* P4 episode on a P4 proposal, which is why the level history is an ordered list and not a set. |
+| **T4** the responsible official redetermines the level | 1b.11(a)(46) | **permission.** See below. |
+
+**T4 rests on something this repository cannot read.** §7 asserted that an
+environmental assessment supporting significance *reopens* the determination and
+moves the proposal to P4. No paragraph here supports that: 1b.2(f)(2)(iv) fires
+*before* the assessment is written and expressly sends unknown significance to an
+assessment, and 1b.5(a) and 1b.6(c) — where such a rule would live — are cited
+nowhere in the tree and could not be retrieved. It is therefore carried as a
+permission under 1b.11(a)(46), with the two unread paragraphs named on the
+surface, and **must not be promoted to a duty until they are read.**
+
+There is **no de-escalation**. `direction` is a closed union with no `"lower"`
+member, so one is unauthorable rather than merely unrecommended: 1b.9(r)(2) says
+*higher* and names no lower, an errata under 1b.9(r)(3)(i) is defined as an
+update that does *not* change the determinations in the record of decision, and
+1b.3(f)(3)'s cure operates before any document exists. The surface says this is
+the rule's **silence**, not its prohibition.
+
+**One proposal, one project, one rail.** 1b.2(e) confines the subcomponent to the
+proposed action at hand, 1b.9(a) keeps one record per proposal, and
+`open-document`'s uniqueness is over the *pair* (project, documentType) — so an
+EA, a FONSI, an EIS and a ROD already coexist on one project by design. A level
+change therefore **appends** a band to the rail; it never replaces one. §7.8 said
+*replaces* and is superseded on that point. A superseded level keeps its steps,
+readable and read-only.
+
+**The rail is computed from the rule, not from the adapter's answer.** `railFor`
+reads `pathways.ts` over the level ids `useLevels` returns. A `readonly` array
+forbids mutation, not a *shorter* one — an implementation written against a
+blanket uniqueness constraint would return a single episode and silently delete
+the earlier level's steps, undetectably, because the port is the boundary. This
+way a wrong answer can mislabel a level and can never lose a step.
+
+**Three things the FDE must settle before wiring `useLevels`**, and each is a
+decision rather than a gap:
+
+1. **A convention mapping `determination.outcome` onto P0–P4.** The property is
+   free text; nothing decodes a level from it. Invented privately, the two sides
+   will disagree about what level a proposal is on with nothing to detect it.
+2. **A supersession property or edge.** None exists, so an ordered level history
+   has no address at all. Until it does, `useLevels` returns `unresolved` — which
+   is a demoable state, not a bug.
+3. **Uniqueness over `(project, whichDetermination)` scoped to the unsuperseded
+   row.** Written blanket, it permanently forecloses reopening. At most one
+   *live* determination of each kind, with an ordered history behind it. Order
+   that history by the supersession edge or by the platform's own edit ordering
+   and **never by `decidedAt`**, which is a client-supplied parameter — ordering
+   on it lets the browser decide which level a proposal is on.
+
+And one schema change that cannot be deferred past integration: **the unique
+identification number belongs on the document, not the project.** 1b.9(u)
+attaches it to the environmental assessment (1b.5(c)(7)) and the statement
+(1b.7(h)(1)(v)) and makes it discretionary for a FANEC. One field on the project
+cannot carry two on an escalated proposal.
+
+## The Levels framework
+
+A different scale entirely from a *level of NEPA review*, and the collision is
+the design: this is a **Level 2** instrument whose job is to drive a
+non-specialist to the correct level of review.
+
+| | | this build |
+| --- | --- | --- |
+| **0** | Data processing | intake, the proposal record, withholding, agencies |
+| **1** | Search and visualisation | the categorical-exclusion catalogue, the forest-plan register, incorporation by reference |
+| **2** | Decision guidance | every determination, screen and drafted recommendation — the centre of gravity, and a test asserts it |
+| **3** | Feedback loops | reevaluation under 1b.9(r); the adopt disposition on every drafted row |
+| **4** | Automation | the deadline computed from soonest-of-three with compelled publication at expiry, page count against the limit, the notification list |
+
+Lower levels enable higher ones and a level is never forced. `coverage.test.ts`
+asserts that every level is carried and that no Level 0 or 1 foundation is
+empty — the framework's own named failure pattern.
 
 ## Integrating this into the host
 

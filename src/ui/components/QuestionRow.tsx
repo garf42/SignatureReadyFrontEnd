@@ -1,11 +1,58 @@
 import { useState } from "react";
 import { Card, HTMLSelect, Icon, Radio, RadioGroup } from "@blueprintjs/core";
 
-import type { Answer, QuestionRow as Row, SourceKind } from "@/ui/data/port";
+import type { Answer, Modality, QuestionRow as Row, SourceKind } from "@/ui/data/port";
 import { Region } from "@/ui/components/Region";
 import { StatusMark } from "@/ui/components/StatusMark";
 
 import css from "@/ui/components/QuestionRow.module.css";
+
+/** What the rule does with this row, said in plain words.
+ *
+ *  One branch per member of the union, and the default throws — so adding a
+ *  modality without deciding what it SAYS is a failure at the point of use
+ *  rather than a row that silently says nothing. `derived` is the branch that
+ *  matters most: a consequence the rule compels without stating in one
+ *  paragraph is not a choice, and reading it as one is the dangerous
+ *  direction. */
+function Modality({ modality }: { modality: Modality }) {
+  switch (modality) {
+    case "permission":
+      return (
+        <p className={css.permission}>
+          A permission in the rule, not a duty. Nothing here turns it into a requirement, and leaving
+          it unanswered does not hold the element open.
+        </p>
+      );
+    case "duty-to-consider":
+      return (
+        <p className={css.consider}>
+          The rule requires that this be considered. It does not decide the answer — the conclusion
+          stays the responsible official&rsquo;s.
+        </p>
+      );
+    case "derived":
+      return (
+        <p className={css.derived}>
+          No single paragraph states this. It follows from the chain of paragraphs cited above, and
+          it is a consequence rather than a choice.
+        </p>
+      );
+    case "outbound-request":
+      return (
+        <p className={css.outbound}>
+          Reserved to someone else. This records the request and sends it; nothing here waits on the
+          reply, because this application cannot verify a credential.
+        </p>
+      );
+    case "duty":
+      return null;
+    default: {
+      const never: never = modality;
+      throw new Error(`unhandled modality: ${String(never)}`);
+    }
+  }
+}
 
 /** One question. Closed, it shows its name and where it stands; open, it hands
  *  its answer to Region, which decides the shape. */
@@ -22,16 +69,21 @@ export function QuestionRow({
 }) {
   return (
     <Card
+      id={row.rid}
       className={css.row}
       data-mark={row.mark}
       data-gated={row.gate ? (row.gate.held ? "held" : "withheld") : undefined}
       data-discretionary={row.discretionary ? "yes" : undefined}
+      data-modality={row.modality}
+      data-text={row.textState}
+      data-level={row.level}
+      data-rid={row.rid}
     >
       <button
         type="button"
         className={css.header}
         aria-expanded={open}
-        onClick={() => onToggle(row.id)}
+        onClick={() => onToggle(row.rid)}
       >
         <span className={css.ref}>{row.ref}</span>
         <span className={css.label}>{row.label}</span>
@@ -42,11 +94,17 @@ export function QuestionRow({
       </button>
       {open ? (
         <div className={css.body}>
+          {/* The anchor. A comment left on this row resolves to this string,
+              and so does per-row state a backend eventually joins on — one
+              address, computed in one place. The ordinal is load-bearing: a
+              citation repeats inside a single tab in twelve places. */}
+          <p className={css.rid}>{row.rid}</p>
           {row.help ? <p className={css.help}>{row.help}</p> : null}
-          {row.discretionary ? (
-            <p className={css.permission}>
-              A permission in the rule, not a duty. Nothing here turns it into a requirement, and
-              leaving it unanswered does not hold the element open.
+          <Modality modality={row.modality} />
+          {row.restates ? (
+            <p className={css.echo}>
+              Asked once, elsewhere. Shown here as the record of the answer, so the same question is
+              never put twice.
             </p>
           ) : null}
           {row.gate ? (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 
-import type { ElementPanel, SourceKind } from "@/ui/data/port";
+import type { DocumentType, ElementPanel, SourceKind } from "@/ui/data/port";
 import { usePort } from "@/ui/data/port";
 import { ActionBar } from "@/ui/components/ActionBar";
 import { QuestionRow } from "@/ui/components/QuestionRow";
@@ -20,7 +20,9 @@ export function ElementScreen() {
     params.stepId ?? "",
     params.tabId ?? ""
   );
-  const gate = port.useGate();
+  /* Asked about the document this tab assembles, so a FANEC tab cites
+     1b.3(g)(2)(vi) and says nothing about a record of decision. */
+  const gate = port.useGate(documentOf(params.tabId ?? ""));
   const [open, setOpen] = useState<Record<string, boolean>>({});
   const [submitted, setSubmitted] = useState(false);
   const [source, setSource] = useState<SourceKind | null>(null);
@@ -55,9 +57,9 @@ export function ElementScreen() {
             <div className={css.rows} data-locked={submitted ? "yes" : "no"}>
               {element.rows.map((row) => (
                 <QuestionRow
-                  key={row.id}
+                  key={row.rid}
                   row={row}
-                  open={!!open[row.id]}
+                  open={!!open[row.rid]}
                   onToggle={toggle}
                   onSource={setSource}
                 />
@@ -80,4 +82,25 @@ export function ElementScreen() {
  *  a FANEC tab cites 1b.3(g)(2)(vi) and says nothing about a ROD. */
 function gatedRow(element: ElementPanel) {
   return element.rows.find((row) => row.gate);
+}
+
+/** Which document this tab assembles, if any. Exactly three carry a signature
+ *  the rule reserves: 1b.5(c)(6) and 1b.7(h)(8) state that the certifying
+ *  statement needs no signature and that approval to publish indicates
+ *  concurrence, so the EA and the EIS carry no gate at any point. */
+function documentOf(tabId: string): DocumentType | null {
+  switch (tabId) {
+    case "fanec":
+      return "FANEC";
+    case "fonsi":
+      return "FONSI";
+    case "rod":
+      return "ROD";
+    case "ea":
+      return "EA";
+    case "eis":
+      return "EIS";
+    default:
+      return null;
+  }
 }

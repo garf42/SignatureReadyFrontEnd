@@ -13,7 +13,7 @@ Where the front end needs something the ontology does not yet support, the
 ontology is what changes. A declared gap is a note for the FDE, never a
 reason to redesign the screen.
 
-15 surfaces declared · 14 with gaps · 1 answerable today · 17 acts · 56 names still to confirm.
+17 surfaces declared · 16 with gaps · 1 answerable today · 17 acts · 59 names still to confirm.
 
 ## Read this first: the names that are not measured
 
@@ -67,6 +67,9 @@ before wiring it. A wrong name here fails silently and forever.
 | `useLearning` | `dispositionMix` |
 | `useLearning` | `document` |
 | `useLearning` | `manifest` |
+| `useLevels` | `supersededAt` |
+| `useLevels` | `project.determinations` |
+| `useLevels` | `project.documents` |
 | `useReference` | `title` |
 | `useReference` | `corpus` |
 | `useReference` | `documentType` |
@@ -87,12 +90,14 @@ before wiring it. A wrong name here fails silently and forever.
 | --- | --- | --- |
 | `useArchive` — recently-deleted projects, ordered by archived date, with restore and purge | absent | an archived state on project; an archive act; a restore act; a purge act; an archivedAt property, and an archivedBy if that becomes recordable |
 | `useCatalogue` — the categorical-exclusion catalogue, and the 1b.4(c) / 1b.4(d) split | backlog | category populated from ce_categories.json — 87 rows already in the repository, no egress and no retrieval. §3 names it the single cheapest high-value population in the build, with five obligations blocked behind it |
+| `useCrossCutting` — the ten tabs reachable from every step on every level | backlog | per-tab completion, which is the same slot closure §1 records as having no address; a document parameter on the review-scoped tabs: 1b.9(r) reevaluation operates on a PUBLISHED DOCUMENT, so on a proposal that has published more than one, one tab cannot say which it is about |
 | `useElement` — one tab: its rows, their answers and the one act that closes it | backlog | the submission-time Function; eight named preconditions wait on one, including adopt's rule that adoptedValue must be present unless adoptionState is 'rejected'; element and slot rows, as above; an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered |
 | `useExpertQueue` — the open expert requests, overdue first, and what came back | backlog | anything that creates a slot row — eleven of seventeen acts wait on this, and the queue is empty until it exists; an actor on identify-expert-requirement, package-expert-request and state-factor-finding; none writes one, so the queue cannot show who sent a request; a holder-to-slot join (B.5.12); nothing joins a holder to the slot needing one, so a recipient is a suggestion the officer confirms; a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert |
 | `useExpertRequest` — the drafted request in the compose overlay, and sending it | backlog | the same slot row the queue waits on; an actor on package-expert-request; an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline |
 | `useGate` — the three signature surfaces the regulation reserves, and the route-to-holder action offered instead | partial | a signature concept; document carries no date-issued and no signatory property, and §5 records a signature as the corpus's largest gap; a platform predicate for the caller's class; the interface presents the gate and cannot verify a credential; a record of a routing — that a document was referred to a holder for signature |
 | `useInbox` — every project this officer holds | partial | a holder-to-project relation; nothing records which officer holds a project; a modified-at property; the inbox sorts and groups on 'recently changed' and nothing carries it; a position property, or a projection of it; 'where it is' is step and tab state, which is C9's pathway state and is not built |
 | `useLearning` — what the system proposed, what a human did with it, and whether it is calibrated | backlog | the five object-dataset materializations — adoption, assignment, determination, engagement, receivedArtifact — all hold zero rows, so no transform can read an act-written row and ratification can never populate; the submission-time Function, which holds eight named preconditions including two intent-predicate clauses |
+| `useLevels` — which levels of NEPA review this proposal has occupied, in order | backlog | a convention mapping determination.outcome onto P0–P4; the property is free text and nothing decodes a level from it; determination.supersededAt, or a supersedes edge — an ordered level history has no address at all today; uniqueness over (project, whichDetermination) SCOPED TO THE UNSUPERSEDED ROW; written blanket it permanently forecloses reopening; branch rows for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row; document.uniqueIdentificationNumber and its issuer, moved off project — 1b.9(u) attaches the number to the EA (1b.5(c)(7)) and the EIS (1b.7(h)(1)(v)), and one field on the project cannot carry two on an escalated proposal |
 | `useProject` — the project band above every step | partial | an office or subcomponent property; §3 records that no object type carries a USDA subcomponent identity, which is also 1b.4(a)'s third limb; a status property; project state is pathway state and is not built |
 | `useReference` — the corpus, faceted and searchable — the only page in the application with real data in it | answerable | a decision on what add means — upload, or recording an intent to add. No act adds or removes a corpus artifact, nothing syncs, and the build account is Viewer-only and permanently so |
 | `useReferenceArtifact` — one artifact in the viewer, opened at a cited page range | partial | a media-set read route for the viewer. Whether an OSDK front end can read those bytes, and by what route, is not answerable from the interface side; until it is, the card carries metadata, digest and page-range citation and the viewer is a slot that lights up later |
@@ -140,14 +145,14 @@ from this one, so the two cannot disagree.
 | `signature-ready-freeze-slot-disposition` | blocked | no | none | `useElement`, `useLearning` |
 | `signature-ready-identify-expert-requirement` | blocked | no | none | `useExpertQueue`, `useExpertRequest` |
 | `signature-ready-open-determination` | exercisable | no | none | `useSteps`, `useElement` |
-| `signature-ready-open-document` | exercisable | no | none | `useSteps`, `useElement` |
+| `signature-ready-open-document` | exercisable | no | none | `useLevels`, `useSteps`, `useElement` |
 | `signature-ready-package-expert-request` | blocked | no | none | `useExpertQueue`, `useExpertRequest` |
 | `signature-ready-publish-under-compulsion` | exercisable | no | current_user_id | `useElement`, `useSteps` |
 | `signature-ready-record-artifact-arrival` | blocked | no | none | `useExpertQueue` |
 | `signature-ready-record-branch` | blocked | yes | current_user_id | `useSteps`, `useElement` |
 | `signature-ready-record-consistency-finding` | blocked | no | current_user_id | — |
-| `signature-ready-record-determination` | exercisable | yes | current_user_id | `useSteps`, `useElement` |
-| `signature-ready-record-determination-outcome` | exercisable | yes | none | `useSteps`, `useElement` |
+| `signature-ready-record-determination` | exercisable | yes | current_user_id | `useLevels`, `useSteps`, `useElement` |
+| `signature-ready-record-determination-outcome` | exercisable | yes | none | `useLevels`, `useSteps`, `useElement` |
 | `signature-ready-stamp-verifier-verdict` | blocked | no | none | `useElement`, `useLearning` |
 | `signature-ready-state-factor-finding` | blocked | yes | none | `useElement`, `useSteps`, `useExpertQueue`, `useExpertRequest` |
 | `signature-ready-submit-intake` | exercisable | no | none | `useInbox`, `useProject` |
@@ -226,6 +231,39 @@ Rendered rather than hidden:
 - 39 categories at 1b.4(c) require no documentation; 48 at 1b.4(d) require a FANEC. §2 re-derives 87 from the pinned text, so the file and the rule agree.
 - project_screened_against_category is the correct link type and is vacuous at the target end: both it and category hold zero rows.
 - Until the rows land the section renders empty and says why (§6.6).
+
+### `useCrossCutting`
+
+the ten tabs reachable from every step on every level. Verdict: **backlog**. Required by §7.7.
+
+| | |
+| --- | --- |
+| object types | `project`, `proposalRecordItem` |
+| properties | — |
+| acts | — |
+| datasets | — |
+| links traversed | — |
+| addressed by | `:projectRef` |
+| query | not a list, sort unaddressed, search none, counts length |
+| freshness | tolerant |
+
+**Identity.** The tabs themselves come from the rule and have no ontology identity; :tabId is pathways.ts's own id and nothing resolves it.
+
+**Query.** What a live implementation supplies is their COMPLETION, which is the same slot closure every other completion count waits on.
+
+**Authority.** No gate. §7.2 requires every row to be reachable and workable without agency credentials.
+
+**Freshness.** The tab set is the rule's and does not move. Completion would stale on the acts that close a slot, and no act creates one.
+
+Needed:
+
+- per-tab completion, which is the same slot closure §1 records as having no address
+- a document parameter on the review-scoped tabs: 1b.9(r) reevaluation operates on a PUBLISHED DOCUMENT, so on a proposal that has published more than one, one tab cannot say which it is about
+
+Rendered rather than hidden:
+
+- Nine of the ten are answered once for the proposal and travel across a level change; reevaluation and programmatic reliance are per level. TabSpec.scope carries the split, so carry-forward is a property a test can check rather than a rule someone follows.
+- They are ten TABS under one rail entry at a single step segment, not ten steps. The generated handoff said otherwise and was wrong about the built shape before any of this.
 
 ### `useElement`
 
@@ -478,6 +516,48 @@ Rendered rather than hidden:
 - determinationEvidence has a declared evidence set for two of the five determinations and none for the other three, so those three report that nothing was asked rather than that nothing was found. That is the distinction working (§1).
 - Named as a future tile and not built: 1b.3(h) reliance on a prior CE determination is a genuine regulation-backed learning loop. §3 records precedent and prior_coverage in the spec and 51 artifacts in the prior-coverage corpus, and no object type records a reliance (§6.5).
 
+### `useLevels`
+
+which levels of NEPA review this proposal has occupied, in order. Verdict: **backlog**. Required by §8.0; §8.4; §7.1; §2 the determinations.
+
+| | |
+| --- | --- |
+| object types | `determination`, `project`, `document` |
+| properties | `determination.whichDetermination`, `determination.outcome`, `document.documentType`, `determination.supersededAt` *(proposed)* |
+| acts | `signature-ready-open-determination`, `signature-ready-record-determination-outcome`, `signature-ready-record-determination`, `signature-ready-open-document` |
+| datasets | — |
+| links traversed | `project.determinations` (project → determination), `project.documents` (project → document) |
+| addressed by | `:projectRef` |
+| query | not a list, sort `the order the determinations were made` asc, search none, counts length |
+| freshness | immediate |
+
+**Identity.** Per proposal, not per level. One proposal, one project row, one record — an escalation appends a determination and never a project.
+
+**Query.** Walk project → determinations, keep those whose whichDetermination is det_review_level, order them, and read the level off each outcome through the convention. Never a scan of the determination type. ORDER BY THE SUPERSEDES EDGE OR THE PLATFORM'S OWN EDIT ORDERING — decidedAt is a client-supplied parameter, so ordering on it lets the browser decide which level a proposal is on.
+
+**Authority.** The determinations at 1b.11(a)(46) are reserved to the responsible official, but their arbiter belongs to the act that RECORDS one, not to a surface that reads the history back. Reading which level a proposal is on is not a reserved act.
+
+**Freshness.** A recorded outcome is what fixes a level, so the history is stale across that write and the whole rail rebuilds from it. open-determination is deliberately not listed: it creates the row and changes no level, because the outcome is what decides. AMENDMENT-7 §7.8 said a reopened determination REPLACES the step set; §8 supersedes that. It APPENDS. A superseded level keeps its steps, readable and read-only — 1b.9(a) keeps the work in the proposal record and 1b.6(b)(1) and 1b.8(b)(1) incorporate it into whatever follows.
+
+Traversed rather than scanned:
+
+- `project.determinations` — EXPECT MORE THAN ONE, and order them. Nothing refuses a second det_review_level, and after §8 that is not a defect to close blanket — it is the seam an escalation runs on. Order by the supersedes edge or by the platform's own edit ordering, NEVER by decidedAt: that is a client-supplied parameter, so ordering on it lets the browser decide which level a proposal is on. The name is a normalisation and must be matched against the 38 link type resources first.
+- `project.documents` — The document ledger shown under each level band. Rows live in the edits layer and signatureReady.document holds zero, so a dataset query finds nothing at all.
+
+Needed:
+
+- a convention mapping determination.outcome onto P0–P4; the property is free text and nothing decodes a level from it
+- determination.supersededAt, or a supersedes edge — an ordered level history has no address at all today
+- uniqueness over (project, whichDetermination) SCOPED TO THE UNSUPERSEDED ROW; written blanket it permanently forecloses reopening
+- branch rows for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row
+- document.uniqueIdentificationNumber and its issuer, moved off project — 1b.9(u) attaches the number to the EA (1b.5(c)(7)) and the EIS (1b.7(h)(1)(v)), and one field on the project cannot carry two on an escalated proposal
+
+Rendered rather than hidden:
+
+- The rail is computed from the rule over the level ids this member returns; it is NOT this member's own array. A readonly array forbids mutation, not a shorter one, so an implementation that returned a single episode would silently delete the earlier level's steps and nothing on the client could tell.
+- Part 1b contains no cross-pathway dependency. P0–P4 are the mutually exclusive outcomes of one ordered elimination at 1b.2(f)(2); a FONSI after an EA (1b.6(a)) and a ROD after an EIS (1b.8(a)) are ordering WITHIN a level, and either may be one physical document with its predecessor.
+- Four transitions exist and their modalities differ: 1b.9(r)(2) is a duty to CONSIDER, the uncured-extraordinary-circumstance route is DERIVED from a chain of four paragraphs, 1b.9(r)(3) is a duty, and a redetermination under 1b.11(a)(46) is a PERMISSION. Nothing in this repository supports a rule that an environmental assessment finding significance requires a statement — 1b.5(a) and 1b.6(c) are cited nowhere and could not be retrieved.
+
 ### `useProject`
 
 the project band above every step. Verdict: **partial**. Required by §7.3 initiation overlay; §3 process, record and competence.
@@ -694,7 +774,7 @@ the step list for the determined pathway, and each step's tabs. Verdict: **backl
 
 **Authority.** No gate on the step list. §7.2 requires every step, tab and row to be reachable and workable without agency credentials, and a waiting step still opens. The determinations that decide WHICH steps exist are reserved to the responsible official by 1b.11(a)(46), but their arbiter belongs to the row that records them, not to this surface. The one refusal the platform actually holds on this spine is record-determination's ordering — it refuses attribution while outcome is empty, and record-determination-outcome refuses a new outcome once actorPrincipal is set (§1) — and it is a sequencing rule, not a credential.
 
-**Freshness.** Step 2 fixes the pathway and populates Steps 3 and beyond, and §7.8 records that a reopened level-of-review determination REPLACES the step set — so the rail cannot be stale across that write. open-determination is deliberately not in the list: it creates the row and changes nothing the rail shows, because the outcome is what fixes the pathway. Marks and completion would additionally be staled by adopt, freeze-slot-disposition, record-branch and emit-document, and each of those stales state with no address today, so refetching on them buys nothing until C9 lands.
+**Freshness.** Step 2 fixes the level of review and populates Steps 3 and beyond. §7.8 said a reopened determination REPLACES the step set; §8 supersedes that and it APPENDS — a superseded level keeps its steps, readable and read-only, because 1b.9(a) keeps the work in the proposal record and 1b.6(b)(1) and 1b.8(b)(1) incorporate it into whatever follows. The rail is computed from the rule over the level ids useLevels returns, so a partial answer here can mislabel a level and can never delete a step; it cannot be stale across that write either way. open-determination is deliberately not in the list: it creates the row and changes nothing the rail shows, because the outcome is what fixes the pathway. Marks and completion would additionally be staled by adopt, freeze-slot-disposition, record-branch and emit-document, and each of those stales state with no address today, so refetching on them buys nothing until C9 lands.
 
 Traversed rather than scanned:
 
@@ -716,5 +796,5 @@ Rendered rather than hidden:
 
 - Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).
 - Steps 0–2 are shared and exist before any pathway is fixed; Steps 3 and beyond are the pathway's and do not exist until Step 2 determines it (§7.1). Unknown significance routes to P3, not P4 — 1b.2(f)(2)(iv)(A).
-- The rail is three segments in one sequence, and the wiring must preserve the distinction. Steps 0–2 are shared and exist from the start. The pathway's own steps exist only once Step 2 fixes a pathway and are generated from that determination. §7.7's ten items are shared by every pathway, so each is a step of its own and they follow the pathway's steps.
+- The rail is BANDED, and the wiring must preserve the banding. One shared band holds Steps 0–2 and exists from the start. One band per level of review the proposal has occupied, in order, each holding that level's own steps — a superseded band collapses to a summary and is never removed. §7.7's ten items are TEN TABS UNDER ONE RAIL ENTRY at a single step segment, not ten steps; the earlier description of them as steps of their own never matched the built shape.
 - A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all.

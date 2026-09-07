@@ -103,8 +103,22 @@ export interface QuestionRow {
    *  row is visible and in place either way; what changes is the act offered. */
   gate?: Gate;
   /** §7.9. A permission in the rule. Nothing may turn it into a requirement,
-   *  so the submit bar does not count it as outstanding. */
+   *  so the submit bar does not count it as outstanding. Derived from
+   *  `modality` and never set beside it. */
   discretionary?: boolean;
+  /** What the rule does with this row, in its own force. The renderer has one
+   *  branch per member, so imperative copy cannot reach a permission. */
+  modality: Modality;
+  /** Where the row's own words come from. `placeholder` means the rule's text
+   *  is not in the build and the row is not answerable by a non-specialist. */
+  textState: TextState;
+  /** The Levels-framework level this row carries. */
+  level: Level;
+  /** The stable anchor. Unique across the whole build, the DOM id, and the
+   *  address a review comment resolves to. */
+  rid: string;
+  /** Where this question is canonically asked, when this row echoes one. */
+  restates?: string;
 }
 
 export interface SubmitBar {
@@ -124,21 +138,51 @@ export interface ElementPanel {
   submit: SubmitBar;
 }
 
-export type StepMark = "completed" | "active" | "waiting" | "error";
+/** `superseded` and `blocked` are new and neither had a representation before:
+ *  a step reserved by 1b.6(a) or 1b.8(a) rendered identically to one merely
+ *  unvisited, and a step whose level had been superseded could not be drawn at
+ *  all because it was removed from the rail instead. */
+export type StepMark = "completed" | "active" | "waiting" | "error" | "superseded" | "blocked";
 
 export interface TabEntry {
   id: string;
   name: string;
   done: boolean;
+  /** How many binding rows are still outstanding, or null where completion has
+   *  no ontology address. Null is not zero, and must not render as done. */
+  outstanding: number | null;
+  /** Rows whose text is not in the build. Counted on the strip so the debt is
+   *  visible where the work is, not only in an audit. */
+  placeholders: number;
+  level: Level;
 }
 
 export interface StepEntry {
+  /** The local id inside its band — "0", "4", "x". Kept for compatibility;
+   *  it is NOT an address, because it collides across pathways. */
   id: string;
+  /** The canonical address. `S.0` for a shared step, `E<seq>.<PathwayId>.<id>`
+   *  for a level episode's step, `x` for the cross-cutting band. Unique across
+   *  the whole history by construction, including a proposal that occupies one
+   *  pathway twice under 1b.9(r)(3). */
+  key: string;
   n: number;
   name: string;
   mark: StepMark;
   meta: string;
   tabs: TabEntry[];
+  band: BandRef;
+  /** The citation a blocked step waits on — 1b.6(a) for a FONSI, 1b.8(a) for a
+   *  ROD. Never help prose an adapter has to parse. */
+  waitingOn: string | null;
+}
+
+/** What `useSteps` returns. A bare array could not carry the banding, and a
+ *  screen that infers grouping from step ids is inferring it from a value the
+ *  rule does not guarantee is unique. */
+export interface StepRail {
+  bands: BandEntry[];
+  steps: StepEntry[];
 }
 
 export interface ProjectHeader {
@@ -187,19 +231,105 @@ export interface Session {
  * §7 — the project page. Pathways, the signature gate, and the trigger map.
  * ------------------------------------------------------------------------ */
 
-import type { PathwayId } from "@/ui/data/pathways";
+import type { DocumentType, Level, Modality, PathwayId, TextState } from "@/ui/data/pathways";
 
-export type { DocumentType, GateSpec, PathwayId, RowSpec, StepSpec, TabSpec } from "@/ui/data/pathways";
+export type {
+  DocumentType,
+  GateSpec,
+  Level,
+  Modality,
+  Options,
+  PathwayId,
+  RowForm,
+  RowSpec,
+  StepSpec,
+  TabSpec,
+  TextState
+} from "@/ui/data/pathways";
 
-/** Which pathway Step 2 fixed. `null` is the state before it is fixed, and it
- *  is not an error: Steps 0–2 exist on every pathway, and until the
- *  determination is recorded the step list names no pathway step. */
-export interface PathwayState {
-  pathway: PathwayId | null;
-  /** The words shown where a pathway is not yet fixed. */
-  note: string;
+/** What a level of review is to this project, once the ordered elimination at
+ *  1b.2(f)(2) has reached it or declined to.
+ *
+ *  Told apart from the five REGION states on purpose, and the distinction is
+ *  load-bearing: a Region says whether a QUERY answered, a LevelState says a
+ *  fact about the WORLD. An adapter that returns `absent` where it meant "this
+ *  level was never reached" is making a false claim in the one state reserved
+ *  for true ones — which is exactly what the build did before. */
+export type LevelState =
+  /** The outcome of the determination that has not been superseded. */
+  | "live"
+  /** Was the outcome of a superseded determination. Rows stay readable and
+   *  read-only forever: 1b.9(a) keeps the work in the proposal record and
+   *  1b.6(b)(1)/1b.8(b)(1) incorporate it. */
+  | "superseded"
+  /** Eliminated by the live determination's own limb sequence. Named with the
+   *  limb that eliminated it, and a way back to the answer that did. */
+  | "foreclosed"
+  /** No level-of-review determination exists yet. */
+  | "notReached";
+
+/** One level of review this proposal has been on. Episodes are append-only:
+ *  the array is readonly, no act removes one, and `railFor` only concatenates,
+ *  so a step cannot leave the rail once it has entered it. */
+export interface LevelEpisode {
+  /** 1-based, in the order the determinations were made. */
+  seq: number;
+  pathway: PathwayId;
+  name: string;
   reachedWhen: string;
   terminalOutput: string;
+  /** Which transition opened this episode; `"initial"` for the first. */
+  ground: string;
+  /** The seq of the episode that superseded this one, or null while live. */
+  supersededBy: number | null;
+}
+
+/** A document opened on this proposal, and where it sits. `open-document`'s
+ *  uniqueness is over the PAIR (project, documentType), so an EA, a FONSI, an
+ *  EIS and a ROD coexist on one project by design — which is why an escalated
+ *  project needs no second project row. */
+export interface DocumentLedgerEntry {
+  documentType: DocumentType;
+  openedInEpisode: number;
+  state: "not-opened" | "assembling" | "published" | "signed" | "supplemented";
+  /** 1b.9(u): the number follows the DOCUMENT — 1b.5(c)(7) for an EA,
+   *  1b.7(h)(1)(v) for an EIS, discretionary for a FANEC. One field on the
+   *  project cannot carry two on an escalated proposal. */
+  uniqueIdentificationNumber: string | null;
+  stepKey: string;
+}
+
+/** The whole level history of one proposal. `null` liveSeq is the state before
+ *  Step 2 fixes anything, and it is not an error. */
+export interface LevelHistory {
+  episodes: readonly LevelEpisode[];
+  /** The seq of the live episode. Derived from the one episode whose
+   *  `supersededBy` is null — never stored twice, so two live levels are
+   *  unrepresentable for want of a field. */
+  liveSeq: number | null;
+  /** The words shown where no level is fixed yet. */
+  note: string;
+  documents: DocumentLedgerEntry[];
+  /** Levels the live determination's limb sequence eliminated, with the limb. */
+  foreclosed: { pathway: PathwayId; limb: string; because: string }[];
+}
+
+/** A band in the step rail: the shared steps, one level episode, or the
+ *  cross-cutting tabs. Grouping is data, so no screen infers it from markup. */
+export type BandRef =
+  | { kind: "shared" }
+  | { kind: "episode"; seq: number; pathway: PathwayId; superseded: boolean }
+  | { kind: "cross" };
+
+export interface BandEntry {
+  band: BandRef;
+  title: string;
+  status: "shared" | "live" | "superseded" | "cross";
+  /** One line that stands in for the band when it is collapsed, so a reader
+   *  who never expands it still knows what is inside. */
+  summary: string;
+  documents: DocumentLedgerEntry[];
+  collapsed: boolean;
 }
 
 /** A surface the rule reserves to a named holder. `held` is what the caller

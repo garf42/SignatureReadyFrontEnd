@@ -1,14 +1,27 @@
 import {
+  COMPETENCE_CONDITIONS,
   CROSS_CUTTING,
   DOCUMENT_AUTHORITY,
+  LEVELS,
   PATHWAYS,
+  PATHWAY_IDS,
   RETRIEVAL_PUSHES,
   SHARED_STEPS,
+  TRANSITIONS,
   TRIGGERS,
+  elementRows,
   findTab,
-  stepsFor
+  isPermission,
+  railFor,
+  ridFor
 } from "@/ui/data/pathways";
-import type { PathwayId, RowSpec, TabSpec } from "@/ui/data/pathways";
+import type {
+  DocumentType,
+  GateSpec,
+  PathwayId,
+  RowSpec,
+  TabSpec
+} from "@/ui/data/pathways";
 import {
   CALCULATED,
   CHOICE_LIST,
@@ -26,12 +39,15 @@ import {
 import type {
   Action,
   Answer,
+  BandEntry,
+  DocumentLedgerEntry,
   ElementPanel,
   Gate,
-  PathwayState,
+  LevelHistory,
   QuestionRow,
   Region,
   StepEntry,
+  StepRail,
   TabEntry
 } from "@/ui/data/types";
 
@@ -46,7 +62,15 @@ import type {
  *  drafting lane, which is the case §7.8 names.
  */
 
-export { CROSS_CUTTING, DOCUMENT_AUTHORITY, RETRIEVAL_PUSHES, TRIGGERS };
+export {
+  COMPETENCE_CONDITIONS,
+  CROSS_CUTTING,
+  DOCUMENT_AUTHORITY,
+  LEVELS,
+  RETRIEVAL_PUSHES,
+  TRANSITIONS,
+  TRIGGERS
+};
 
 const CHANGE: Action = { id: "change", label: "Change answer", look: "secondary", enabled: true };
 const ACCEPT: Action = { id: "accept", label: "Accept", look: "primary", enabled: true };
@@ -56,38 +80,118 @@ const SAVE: Action = { id: "save", label: "Save", look: "primary", enabled: true
 const WRITE_OWN: Action = { id: "write", label: "Write your own answer", look: "link", enabled: true };
 const REPORT: Action = { id: "report", label: "Report a problem", look: "link", enabled: true };
 
-/* --- the pathway, and the state before one is fixed --- */
+/* --- the level history, and the state before a level is fixed -------------
 
-export function pathwayState(pathway: PathwayId | null): Region<PathwayState> {
-  if (!pathway) {
-    return filled<PathwayState>({
-      pathway: null,
-      note: "The pathway is fixed at Step 2. Until then no pathway step exists and none is named.",
-      reachedWhen: "1b.2(f)(2) — the level-of-review determination, in sequence",
-      terminalOutput: "Not yet determined"
-    });
-  }
+   Replaces the old `pathwayState`, which was declared here, exported from
+   nowhere and rendered by nothing: the pathway line was deleted from the band
+   and the data layer was left behind. A non-specialist who is never told which
+   review they are doing cannot be driven to the correct one, so it comes back —
+   as a history rather than a scalar, because one proposal can occupy more than
+   one level and, under 1b.9(r)(3), the same level twice. */
+
+function episode(seq: number, pathway: PathwayId, ground: string, supersededBy: number | null) {
   const spec = PATHWAYS[pathway];
-  return filled<PathwayState>({
+  return {
+    seq,
     pathway,
-    note: `${spec.id} · ${spec.name}`,
+    name: spec.name,
     reachedWhen: spec.reachedWhen,
-    terminalOutput: spec.terminalOutput
+    terminalOutput: spec.terminalOutput,
+    ground,
+    supersededBy
+  };
+}
+
+/** The levels a proposal has occupied, in order, from the knob or the backend.
+ *  `[]` is the honest state before Step 2 decides anything. */
+export function levelHistory(levels: PathwayId[]): Region<LevelHistory> {
+  const episodes = levels.map((pathway, i) =>
+    episode(
+      i + 1,
+      pathway,
+      i === 0 ? "initial" : "⟨transition⟩",
+      i === levels.length - 1 ? null : i + 2
+    )
+  );
+  const liveSeq = episodes.length > 0 ? episodes[episodes.length - 1].seq : null;
+  const live = episodes.find((e) => e.seq === liveSeq);
+
+  /* Levels the live determination's own limb sequence eliminated. Stated as an
+     elimination, with the limb that did it — 1b.2(f)(2) is an ordered
+     elimination, and expressing it by the ABSENCE of steps is what made the
+     build unreviewable. Never rendered as a lane a user might pick from. */
+  const foreclosed = live
+    ? PATHWAY_IDS.filter((id) => !levels.includes(id)).map((pathway) => ({
+        pathway,
+        limb: FORECLOSED_BY[live.pathway],
+        because: `${PATHWAYS[pathway].name} — not this proposal`
+      }))
+    : [];
+
+  return filled<LevelHistory>({
+    episodes,
+    liveSeq,
+    note:
+      liveSeq === null
+        ? "The level of review is fixed at Step 2. Until then no level step exists and none is named."
+        : `Level ${String(liveSeq)} of ${String(episodes.length)} · ${live?.pathway ?? ""} · ${live?.terminalOutput ?? ""}`,
+    documents: live ? DOCUMENTS_FOR[live.pathway](live.seq) : [],
+    foreclosed
   });
 }
 
-export const pathwayBlocked: Region<PathwayState> = blocked(
+const FORECLOSED_BY: Record<PathwayId, string> = {
+  P0: "1b.2(e) — NEPA does not apply, so the level-of-review sequence is not reached",
+  P1: "1b.2(f)(2)(i) — a categorical exclusion applies",
+  P2: "1b.2(f)(2)(i) — a categorical exclusion applies",
+  P3: "1b.2(f)(2)(iv)(A) — impacts not likely significant, or of unknown significance",
+  P4: "1b.2(f)(2)(iv)(B) — impacts likely significant"
+};
+
+/** 1b.9(u) attaches the unique identification number to the DOCUMENT — the EA
+ *  at 1b.5(c)(7), the EIS at 1b.7(h)(1)(v) — and makes it discretionary for a
+ *  FANEC. One field on the project cannot carry two on an escalated proposal,
+ *  which is the sharpest concrete consequence of escalation for the FDE and a
+ *  schema change rather than a UI one. */
+const doc = (
+  documentType: DocumentType,
+  seq: number,
+  stepKey: string,
+  numbered: boolean
+): DocumentLedgerEntry => ({
+  documentType,
+  openedInEpisode: seq,
+  state: "not-opened",
+  uniqueIdentificationNumber: numbered ? "⟨document.uniqueIdentificationNumber⟩" : null,
+  stepKey
+});
+
+const DOCUMENTS_FOR: Record<PathwayId, (seq: number) => DocumentLedgerEntry[]> = {
+  P0: () => [],
+  P1: () => [],
+  P2: (seq) => [doc("FANEC", seq, `E${String(seq)}.P2.4`, false)],
+  P3: (seq) => [
+    doc("EA", seq, `E${String(seq)}.P3.4`, true),
+    doc("FONSI", seq, `E${String(seq)}.P3.6`, false)
+  ],
+  P4: (seq) => [
+    doc("EIS", seq, `E${String(seq)}.P4.5`, true),
+    doc("ROD", seq, `E${String(seq)}.P4.8`, false)
+  ]
+};
+
+export const levelsBlocked: Region<LevelHistory> = blocked(
   "Not ready yet",
   "the level-of-review determination at Step 2",
   STEP_LINK
 );
-export const pathwayAbsent: Region<PathwayState> = absent(
+export const levelsAbsent: Region<LevelHistory> = absent(
   "No level-of-review determination has been recorded",
   "⟨determination.whichDetermination = det_review_level⟩"
 );
-export const pathwayUnresolved: Region<PathwayState> = unresolved(
-  "The pathway could not be read",
-  "pathway state has no ontology address — 1b.2(f)(2) is an ordered elimination and document.documentType names only a document that exists"
+export const levelsUnresolved: Region<LevelHistory> = unresolved(
+  "The level history could not be read",
+  "determination.outcome is free text and nothing maps an outcome onto P0–P4; no supersession property exists, so an ordered history has no address"
 );
 
 /* --- the signature gate --- */
@@ -95,68 +199,171 @@ export const pathwayUnresolved: Region<PathwayState> = unresolved(
 const CANNOT_VERIFY =
   "No platform predicate marks a caller's class. The surface withholds the act and the platform refuses the write; nothing here asserts an authorisation it cannot check.";
 
-export function gateFor(held: boolean): Region<Gate> {
+/** Takes the document it is being asked about. It used to take nothing and
+ *  return one gate for the whole application whose citation was all three
+ *  joined, so a FANEC tab could not say 1b.3(g)(2)(vi) without also saying
+ *  something about a record of decision. */
+export function gateFor(documentType: DocumentType | null, held: boolean): Region<Gate> {
+  const spec = documentType ? GATE_BY_DOCUMENT[documentType] : null;
+  if (!spec) {
+    return absent(
+      "No surface here is reserved to a named holder",
+      "⟨authority.reserved_surfaces · this tab⟩"
+    );
+  }
   return filled<Gate>({
-    reservedTo: "responsible official",
-    citation: "1b.3(g)(2)(vi) · 1b.6(b)(5) · 1b.8(b)(8)",
-    routeLabel: "Route for signature",
+    reservedTo: spec.reservedTo,
+    citation: spec.citation,
+    routeLabel: spec.routeLabel,
     held,
     cannotVerify: CANNOT_VERIFY
   });
 }
+
+/** Exactly three. 1b.5(c)(6) and 1b.7(h)(8) state that the certifying statement
+ *  requires no signature and that approval to publish indicates concurrence, so
+ *  the EA and the EIS carry no gate at any point. */
+const GATE_BY_DOCUMENT: Partial<Record<DocumentType, GateSpec>> = {
+  FANEC: { reservedTo: "responsible official", citation: "1b.3(g)(2)(vi)", routeLabel: "Route for signature" },
+  FONSI: { reservedTo: "responsible official", citation: "1b.6(b)(5)", routeLabel: "Route for signature" },
+  ROD: { reservedTo: "responsible official", citation: "1b.8(b)(8)", routeLabel: "Route for signature" }
+};
 
 export const gateUnresolved: Region<Gate> = unresolved(
   "The caller's credential could not be read",
   "responsibleOfficial and delegation hold no rows and no platform predicate marks a user's role"
 );
 
-/* --- steps and tabs --- */
+/* --- the rail ------------------------------------------------------------
 
-function tabEntries(tabs: TabSpec[], activeIndex: number): TabEntry[] {
-  return tabs.map((tab, i) => ({ id: tab.id, name: tab.name, done: i < activeIndex }));
+   Computed from `railFor`, which reads `pathways.ts` over the level IDS the
+   history names. It is deliberately NOT the array a backend returned: a
+   readonly array forbids mutation, not a shorter one, so a live implementation
+   that returned a single episode would silently delete the earlier level's
+   steps and nothing on this side could tell. Deriving the rail means a wrong
+   response can mislabel a level and can never lose a step. */
+
+/** Per-tab and per-step completion has NO ontology address: nothing creates a
+ *  slot row and eleven of the seventeen acts are keyed on one. So the count is
+ *  null, and null is not zero — a tab with no address must not render as done.
+ *  The old rail computed completion from the step's INDEX relative to whatever
+ *  step id was in the URL, which meant standing on Step 8 marked Steps 0–7
+ *  complete with full tab counts from a cold start. */
+function tabEntries(tabs: TabSpec[]): TabEntry[] {
+  return tabs.map((tab) => ({
+    id: tab.id,
+    name: tab.name,
+    done: false,
+    outstanding: null,
+    placeholders: tab.rows.filter((row) => row.text === "placeholder").length,
+    level: tab.level
+  }));
 }
 
-export function stepEntries(pathway: PathwayId | null, activeStepId: string): Region<StepEntry[]> {
-  const steps = stepsFor(pathway);
-  // -1 where the route is not on a step at all — the cross-cutting tabs sit
-  // outside the sequence. No step is active then, and marking the first one
-  // would leave Intake highlighted from anywhere in §7.7.
-  const activeIndex = steps.findIndex((step) => step.id === activeStepId);
+/** A step whose document cannot begin until another exists. Machine-readable,
+ *  and the two kinds are deliberately different strengths because the rule's
+ *  own words are: a finding is prepared "based on" the assessment — 1b.6(a) —
+ *  while a record of decision comes "upon COMPLETING" the statement — 1b.8(a).
+ *  Flattening them into one predicate loses a distinction the rule makes. */
+const WAITS_ON: Record<string, string> = {
+  "P3.6": "1b.6(a) — the environmental assessment exists",
+  "P4.8": "1b.8(a) — the environmental impact statement is complete"
+};
 
-  return filled(
-    steps.map((step, i) => ({
-      id: step.id,
-      n: step.n,
-      name: step.name,
-      mark:
-        activeIndex < 0
-          ? ("waiting" as const)
-          : i < activeIndex
-            ? ("completed" as const)
-            : i === activeIndex
-              ? ("active" as const)
-              : ("waiting" as const),
-      meta:
-        activeIndex >= 0 && i < activeIndex
-          ? `${step.tabs.length} of ${step.tabs.length} tabs`
-          : i === activeIndex
-            ? `0 of ${step.tabs.length} tabs`
-            : "Not started",
-      tabs: tabEntries(step.tabs, activeIndex >= 0 && i < activeIndex ? step.tabs.length : 0)
-    }))
-  );
+export function stepRail(levels: PathwayId[], activeKey: string): Region<StepRail> {
+  const withSeq = levels.map((pathway, i) => ({ seq: i + 1, pathway }));
+  const liveSeq = withSeq.length > 0 ? withSeq[withSeq.length - 1].seq : null;
+  const rail = railFor(withSeq);
+
+  const steps: StepEntry[] = rail.map((entry) => {
+    const superseded = entry.band.kind === "episode" && entry.band.seq !== liveSeq;
+    const waitKey =
+      entry.band.kind === "episode" ? `${entry.band.pathway}.${entry.step.id}` : "";
+    const waitingOn = WAITS_ON[waitKey] ?? null;
+    const active = entry.key === activeKey;
+    return {
+      id: entry.step.id,
+      key: entry.key,
+      n: entry.step.n,
+      name: entry.step.name,
+      mark: superseded
+        ? ("superseded" as const)
+        : active
+          ? ("active" as const)
+          : waitingOn
+            ? ("blocked" as const)
+            : ("waiting" as const),
+      meta: superseded
+        ? "Superseded — read only"
+        : waitingOn
+          ? "Waiting on an earlier document"
+          : `${String(entry.step.tabs.length)} ${entry.step.tabs.length === 1 ? "tab" : "tabs"}`,
+      tabs: tabEntries(entry.step.tabs),
+      band:
+        entry.band.kind === "shared"
+          ? { kind: "shared" as const }
+          : { kind: "episode" as const, seq: entry.band.seq, pathway: entry.band.pathway, superseded },
+      waitingOn
+    };
+  });
+
+  const bands: BandEntry[] = [
+    {
+      band: { kind: "shared" },
+      title: "Every review",
+      status: "shared",
+      summary: `${String(SHARED_STEPS.length)} steps · intake, the threshold determination and the level of review`,
+      documents: [],
+      collapsed: false
+    },
+    ...withSeq.map((level): BandEntry => {
+      const superseded = level.seq !== liveSeq;
+      const own = steps.filter(
+        (s) => s.band.kind === "episode" && s.band.seq === level.seq
+      );
+      const docs = DOCUMENTS_FOR[level.pathway](level.seq);
+      return {
+        band: { kind: "episode", seq: level.seq, pathway: level.pathway, superseded },
+        title: `Level ${String(level.seq)} · ${level.pathway} ${PATHWAYS[level.pathway].name}`,
+        status: superseded ? "superseded" : "live",
+        summary: [
+          `${String(own.length)} steps`,
+          PATHWAYS[level.pathway].terminalOutput,
+          superseded ? "superseded — read only" : null
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        documents: docs,
+        /* Exactly one band opens: the live one. A P1 → P3 → P4 proposal is
+           eighteen steps, and a rail that shows all of them at once is not a
+           rail. The summary line is what a reader who never expands still
+           gets, and it names the step count and the documents. */
+        collapsed: superseded
+      };
+    }),
+    {
+      band: { kind: "cross" },
+      title: "Across the project",
+      status: "cross",
+      summary: `${String(CROSS_CUTTING.length)} tabs · reachable from every step`,
+      documents: [],
+      collapsed: false
+    }
+  ];
+
+  return filled<StepRail>({ bands, steps });
 }
 
-export const stepsAbsentSpec: Region<StepEntry[]> = absent(
+export const stepsAbsentSpec: Region<StepRail> = absent(
   "No steps have been worked out yet",
   "⟨element.byDocument · slot.byElement⟩"
 );
-export const stepsBlockedSpec: Region<StepEntry[]> = blocked(
+export const stepsBlockedSpec: Region<StepRail> = blocked(
   "Not ready yet",
   "the intake answers at Step 0",
   STEP_LINK
 );
-export const stepsUnresolvedSpec: Region<StepEntry[]> = unresolved(
+export const stepsUnresolvedSpec: Region<StepRail> = unresolved(
   "The steps could not be read",
   "nothing creates a slot row, and eleven of seventeen acts are keyed on one"
 );
@@ -184,17 +391,33 @@ const answerFor = (spec: RowSpec): Answer => {
   }
 };
 
+/** The five fields every row now carries, whatever branch builds it. `rid` is
+ *  computed by ONE function so the anchor a comment resolves to and the key a
+ *  backend joins on are the same string. */
+function stem(stepKey: string, tab: TabSpec, i: number) {
+  const spec = tab.rows[i];
+  return {
+    id: `${tab.id}-${String(i + 1)}`,
+    rid: ridFor(stepKey, tab, i),
+    ref: spec.ref,
+    label: spec.label,
+    help: spec.help,
+    modality: spec.modality,
+    textState: spec.text,
+    level: spec.level ?? tab.level,
+    restates: spec.restates,
+    discretionary: isPermission(spec)
+  };
+}
+
 /** A gated row is visible and in place. What a caller without the credential
  *  gets is the routing, never a dead end and never a silently empty row. */
-function gatedRow(id: string, spec: RowSpec, held: boolean): QuestionRow {
+function gatedRow(base: ReturnType<typeof stem>, spec: RowSpec, held: boolean): QuestionRow {
   const gate = spec.gate!;
   const asGate: Gate = { ...gate, held, cannotVerify: CANNOT_VERIFY };
   if (held) {
     return {
-      id,
-      ref: spec.ref,
-      label: spec.label,
-      help: spec.help,
+      ...base,
       mark: "ready",
       gate: asGate,
       answer: filled(answerFor(spec), [RULE, SUBMITTING], [
@@ -203,10 +426,7 @@ function gatedRow(id: string, spec: RowSpec, held: boolean): QuestionRow {
     };
   }
   return {
-    id,
-    ref: spec.ref,
-    label: spec.label,
-    help: spec.help,
+    ...base,
     mark: "waiting",
     gate: asGate,
     answer: blocked(
@@ -219,28 +439,34 @@ function gatedRow(id: string, spec: RowSpec, held: boolean): QuestionRow {
   };
 }
 
+/** A row whose own words are not in the build. It is `unresolved` and not
+ *  `absent`, and the distinction is the whole four-state contract: the lane
+ *  COULD NOT have answered, because the question has not been written. Asking a
+ *  non-specialist "Notice of intent — content (vii)" is not a question. It is
+ *  never counted as complete and never holds the bar shut, because there is
+ *  nothing there to answer. */
+function placeholderRow(base: ReturnType<typeof stem>, spec: RowSpec): QuestionRow {
+  return {
+    ...base,
+    mark: "error",
+    answer: unresolved(
+      "The rule's text for this item is not in the build",
+      `${spec.ref} is named by ordinal and not by content anywhere in this repository, so this row cannot be answered as written`,
+      [REPORT]
+    )
+  };
+}
+
 /** The drafting lane. §7.8: retrieval that cannot run reports unresolved, not
  *  absent — the lane could not have answered, which is a different claim from
  *  finding nothing. §1 records that no model call has occurred or can. */
-function draftedRow(id: string, spec: RowSpec, retrievalUp: boolean): QuestionRow {
+function draftedRow(base: ReturnType<typeof stem>, spec: RowSpec, retrievalUp: boolean): QuestionRow {
   if (retrievalUp) {
-    return {
-      id,
-      ref: spec.ref,
-      label: spec.label,
-      help: spec.help,
-      mark: "review",
-      discretionary: spec.discretionary,
-      answer: filled(answerFor(spec), [DRAFTED], [ACCEPT, EDIT])
-    };
+    return { ...base, mark: "review", answer: filled(answerFor(spec), [DRAFTED], [ACCEPT, EDIT]) };
   }
   return {
-    id,
-    ref: spec.ref,
-    label: spec.label,
-    help: spec.help,
+    ...base,
     mark: "error",
-    discretionary: spec.discretionary,
     answer: unresolved(
       "No draft could be written",
       "the drafting lane could not run — the only configured provider host is an RFC-2606 .invalid domain and no Function or AIP Logic exists",
@@ -249,8 +475,20 @@ function draftedRow(id: string, spec: RowSpec, retrievalUp: boolean): QuestionRo
   };
 }
 
-function ordinaryRow(id: string, spec: RowSpec, i: number): QuestionRow {
-  const base = { id, ref: spec.ref, label: spec.label, help: spec.help, discretionary: spec.discretionary };
+/** A row that echoes a question asked somewhere else. Asked once and shown
+ *  here, so a person is never asked the same thing twice and left to wonder
+ *  whether they got it wrong the first time. */
+function echoRow(base: ReturnType<typeof stem>, spec: RowSpec): QuestionRow {
+  return {
+    ...base,
+    mark: "accepted",
+    answer: filled(answerFor(spec), [RECORD], [
+      { id: "goto", label: "Open where this is asked", look: "link", enabled: true }
+    ])
+  };
+}
+
+function ordinaryRow(base: ReturnType<typeof stem>, spec: RowSpec, i: number): QuestionRow {
   switch (i % 5) {
     case 2:
       return {
@@ -286,33 +524,61 @@ function ordinaryRow(id: string, spec: RowSpec, i: number): QuestionRow {
   }
 }
 
-export function rowsFor(tab: TabSpec, held: boolean, retrievalUp: boolean): QuestionRow[] {
+export function rowsFor(
+  stepKey: string,
+  tab: TabSpec,
+  held: boolean,
+  retrievalUp: boolean
+): QuestionRow[] {
   return tab.rows.map((spec, i) => {
-    const id = `${tab.id}-${String(i + 1)}`;
+    const base = stem(stepKey, tab, i);
     if (spec.gate) {
-      return gatedRow(id, spec, held);
+      return gatedRow(base, spec, held);
+    }
+    if (spec.text === "placeholder") {
+      return placeholderRow(base, spec);
+    }
+    if (spec.restates) {
+      return echoRow(base, spec);
     }
     if (spec.form === "draft") {
-      return draftedRow(id, spec, retrievalUp);
+      return draftedRow(base, spec, retrievalUp);
     }
-    return ordinaryRow(id, spec, i);
+    return ordinaryRow(base, spec, i);
   });
 }
 
 /* --- one tab --- */
 
+/** A row the bar may wait on. Three classes never hold it: a PERMISSION,
+ *  because §7.9 forbids turning one into a requirement; an OUTBOUND REQUEST,
+ *  because a client cannot verify a concurrence and must not stall work on one;
+ *  and a PLACEHOLDER, because there is no question there to answer. The old
+ *  rule counted only the first, and one flag was doing all three jobs. */
 const outstanding = (rows: QuestionRow[]) =>
-  rows.filter((row) => !row.discretionary && row.mark !== "accepted" && row.mark !== "ready").length;
+  rows.filter(
+    (row) =>
+      row.modality !== "permission" &&
+      row.modality !== "outbound-request" &&
+      row.textState !== "placeholder" &&
+      row.mark !== "accepted" &&
+      row.mark !== "ready"
+  ).length;
 
-export function panelFor(tab: TabSpec, held: boolean, retrievalUp: boolean): ElementPanel {
-  const rows = rowsFor(tab, held, retrievalUp);
+export function panelFor(
+  stepKey: string,
+  tab: TabSpec,
+  held: boolean,
+  retrievalUp: boolean
+): ElementPanel {
+  const rows = rowsFor(stepKey, tab, held, retrievalUp);
   const left = outstanding(rows);
   const done = rows.length - left;
   const gated = rows.some((row) => row.gate && !row.gate.held);
   const document = tab.documentType;
 
   return {
-    title: document ? `${tab.name} — ${String(tab.rows.length)} elements` : tab.name,
+    title: document ? `${tab.name} — ${String(elementRows(tab).length)} elements` : tab.name,
     help: helpFor(tab),
     progress: `${String(done)} of ${String(rows.length)} completed`,
     rows,
@@ -336,29 +602,49 @@ function helpFor(tab: TabSpec): string {
   if (authority) {
     return `Preparation open to ${authority.preparationOpenTo}. Issued by: ${authority.issuedBy}. Cannot begin until ${authority.cannotBeginUntil}.`;
   }
-  const discretions = tab.rows.filter((row) => row.discretionary).length;
+  const discretions = tab.rows.filter((row) => isPermission(row)).length;
   if (discretions > 0) {
     return `${String(discretions)} of these ${String(tab.rows.length)} are permissions in the rule rather than duties, and nothing here turns one into a requirement.`;
   }
   return "Work runs top to bottom. Every row is reachable and workable without agency credentials.";
 }
 
+/** A tab that is not on any level this proposal has occupied is BLOCKED, and
+ *  it names the level it waits on.
+ *
+ *  It used to be `absent` — "Nothing found for this part of the document" —
+ *  which is the interface stating a falsehood in the one state defined as a
+ *  real answer about the world. After a level change it would have said it
+ *  about a document row that exists. `absent` means a query ran and found
+ *  nothing; a level that was never reached is not a query result. */
 export function panelRegion(
-  pathway: PathwayId | null,
+  levels: PathwayId[],
   stepId: string,
   tabId: string,
   held: boolean,
   retrievalUp: boolean
 ): Region<ElementPanel> {
-  const tab = findTab(pathway, stepId, tabId);
+  const owner = levels.find((pathway) => findTab(pathway, stepId, tabId));
+  const tab = findTab(owner ?? levels[0] ?? null, stepId, tabId);
   if (!tab) {
+    const elsewhere = PATHWAY_IDS.find((pathway) => findTab(pathway, stepId, tabId));
+    if (elsewhere) {
+      return blocked(
+        "Not this level of review",
+        `a level-of-review determination reaching ${elsewhere} — ${PATHWAYS[elsewhere].reachedWhen}`,
+        STEP_LINK,
+        [],
+        [RULE]
+      );
+    }
     return absent(
       "Nothing found for this part of the document",
       `⟨element.byTab · ${tabId}⟩`,
       [SEARCH]
     );
   }
-  return filled(panelFor(tab, held, retrievalUp));
+  const stepKey = owner ? `E${String(levels.indexOf(owner) + 1)}.${owner}.${stepId}` : stepId;
+  return filled(panelFor(stepKey, tab, held, retrievalUp));
 }
 
 export const elementAbsentSpec: Region<ElementPanel> = absent(

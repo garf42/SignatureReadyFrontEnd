@@ -9,7 +9,9 @@ import {
   RETRIEVAL_PUSHES,
   SHARED_STEPS,
   TRIGGERS,
+  elementRows,
   findTab,
+  isPermission,
   stepsFor
 } from "@/ui/data/pathways";
 import type { DocumentType, TabSpec } from "@/ui/data/pathways";
@@ -38,18 +40,32 @@ describe("element counts — §7.10", () => {
   it.each(Object.entries(expected))("%s carries %i elements", (type, count) => {
     const tabs = documentTabs().filter((tab) => tab.documentType === type);
     expect(tabs).toHaveLength(1);
-    expect(tabs[0].rows).toHaveLength(count);
+    expect(elementRows(tabs[0])).toHaveLength(count);
   });
 
   it("comes to thirty-four across the five documents", () => {
-    const total = documentTabs().reduce((sum, tab) => sum + tab.rows.length, 0);
+    const total = documentTabs().reduce((sum, tab) => sum + elementRows(tab).length, 0);
     expect(total).toBe(34);
   });
 
   it("agrees with the drafting-authority table", () => {
     for (const entry of DOCUMENT_AUTHORITY) {
       const tab = documentTabs().find((t) => t.documentType === entry.documentType);
-      expect(tab?.rows).toHaveLength(entry.elements);
+      expect(elementRows(tab!)).toHaveLength(entry.elements);
+    }
+  });
+
+  /* A sub-paragraph that says HOW an element may be satisfied must have a
+     surface — a permission with no row cannot be exercised — and must not move
+     the totals. Both halves are asserted, because keeping only the first is how
+     1b.5(c)(2)(i) and (ii) would silently become elements of the EA. */
+  it("gives a sub-paragraph a row without making it an element", () => {
+    const ea = documentTabs().find((tab) => tab.documentType === "EA");
+    expect(ea!.rows.length).toBeGreaterThan(elementRows(ea!).length);
+    const subs = ea!.rows.filter((row) => row.subOf);
+    expect(subs.map((row) => row.ref)).toEqual(["1b.5(c)(2)(i)", "1b.5(c)(2)(ii)"]);
+    for (const row of subs) {
+      expect(elementRows(ea!).some((el) => el.ref === row.subOf)).toBe(true);
     }
   });
 });
@@ -93,8 +109,15 @@ describe("pathways — §7.1 and §7.2", () => {
     expect(stepsFor(null).map((step) => step.name)).not.toContain("Assembly");
   });
 
-  it("terminates P0 at the threshold determination", () => {
-    expect(PATHWAYS.P0.steps).toHaveLength(0);
+  it("gives P0 somewhere to end, and makes every row there a permission", () => {
+    expect(PATHWAYS.P0.steps).toHaveLength(1);
+    expect(PATHWAYS.P0.steps[0].terminal).toBe(true);
+    expect(PATHWAYS.P0.steps[0].tabs.flatMap((tab) => tab.rows).every(isPermission)).toBe(true);
+    // No document, no publication, no signature.
+    expect(PATHWAYS.P0.steps.flatMap((s) => s.tabs).some((t) => t.documentType)).toBe(false);
+    expect(PATHWAYS.P0.steps.flatMap((s) => s.tabs).flatMap((t) => t.rows).some((r) => r.gate)).toBe(
+      false
+    );
   });
 
   it("gives P1 and P2 the same extraordinary-circumstance screen at Step 3", () => {
@@ -162,11 +185,23 @@ describe("a tab is a part of its step, never a copy of one", () => {
 describe("cross-cutting — §7.7", () => {
   it("carries the ten tabs, reachable from every step on every pathway", () => {
     expect(CROSS_CUTTING).toHaveLength(10);
+    for (const tab of CROSS_CUTTING) {
+      expect(findTab(null, "x", tab.id)).toBe(tab);
+    }
+  });
+
+  /* THE LEAK THIS TEST USED TO PIN OPEN. The cross-cutting fallback fired for
+     ANY step id, so ten tab ids rendered foreign content under any segment at
+     all — /steps/99/proposal-record included. It fires only for the
+     cross-cutting segment now, so a tab id resolves under the step that owns
+     it and nowhere else. */
+  it("does not leak a cross-cutting tab into an ordinary step segment", () => {
     for (const id of PATHWAY_IDS) {
       for (const tab of CROSS_CUTTING) {
-        expect(findTab(id, "0", tab.id)).toBe(tab);
+        expect(findTab(id, "0", tab.id)).toBeUndefined();
       }
     }
+    expect(findTab("P3", "99", "proposal-record")).toBeUndefined();
   });
 });
 
@@ -175,23 +210,50 @@ describe("discretion that must not become requirement — §7.9", () => {
     expect(DISCRETIONS).toHaveLength(12);
   });
 
-  it("marks the two rules that name the most-lost discretions", () => {
+  /* THE CORRECTION THIS TEST USED TO PIN. 1b.5(c)(2) was marked discretionary
+     and asserted to be so — but it is an ELEMENT of a seven-item list the rule
+     requires "at a minimum", and the submit gate dropped every flagged row, so
+     a mandatory element of the environmental assessment could never hold the
+     element open. What is discretionary is what goes INSIDE it, and that is
+     now carried by (c)(2)(i) and (c)(2)(ii). */
+  it("calls 1b.5(c)(2) a duty and its two sub-paragraphs permissions", () => {
+    const rows = allTabs().flatMap((tab) => tab.rows);
+    const element = rows.find((row) => row.ref === "1b.5(c)(2)");
+    expect(element?.modality).toBe("duty");
+    expect(rows.find((row) => row.ref === "1b.5(c)(2)(i)")?.modality).toBe("permission");
+    expect(rows.find((row) => row.ref === "1b.5(c)(2)(ii)")?.modality).toBe("permission");
+  });
+
+  it("marks the rules that name the most-lost discretions", () => {
     const marked = allTabs()
       .flatMap((tab) => tab.rows)
-      .filter((row) => row.discretionary)
+      .filter(isPermission)
       .map((row) => row.ref);
-    // The threshold-determination record is advisable, not required, and
-    // 1b.5(c)(2) may never be built as a requirement to analyse alternatives.
     expect(marked).toContain("1b.2(e)");
-    expect(marked).toContain("1b.5(c)(2)");
+    expect(marked).toContain("1b.5(c)(2)(ii)");
     expect(marked).toContain("1b.7(c)");
     expect(marked).toContain("1b.9(u)");
   });
 
-  it("never gates a row it also calls discretionary", () => {
+  /* An evaluation the rule makes mandatory is not a permission just because
+     its CONTENT is at sole discretion. All four were flagged, and all four
+     left the submit gate as a result. */
+  it("keeps a mandatory act a duty even where its content is at sole discretion", () => {
+    const rows = allTabs().flatMap((tab) => tab.rows);
+    for (const ref of ["1b.3(f)", "1b.9(g)"]) {
+      expect(rows.find((row) => row.ref === ref)?.modality).toBe("duty");
+    }
+    // A Senior Agency Official act is neither a duty of this user nor a
+    // permission: it is an outbound request, and it never holds work.
+    for (const ref of ["1b.5(g)(2)", "1b.7(i)(2)"]) {
+      expect(rows.find((row) => row.ref === ref)?.modality).toBe("outbound-request");
+    }
+  });
+
+  it("never gates a row it also calls a permission", () => {
     const both = allTabs()
       .flatMap((tab) => tab.rows)
-      .filter((row) => row.discretionary && row.gate);
+      .filter((row) => isPermission(row) && row.gate);
     expect(both).toEqual([]);
   });
 });

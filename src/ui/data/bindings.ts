@@ -414,6 +414,201 @@ export const BINDINGS: Record<string, Binding> = {
       "1b.9(u) attaches the unique identification number to the EA and the EIS and makes it discretionary for a FANEC. It is modelled on project, which §3 records as a divergence rather than a defect."
     ]
   },
+  /* §8. The level history is the surface everything else on the project page
+     keys on, so it is the one an FDE wires first — and the one whose asks are
+     decisions rather than wiring. */
+  useLevels: {
+    serves: "which levels of NEPA review this proposal has occupied, in order",
+    requires: ["§8.0", "§8.4", "§7.1", "§2 the determinations"],
+    status: "backlog",
+    objectTypes: [
+      {
+        name: "determination",
+        status: "confirmed",
+        note: "One row per level-of-review determination. §3 calls it the strongest match in the build — the closed five-member whichDetermination taken from 1b.11(a)(46), the two-step outcome-then-attribution refusal, actorPrincipal from current_user_id. Zero rows."
+      },
+      {
+        name: "project",
+        status: "confirmed",
+        note: "The proposal. ONE project row per proposal, and the level history hangs off it — 1b.2(e) confines the subcomponent to the proposed action at hand and 1b.9(a) keeps one record per proposal, so an escalation must never create a second."
+      },
+      {
+        name: "document",
+        status: "confirmed",
+        note: "The ledger under each level band. open-document's uniqueness is over the PAIR (project, documentType), so an EA, a FONSI, an EIS and a ROD coexist on one project by design — which is why an escalated proposal needs no second project row (§1)."
+      }
+    ],
+    properties: [
+      {
+        name: "whichDetermination",
+        objectType: "determination",
+        status: "confirmed",
+        note: "det_review_level is the member that fixes a level. A SECOND one is what an escalation writes, so the uniqueness constraint §1 lists as missing must be scoped to the unsuperseded row and never written blanket."
+      },
+      {
+        name: "outcome",
+        objectType: "determination",
+        status: "confirmed",
+        note: "FREE TEXT (§3). Nothing maps an outcome onto P0–P4, so a CONVENTION is deliverable #1 for the FDE regardless of anything else here: invented privately, the two sides will disagree about what level a proposal is on with nothing to detect it."
+      },
+      {
+        name: "documentType",
+        objectType: "document",
+        status: "confirmed",
+        note: "Closed five-member set. It names the type of a document that EXISTS, never the set still open."
+      },
+      {
+        name: "supersededAt",
+        objectType: "determination",
+        status: "proposed",
+        note: "DOES NOT EXIST. Liveness is DERIVED from it — the live level is the outcome of the one determination whose supersededAt is null — so that two live levels are unrepresentable for want of a field rather than forbidden by a checker. Until it exists this member returns unresolved, which is a demoable state and not a bug."
+      }
+    ],
+    acts: [
+      {
+        name: "signature-ready-open-determination",
+        status: "confirmed",
+        note: "An escalation opens a NEW determination; it never edits the old one. record-determination-outcome refuses a new outcome once actorPrincipal is set, which is correct and must stay — a closed reserved determination should not be silently editable. So the interface offers 'open a new level-of-review determination' and has no mutate path to offer anything else."
+      },
+      {
+        name: "signature-ready-record-determination-outcome",
+        status: "confirmed",
+        note: "Modify; writes outcome only, and refuses once actorPrincipal is set."
+      },
+      {
+        name: "signature-ready-record-determination",
+        status: "confirmed",
+        note: "Modify; writes decidedAt, evidenceHash and actorPrincipal from current_user_id, and refuses while outcome is empty."
+      },
+      {
+        name: "signature-ready-open-document",
+        status: "confirmed",
+        note: "Create; the ledger row under a level band."
+      }
+    ],
+    datasets: [],
+    links: [
+      {
+        name: "project.determinations",
+        status: "proposed",
+        from: "project",
+        to: "determination",
+        why: "EXPECT MORE THAN ONE, and order them. Nothing refuses a second det_review_level, and after §8 that is not a defect to close blanket — it is the seam an escalation runs on. Order by the supersedes edge or by the platform's own edit ordering, NEVER by decidedAt: that is a client-supplied parameter, so ordering on it lets the browser decide which level a proposal is on. The name is a normalisation and must be matched against the 38 link type resources first."
+      },
+      {
+        name: "project.documents",
+        status: "proposed",
+        from: "project",
+        to: "document",
+        why: "The document ledger shown under each level band. Rows live in the edits layer and signatureReady.document holds zero, so a dataset query finds nothing at all."
+      }
+    ],
+    identity: {
+      routeParam: ":projectRef",
+      primaryKey: null,
+      isPrimaryKey: false,
+      displayNumber: null,
+      resolver: null,
+      note: "Per proposal, not per level. One proposal, one project row, one record — an escalation appends a determination and never a project."
+    },
+    query: {
+      pageSize: null,
+      sortKey: "the order the determinations were made",
+      sortDirection: "asc",
+      filter: "⟨determination.whichDetermination = det_review_level⟩, traversed from project",
+      search: "none",
+      counts: "length",
+      note: "Walk project → determinations, keep those whose whichDetermination is det_review_level, order them, and read the level off each outcome through the convention. Never a scan of the determination type. ORDER BY THE SUPERSEDES EDGE OR THE PLATFORM'S OWN EDIT ORDERING — decidedAt is a client-supplied parameter, so ordering on it lets the browser decide which level a proposal is on."
+    },
+    authority: {
+      heldBy: "none",
+      heldByName: null,
+      mustBe: "none",
+      mustBeOn: [],
+      note: "The determinations at 1b.11(a)(46) are reserved to the responsible official, but their arbiter belongs to the act that RECORDS one, not to a surface that reads the history back. Reading which level a proposal is on is not a reserved act."
+    },
+    freshness: {
+      afterWrite: "immediate",
+      invalidatedBy: [
+        "signature-ready-record-determination-outcome",
+        "signature-ready-record-determination",
+        "signature-ready-open-document"
+      ],
+      note: "A recorded outcome is what fixes a level, so the history is stale across that write and the whole rail rebuilds from it. open-determination is deliberately not listed: it creates the row and changes no level, because the outcome is what decides. AMENDMENT-7 §7.8 said a reopened determination REPLACES the step set; §8 supersedes that. It APPENDS. A superseded level keeps its steps, readable and read-only — 1b.9(a) keeps the work in the proposal record and 1b.6(b)(1) and 1b.8(b)(1) incorporate it into whatever follows."
+    },
+    needed: [
+      "a convention mapping determination.outcome onto P0–P4; the property is free text and nothing decodes a level from it",
+      "determination.supersededAt, or a supersedes edge — an ordered level history has no address at all today",
+      "uniqueness over (project, whichDetermination) SCOPED TO THE UNSUPERSEDED ROW; written blanket it permanently forecloses reopening",
+      "branch rows for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row",
+      "document.uniqueIdentificationNumber and its issuer, moved off project — 1b.9(u) attaches the number to the EA (1b.5(c)(7)) and the EIS (1b.7(h)(1)(v)), and one field on the project cannot carry two on an escalated proposal"
+    ],
+    notes: [
+      "The rail is computed from the rule over the level ids this member returns; it is NOT this member's own array. A readonly array forbids mutation, not a shorter one, so an implementation that returned a single episode would silently delete the earlier level's steps and nothing on the client could tell.",
+      "Part 1b contains no cross-pathway dependency. P0–P4 are the mutually exclusive outcomes of one ordered elimination at 1b.2(f)(2); a FONSI after an EA (1b.6(a)) and a ROD after an EIS (1b.8(a)) are ordering WITHIN a level, and either may be one physical document with its predecessor.",
+      "Four transitions exist and their modalities differ: 1b.9(r)(2) is a duty to CONSIDER, the uncured-extraordinary-circumstance route is DERIVED from a chain of four paragraphs, 1b.9(r)(3) is a duty, and a redetermination under 1b.11(a)(46) is a PERMISSION. Nothing in this repository supports a rule that an environmental assessment finding significance requires a statement — 1b.5(a) and 1b.6(c) are cited nowhere and could not be retrieved."
+    ]
+  },
+  /* §7.7. Through the port rather than as a static import, so a backend can
+     hide, rename, reorder or complete one without an edit inside src/ui/. */
+  useCrossCutting: {
+    serves: "the ten tabs reachable from every step on every level",
+    requires: ["§7.7"],
+    status: "backlog",
+    objectTypes: [
+      {
+        name: "project",
+        status: "confirmed",
+        note: "The proposal the cross-cutting record hangs off."
+      },
+      {
+        name: "proposalRecordItem",
+        status: "confirmed",
+        note: "Zero rows, and gained documentId and page in C11. TRAP: documentId there refers to a PINNED CORPUS ARTIFACT and never to a document object, so a link would be wrong rather than merely empty (§1, §3)."
+      }
+    ],
+    properties: [],
+    acts: [],
+    datasets: [],
+    links: [],
+    identity: {
+      routeParam: ":projectRef",
+      primaryKey: null,
+      isPrimaryKey: false,
+      displayNumber: null,
+      resolver: null,
+      note: "The tabs themselves come from the rule and have no ontology identity; :tabId is pathways.ts's own id and nothing resolves it."
+    },
+    query: {
+      pageSize: null,
+      sortKey: null,
+      sortDirection: null,
+      filter: "none — the ten come from 1b.9 and 1b.10 and are known before any query runs",
+      search: "none",
+      counts: "length",
+      note: "What a live implementation supplies is their COMPLETION, which is the same slot closure every other completion count waits on."
+    },
+    authority: {
+      heldBy: "none",
+      heldByName: null,
+      mustBe: "none",
+      mustBeOn: [],
+      note: "No gate. §7.2 requires every row to be reachable and workable without agency credentials."
+    },
+    freshness: {
+      afterWrite: "tolerant",
+      invalidatedBy: [],
+      note: "The tab set is the rule's and does not move. Completion would stale on the acts that close a slot, and no act creates one."
+    },
+    needed: [
+      "per-tab completion, which is the same slot closure §1 records as having no address",
+      "a document parameter on the review-scoped tabs: 1b.9(r) reevaluation operates on a PUBLISHED DOCUMENT, so on a proposal that has published more than one, one tab cannot say which it is about"
+    ],
+    notes: [
+      "Nine of the ten are answered once for the proposal and travel across a level change; reevaluation and programmatic reliance are per level. TabSpec.scope carries the split, so carry-forward is a property a test can check rather than a rule someone follows.",
+      "They are ten TABS under one rail entry at a single step segment, not ten steps. The generated handoff said otherwise and was wrong about the built shape before any of this."
+    ]
+  },
   useSteps: {
     serves: "the step list for the determined pathway, and each step's tabs",
     requires: [
@@ -554,7 +749,7 @@ export const BINDINGS: Record<string, Binding> = {
         "signature-ready-record-determination-outcome",
         "signature-ready-state-factor-finding"
       ],
-      note: "Step 2 fixes the pathway and populates Steps 3 and beyond, and §7.8 records that a reopened level-of-review determination REPLACES the step set — so the rail cannot be stale across that write. open-determination is deliberately not in the list: it creates the row and changes nothing the rail shows, because the outcome is what fixes the pathway. Marks and completion would additionally be staled by adopt, freeze-slot-disposition, record-branch and emit-document, and each of those stales state with no address today, so refetching on them buys nothing until C9 lands."
+      note: "Step 2 fixes the level of review and populates Steps 3 and beyond. §7.8 said a reopened determination REPLACES the step set; §8 supersedes that and it APPENDS — a superseded level keeps its steps, readable and read-only, because 1b.9(a) keeps the work in the proposal record and 1b.6(b)(1) and 1b.8(b)(1) incorporate it into whatever follows. The rail is computed from the rule over the level ids useLevels returns, so a partial answer here can mislabel a level and can never delete a step; it cannot be stale across that write either way. open-determination is deliberately not in the list: it creates the row and changes nothing the rail shows, because the outcome is what fixes the pathway. Marks and completion would additionally be staled by adopt, freeze-slot-disposition, record-branch and emit-document, and each of those stales state with no address today, so refetching on them buys nothing until C9 lands."
     },
     needed: [
       "anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1)",
@@ -567,7 +762,7 @@ export const BINDINGS: Record<string, Binding> = {
     notes: [
       "Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).",
       "Steps 0–2 are shared and exist before any pathway is fixed; Steps 3 and beyond are the pathway's and do not exist until Step 2 determines it (§7.1). Unknown significance routes to P3, not P4 — 1b.2(f)(2)(iv)(A).",
-      "The rail is three segments in one sequence, and the wiring must preserve the distinction. Steps 0–2 are shared and exist from the start. The pathway's own steps exist only once Step 2 fixes a pathway and are generated from that determination. §7.7's ten items are shared by every pathway, so each is a step of its own and they follow the pathway's steps.",
+      "The rail is BANDED, and the wiring must preserve the banding. One shared band holds Steps 0–2 and exists from the start. One band per level of review the proposal has occupied, in order, each holding that level's own steps — a superseded band collapses to a summary and is never removed. §7.7's ten items are TEN TABS UNDER ONE RAIL ENTRY at a single step segment, not ten steps; the earlier description of them as steps of their own never matched the built shape.",
       "A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all."
     ]
   },
