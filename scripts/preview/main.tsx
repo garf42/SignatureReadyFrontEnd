@@ -19,7 +19,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter, useLocation, useNavigate } from "react-router-dom";
 
 import { App } from "@/ui/App";
-import { CROSS_CUTTING, PATHWAY_IDS, railFor } from "@/ui/data/port";
+import { PATHWAY_IDS, railFor } from "@/ui/data/port";
 import type { PathwayId } from "@/ui/data/port";
 
 import "./harness.css";
@@ -148,7 +148,7 @@ function Harness({ children }: { children: React.ReactNode }) {
   const stepKey = onProject ? (pathname.split("/steps/")[1]?.split("/")[0] ?? "") : "";
   const tabId = onProject ? (pathname.split("/steps/")[1]?.split("/")[1] ?? "") : "";
   const active = rail.find((entry) => entry.key === stepKey);
-  const tabs = stepKey === "x" ? CROSS_CUTTING : (active?.step.tabs ?? []);
+  const tabs = active?.step.tabs ?? [];
 
   const levelValue = levels.join(",");
   const note = LEVEL_SETS.find((s) => s.value === levelValue)?.note;
@@ -219,13 +219,6 @@ function Harness({ children }: { children: React.ReactNode }) {
                       {entry.step.name}
                     </Seg>
                   ))}
-                  <Seg
-                    on={stepKey === "x"}
-                    title="The ten tabs reachable from every step — §7.7"
-                    onClick={() => go(`/projects/p1/steps/x/${CROSS_CUTTING[0].id}`)}
-                  >
-                    <span className="hkey">x</span>Across the project
-                  </Seg>
                 </Group>
 
                 {tabs.length > 1 ? (

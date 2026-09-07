@@ -119,6 +119,14 @@ export interface QuestionRow {
   rid: string;
   /** Where this question is canonically asked, when this row echoes one. */
   restates?: string;
+  /** How this element gets its value, and what it becomes in the filed
+   *  document. Both are on the surface, because "is this built?" reduces to
+   *  them: an element nobody can say how to fill is not designed, and one with
+   *  no template is one the document cannot carry. */
+  fill: Fill;
+  produces: Produces;
+  /** Set where `fill` needs a second half to mean anything. */
+  filledFrom?: string;
 }
 
 export interface SubmitBar {
@@ -231,15 +239,26 @@ export interface Session {
  * §7 — the project page. Pathways, the signature gate, and the trigger map.
  * ------------------------------------------------------------------------ */
 
-import type { DocumentType, Level, Modality, PathwayId, TextState } from "@/ui/data/pathways";
+import type {
+  DocumentType,
+  Fill,
+  Level,
+  Modality,
+  PathwayId,
+  Produces,
+  TextState
+} from "@/ui/data/pathways";
 
 export type {
   DocumentType,
+  ElementSpec,
+  Fill,
   GateSpec,
   Level,
   Modality,
   Options,
   PathwayId,
+  Produces,
   RowForm,
   RowSpec,
   StepSpec,

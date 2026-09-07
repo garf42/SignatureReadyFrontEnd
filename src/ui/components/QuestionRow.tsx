@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, HTMLSelect, Icon, Radio, RadioGroup } from "@blueprintjs/core";
 
 import type { Answer, Modality, QuestionRow as Row, SourceKind } from "@/ui/data/port";
+import { FILL_SAYS } from "@/ui/data/port";
 import { Region } from "@/ui/components/Region";
 import { StatusMark } from "@/ui/components/StatusMark";
 
@@ -101,6 +102,36 @@ export function QuestionRow({
           <p className={css.rid}>{row.rid}</p>
           {row.help ? <p className={css.help}>{row.help}</p> : null}
           <Modality modality={row.modality} />
+
+          {/* How this element gets its value, and what it becomes on the page
+              that is filed. Both are on the surface because both are what
+              "is this built?" actually asks: an element nobody can say how to
+              fill is not designed, and one with no template is one the
+              document cannot carry. */}
+          <dl className={css.build}>
+            <dt>How it fills</dt>
+            <dd>
+              <span className={css.fill} data-fill={row.fill}>
+                {FILL_SAYS[row.fill].short}
+              </span>{" "}
+              {FILL_SAYS[row.fill].long}
+              {row.filledFrom ? <em> {row.filledFrom}</em> : null}
+            </dd>
+            <dt>In the document</dt>
+            <dd>
+              {row.produces.template === null ? (
+                <span className={css.notemplate}>
+                  Nothing yet. This element informs a determination rather than appearing in a
+                  document, or its text has not been written.
+                </span>
+              ) : (
+                <>
+                  <span className={css.section}>{row.produces.section}</span>
+                  <pre className={css.template}>{row.produces.template}</pre>
+                </>
+              )}
+            </dd>
+          </dl>
           {row.restates ? (
             <p className={css.echo}>
               Asked once, elsewhere. Shown here as the record of the answer, so the same question is

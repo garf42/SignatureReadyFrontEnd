@@ -255,7 +255,7 @@ function tabEntries(tabs: TabSpec[]): TabEntry[] {
     name: tab.name,
     done: false,
     outstanding: null,
-    placeholders: tab.rows.filter((row) => row.text === "placeholder").length,
+    placeholders: tab.elements.filter((row) => row.text === "placeholder").length,
     level: tab.level
   }));
 }
@@ -340,15 +340,7 @@ export function stepRail(levels: PathwayId[], activeKey: string): Region<StepRai
            gets, and it names the step count and the documents. */
         collapsed: superseded
       };
-    }),
-    {
-      band: { kind: "cross" },
-      title: "Across the project",
-      status: "cross",
-      summary: `${String(CROSS_CUTTING.length)} tabs · reachable from every step`,
-      documents: [],
-      collapsed: false
-    }
+    })
   ];
 
   return filled<StepRail>({ bands, steps });
@@ -395,7 +387,7 @@ const answerFor = (spec: RowSpec): Answer => {
  *  computed by ONE function so the anchor a comment resolves to and the key a
  *  backend joins on are the same string. */
 function stem(stepKey: string, tab: TabSpec, i: number) {
-  const spec = tab.rows[i];
+  const spec = tab.elements[i];
   return {
     id: `${tab.id}-${String(i + 1)}`,
     rid: ridFor(stepKey, tab, i),
@@ -406,7 +398,10 @@ function stem(stepKey: string, tab: TabSpec, i: number) {
     textState: spec.text,
     level: spec.level ?? tab.level,
     restates: spec.restates,
-    discretionary: isPermission(spec)
+    discretionary: isPermission(spec),
+    fill: spec.fill,
+    produces: spec.produces,
+    filledFrom: spec.from ?? spec.source ?? spec.rule
   };
 }
 
@@ -530,7 +525,7 @@ export function rowsFor(
   held: boolean,
   retrievalUp: boolean
 ): QuestionRow[] {
-  return tab.rows.map((spec, i) => {
+  return tab.elements.map((spec, i) => {
     const base = stem(stepKey, tab, i);
     if (spec.gate) {
       return gatedRow(base, spec, held);
@@ -602,9 +597,9 @@ function helpFor(tab: TabSpec): string {
   if (authority) {
     return `Preparation open to ${authority.preparationOpenTo}. Issued by: ${authority.issuedBy}. Cannot begin until ${authority.cannotBeginUntil}.`;
   }
-  const discretions = tab.rows.filter((row) => isPermission(row)).length;
+  const discretions = tab.elements.filter((row) => isPermission(row)).length;
   if (discretions > 0) {
-    return `${String(discretions)} of these ${String(tab.rows.length)} are permissions in the rule rather than duties, and nothing here turns one into a requirement.`;
+    return `${String(discretions)} of these ${String(tab.elements.length)} are permissions in the rule rather than duties, and nothing here turns one into a requirement.`;
   }
   return "Work runs top to bottom. Every row is reachable and workable without agency credentials.";
 }

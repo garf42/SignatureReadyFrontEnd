@@ -10,9 +10,12 @@ export const REFERENCE = "/reference";
  *  route says so rather than opening on a step the project has not reached. */
 export const FIRST_TAB = `steps/${SHARED_STEPS[0].id}/${SHARED_STEPS[0].tabs[0].id}`;
 
-/** §7.7's tabs hang off no step: they are reachable from every step on every
- *  pathway, so they take a step segment of their own. */
-export const CROSS_STEP = "x";
+/** Step 0's first tab. The first thing an officer works on is intake, and the
+ *  route says so rather than opening on a step no project has reached.
+ *
+ *  There is no longer a segment for surfaces that belong to no step. Every tab
+ *  is inside the step whose completion it conditions, so a step key and a tab
+ *  id address everything the project page has.  */
 
 /** `:projectRef` is the project's PRIMARY KEY, not its unique identification
  *  number. The number is a display value: §1 records a live project row whose
@@ -29,10 +32,6 @@ export function projectPath(projectRef: string): string {
 
 export function tabPath(projectRef: string, stepId: string, tabId: string): string {
   return projectPath(projectRef) + "/steps/" + stepId + "/" + tabId;
-}
-
-export function crossPath(projectRef: string, tabId: string): string {
-  return tabPath(projectRef, CROSS_STEP, tabId);
 }
 
 /** Query keeps the state the officer is looking at when a link moves them. */

@@ -7,7 +7,7 @@ import { usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
-import { CROSS_STEP, crossPath, tabPath, withSearch } from "@/ui/routes";
+import { tabPath, withSearch } from "@/ui/routes";
 
 import css from "@/ui/screens/ProjectScreen.module.css";
 
@@ -42,12 +42,10 @@ export function ProjectScreen() {
   const project = port.useProject(projectRef);
   const levels = port.useLevels(projectRef);
   const rail = port.useSteps(projectRef, stepId);
-  const cross = port.useCrossCutting(projectRef);
   const [railShut, setRailShut] = useState(false);
   const [openBands, setOpenBands] = useState<Record<string, boolean>>({});
 
   const go = (path: string) => navigate(withSearch(path, search));
-  const onCross = stepId === CROSS_STEP;
   const bandId = (band: BandRef) =>
     band.kind === "episode" ? `E${String(band.seq)}` : band.kind;
 
@@ -161,39 +159,21 @@ export function ProjectScreen() {
             )}
           </Region>
 
-          {/* One entry, not ten. §7.7's tabs are the parts of this parent, and
-              they belong in the tab strip with every other step's parts — the
-              rail lists parents only, so nothing appears in both places. */}
-          <Region region={cross}>
-            {(tabs) => (
-              <Menu>
-                <MenuItem
-                  className={css.step + " " + css.cross + (onCross ? " " + css.active : "")}
-                  title="Across the project"
-                  text={railShut ? <span className={css.number}>§</span> : "Across the project"}
-                  label={railShut ? undefined : `${String(tabs.length)} tabs`}
-                  onClick={() => go(crossPath(projectRef, tabs[0].id))}
-                />
-              </Menu>
-            )}
-          </Region>
+          {/* Nothing here but steps. The rail used to carry an eleventh entry
+              — "across the project" — holding ten tabs that belonged to no step
+              and no level of review. Those duties are inside the steps they
+              condition now, so the rail is the pathway and nothing else. */}
         </aside>
 
         <section className={css.panel}>
           <Region region={rail}>
             {(value) => (
-              <Region region={cross}>
-                {(tabs) => (
-                  <TabStrip
-                    id="element-tabs"
-                    tabs={tabsFor(value, tabs, stepId)}
-                    selected={tabId}
-                    onSelect={(next) =>
-                      go(onCross ? crossPath(projectRef, next) : tabPath(projectRef, stepId, next))
-                    }
-                  />
-                )}
-              </Region>
+              <TabStrip
+                id="element-tabs"
+                tabs={tabsFor(value, stepId)}
+                selected={tabId}
+                onSelect={(next) => go(tabPath(projectRef, stepId, next))}
+              />
             )}
           </Region>
           <div className={css.panelBox}>
@@ -242,10 +222,7 @@ function StepItem({
   );
 }
 
-function tabsFor(rail: StepRail, cross: { id: string; name: string; level: number }[], stepId: string) {
-  if (stepId === CROSS_STEP) {
-    return cross.map((tab) => ({ id: tab.id, name: tab.name, done: false }));
-  }
+function tabsFor(rail: StepRail, stepId: string) {
   const step =
     rail.steps.find((entry) => entry.key === stepId) ??
     rail.steps.find((entry) => entry.id === stepId);

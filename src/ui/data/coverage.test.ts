@@ -31,7 +31,7 @@ import {
  */
 
 const c = coverage();
-const rows = c.tabs.flatMap((tab) => tab.rows);
+const rows = c.tabs.flatMap((tab) => tab.elements);
 
 describe("the anchor", () => {
   /* A citation repeats inside a single tab in twelve places — four rows of
@@ -45,17 +45,17 @@ describe("the anchor", () => {
       expect(seen.has(row.rid), `${row.rid} is claimed twice`).toBe(false);
       seen.set(row.rid, row.label);
     }
-    expect(seen.size).toBe(c.totals.distinctRows);
+    expect(seen.size).toBe(c.totals.distinctElements);
   });
 
   it("keeps the ordinal, because refs really do repeat inside one tab", () => {
     const repeats = c.tabs.filter((tab) => {
-      const refs = tab.rows.map((row) => row.ref);
+      const refs = tab.elements.map((row) => row.ref);
       return new Set(refs).size !== refs.length;
     });
     expect(repeats.length).toBeGreaterThan(0);
     for (const tab of repeats) {
-      const rids = tab.rows.map((row) => row.rid);
+      const rids = tab.elements.map((row) => row.rid);
       expect(new Set(rids).size).toBe(rids.length);
     }
   });
@@ -301,10 +301,10 @@ describe("the rows", () => {
 describe("the audit itself", () => {
   it("walks every pathway, and every pathway has every shared step", () => {
     for (const pathway of PATHWAY_IDS) {
-      const level = c.levels.find((l) => l.pathway === pathway)!;
-      expect(level.steps).toBeGreaterThanOrEqual(SHARED_STEPS.length);
+      const level = c.pathways.find((l) => l.pathway === pathway)!;
+      expect(level.steps.length).toBeGreaterThanOrEqual(SHARED_STEPS.length);
       expect(level.tabs).toBeGreaterThan(0);
-      expect(level.rows).toBeGreaterThan(0);
+      expect(level.elements).toBeGreaterThan(0);
     }
   });
 
@@ -338,7 +338,7 @@ describe("the audit itself", () => {
     expect(c.totals.collapsedFrom).toBeGreaterThan(c.totals.collapsedInto);
     for (const finding of c.findings.filter((f) => f.id.startsWith("collapsed:"))) {
       expect(finding.owner).toBe("spec");
-      expect(finding.what).toMatch(/carried by one row/);
+      expect(finding.what).toMatch(/carried by one element/);
     }
   });
 });

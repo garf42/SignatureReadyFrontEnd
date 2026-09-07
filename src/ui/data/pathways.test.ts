@@ -14,7 +14,7 @@ import {
   isPermission,
   stepsFor
 } from "@/ui/data/pathways";
-import type { DocumentType, TabSpec } from "@/ui/data/pathways";
+import type { DocumentType, PathwayId, TabSpec } from "@/ui/data/pathways";
 
 /** §7 checked against the register's own counts. These are the numbers §2
  *  re-derived from the pinned text; if one of them moves, the rule moved or
@@ -61,8 +61,8 @@ describe("element counts — §7.10", () => {
      1b.5(c)(2)(i) and (ii) would silently become elements of the EA. */
   it("gives a sub-paragraph a row without making it an element", () => {
     const ea = documentTabs().find((tab) => tab.documentType === "EA");
-    expect(ea!.rows.length).toBeGreaterThan(elementRows(ea!).length);
-    const subs = ea!.rows.filter((row) => row.subOf);
+    expect(ea!.elements.length).toBeGreaterThan(elementRows(ea!).length);
+    const subs = ea!.elements.filter((row) => row.subOf);
     expect(subs.map((row) => row.ref)).toEqual(["1b.5(c)(2)(i)", "1b.5(c)(2)(ii)"]);
     for (const row of subs) {
       expect(elementRows(ea!).some((el) => el.ref === row.subOf)).toBe(true);
@@ -72,7 +72,7 @@ describe("element counts — §7.10", () => {
 
 describe("the signature gate — §7.2", () => {
   it("gates three surfaces and no others", () => {
-    const gated = allTabs().flatMap((tab) => tab.rows.filter((row) => row.gate));
+    const gated = allTabs().flatMap((tab) => tab.elements.filter((row) => row.gate));
     const citations = [...new Set(gated.map((row) => row.gate?.citation))].sort();
     expect(citations).toEqual(["1b.3(g)(2)(vi)", "1b.6(b)(5)", "1b.8(b)(8)"]);
   });
@@ -80,18 +80,18 @@ describe("the signature gate — §7.2", () => {
   it("leaves the EA and the EIS ungated at every point", () => {
     for (const type of ["EA", "EIS"] as const) {
       const tab = documentTabs().find((t) => t.documentType === type);
-      expect(tab?.rows.every((row) => !row.gate)).toBe(true);
+      expect(tab?.elements.every((row) => !row.gate)).toBe(true);
       expect(DOCUMENT_AUTHORITY.find((e) => e.documentType === type)?.gate).toBeNull();
     }
   });
 
   it("reserves every gate to the responsible official, never to a delegate", () => {
-    const gated = allTabs().flatMap((tab) => tab.rows.filter((row) => row.gate));
+    const gated = allTabs().flatMap((tab) => tab.elements.filter((row) => row.gate));
     expect(gated.every((row) => row.gate?.reservedTo === "responsible official")).toBe(true);
   });
 
   it("offers a routing wherever it withholds an act — never a dead end", () => {
-    const gated = allTabs().flatMap((tab) => tab.rows.filter((row) => row.gate));
+    const gated = allTabs().flatMap((tab) => tab.elements.filter((row) => row.gate));
     expect(gated.every((row) => (row.gate?.routeLabel.length ?? 0) > 0)).toBe(true);
   });
 });
@@ -109,13 +109,18 @@ describe("pathways — §7.1 and §7.2", () => {
     expect(stepsFor(null).map((step) => step.name)).not.toContain("Assembly");
   });
 
-  it("gives P0 somewhere to end, and makes every row there a permission", () => {
+  it("gives P0 somewhere to end, and asks nothing there it may not ask", () => {
     expect(PATHWAYS.P0.steps).toHaveLength(1);
     expect(PATHWAYS.P0.steps[0].terminal).toBe(true);
-    expect(PATHWAYS.P0.steps[0].tabs.flatMap((tab) => tab.rows).every(isPermission)).toBe(true);
+    /* 1b.2(e) makes record keeping ADVISABLE, so the closing tab's own elements
+       are permissions to the last one. The reevaluation duty attached to this
+       step is a duty and is not one of them: it operates on a published
+       document later, and P0 publishes nothing. */
+    const close = PATHWAYS.P0.steps[0].tabs.find((tab) => tab.id === "close")!;
+    expect(close.elements.every(isPermission)).toBe(true);
     // No document, no publication, no signature.
     expect(PATHWAYS.P0.steps.flatMap((s) => s.tabs).some((t) => t.documentType)).toBe(false);
-    expect(PATHWAYS.P0.steps.flatMap((s) => s.tabs).flatMap((t) => t.rows).some((r) => r.gate)).toBe(
+    expect(PATHWAYS.P0.steps.flatMap((s) => s.tabs).flatMap((t) => t.elements).some((e) => e.gate)).toBe(
       false
     );
   });
@@ -142,7 +147,7 @@ describe("pathways — §7.1 and §7.2", () => {
         expect(step.tabs.length).toBeGreaterThan(0);
         for (const tab of step.tabs) {
           expect(findTab(id, step.id, tab.id)).toBe(tab);
-          expect(tab.rows.length).toBeGreaterThan(0);
+          expect(tab.elements.length).toBeGreaterThan(0);
         }
       }
     }
@@ -182,26 +187,52 @@ describe("a tab is a part of its step, never a copy of one", () => {
   });
 });
 
-describe("cross-cutting — §7.7", () => {
-  it("carries the ten tabs, reachable from every step on every pathway", () => {
-    expect(CROSS_CUTTING).toHaveLength(10);
+/* THE STRUCTURE THIS BLOCK USED TO PIN. Ten tabs reachable from every step on
+   every pathway, hanging off a rail entry that belonged to no step — the place
+   content with no home ended up. Every one of them is now inside the step whose
+   completion it conditions, so the assertions are about attachment rather than
+   about a step-less shelf. */
+describe("every duty is inside a step — the containment law", () => {
+  it("leaves no tab outside a step, on any pathway", () => {
+    const inSteps = new Set(
+      PATHWAY_IDS.flatMap((id) => stepsFor(id).flatMap((step) => step.tabs))
+    );
     for (const tab of CROSS_CUTTING) {
-      expect(findTab(null, "x", tab.id)).toBe(tab);
+      expect(inSteps.has(tab), `${tab.id} belongs to no step`).toBe(true);
     }
   });
 
-  /* THE LEAK THIS TEST USED TO PIN OPEN. The cross-cutting fallback fired for
-     ANY step id, so ten tab ids rendered foreign content under any segment at
-     all — /steps/99/proposal-record included. It fires only for the
-     cross-cutting segment now, so a tab id resolves under the step that owns
-     it and nowhere else. */
-  it("does not leak a cross-cutting tab into an ordinary step segment", () => {
-    for (const id of PATHWAY_IDS) {
-      for (const tab of CROSS_CUTTING) {
-        expect(findTab(id, "0", tab.id)).toBeUndefined();
-      }
-    }
+  it("finds a tab only under the step that owns it", () => {
+    /* The old fallback searched the ten step-less tabs for ANY step id, so
+       those ids rendered foreign content under any segment at all — including
+       a step that does not exist. */
     expect(findTab("P3", "99", "proposal-record")).toBeUndefined();
+    expect(findTab("P3", "4", "proposal-record")).toBeUndefined();
+    expect(findTab("P3", "0", "proposal-record")).toBeDefined();
+  });
+
+  it("asks a duty that recurs with literally the same tab", () => {
+    /* 1b.9(g) applies to every environmental document and 1b.9(r) to every
+       published one, so both are asked in more than one place. Same object, so
+       the two askings cannot drift; the anchor carries the step key, so they
+       stay separately addressable. */
+    const interdisciplinary = (id: PathwayId, step: string) =>
+      stepsFor(id)
+        .find((s) => s.id === step)!
+        .tabs.find((t) => t.id === "interdisciplinary");
+    expect(interdisciplinary("P3", "4")).toBe(interdisciplinary("P4", "5"));
+    expect(interdisciplinary("P1", "3")).toBe(interdisciplinary("P3", "4"));
+  });
+
+  it("ends every pathway on a step that can reevaluate what it produced", () => {
+    for (const id of PATHWAY_IDS) {
+      const last = stepsFor(id).at(-1)!;
+      expect(last.terminal, `${id} has no terminal step`).toBe(true);
+      expect(
+        last.tabs.some((t) => t.id === "reevaluation"),
+        `${id} ends with nowhere to reevaluate`
+      ).toBe(true);
+    }
   });
 });
 
@@ -217,7 +248,7 @@ describe("discretion that must not become requirement — §7.9", () => {
      element open. What is discretionary is what goes INSIDE it, and that is
      now carried by (c)(2)(i) and (c)(2)(ii). */
   it("calls 1b.5(c)(2) a duty and its two sub-paragraphs permissions", () => {
-    const rows = allTabs().flatMap((tab) => tab.rows);
+    const rows = allTabs().flatMap((tab) => tab.elements);
     const element = rows.find((row) => row.ref === "1b.5(c)(2)");
     expect(element?.modality).toBe("duty");
     expect(rows.find((row) => row.ref === "1b.5(c)(2)(i)")?.modality).toBe("permission");
@@ -226,7 +257,7 @@ describe("discretion that must not become requirement — §7.9", () => {
 
   it("marks the rules that name the most-lost discretions", () => {
     const marked = allTabs()
-      .flatMap((tab) => tab.rows)
+      .flatMap((tab) => tab.elements)
       .filter(isPermission)
       .map((row) => row.ref);
     expect(marked).toContain("1b.2(e)");
@@ -239,7 +270,7 @@ describe("discretion that must not become requirement — §7.9", () => {
      its CONTENT is at sole discretion. All four were flagged, and all four
      left the submit gate as a result. */
   it("keeps a mandatory act a duty even where its content is at sole discretion", () => {
-    const rows = allTabs().flatMap((tab) => tab.rows);
+    const rows = allTabs().flatMap((tab) => tab.elements);
     for (const ref of ["1b.3(f)", "1b.9(g)"]) {
       expect(rows.find((row) => row.ref === ref)?.modality).toBe("duty");
     }
@@ -252,7 +283,7 @@ describe("discretion that must not become requirement — §7.9", () => {
 
   it("never gates a row it also calls a permission", () => {
     const both = allTabs()
-      .flatMap((tab) => tab.rows)
+      .flatMap((tab) => tab.elements)
       .filter((row) => isPermission(row) && row.gate);
     expect(both).toEqual([]);
   });

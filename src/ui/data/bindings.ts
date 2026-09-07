@@ -549,66 +549,6 @@ export const BINDINGS: Record<string, Binding> = {
       "Four transitions exist and their modalities differ: 1b.9(r)(2) is a duty to CONSIDER, the uncured-extraordinary-circumstance route is DERIVED from a chain of four paragraphs, 1b.9(r)(3) is a duty, and a redetermination under 1b.11(a)(46) is a PERMISSION. Nothing in this repository supports a rule that an environmental assessment finding significance requires a statement — 1b.5(a) and 1b.6(c) are cited nowhere and could not be retrieved."
     ]
   },
-  /* §7.7. Through the port rather than as a static import, so a backend can
-     hide, rename, reorder or complete one without an edit inside src/ui/. */
-  useCrossCutting: {
-    serves: "the ten tabs reachable from every step on every level",
-    requires: ["§7.7"],
-    status: "backlog",
-    objectTypes: [
-      {
-        name: "project",
-        status: "confirmed",
-        note: "The proposal the cross-cutting record hangs off."
-      },
-      {
-        name: "proposalRecordItem",
-        status: "confirmed",
-        note: "Zero rows, and gained documentId and page in C11. TRAP: documentId there refers to a PINNED CORPUS ARTIFACT and never to a document object, so a link would be wrong rather than merely empty (§1, §3)."
-      }
-    ],
-    properties: [],
-    acts: [],
-    datasets: [],
-    links: [],
-    identity: {
-      routeParam: ":projectRef",
-      primaryKey: null,
-      isPrimaryKey: false,
-      displayNumber: null,
-      resolver: null,
-      note: "The tabs themselves come from the rule and have no ontology identity; :tabId is pathways.ts's own id and nothing resolves it."
-    },
-    query: {
-      pageSize: null,
-      sortKey: null,
-      sortDirection: null,
-      filter: "none — the ten come from 1b.9 and 1b.10 and are known before any query runs",
-      search: "none",
-      counts: "length",
-      note: "What a live implementation supplies is their COMPLETION, which is the same slot closure every other completion count waits on."
-    },
-    authority: {
-      heldBy: "none",
-      heldByName: null,
-      mustBe: "none",
-      mustBeOn: [],
-      note: "No gate. §7.2 requires every row to be reachable and workable without agency credentials."
-    },
-    freshness: {
-      afterWrite: "tolerant",
-      invalidatedBy: [],
-      note: "The tab set is the rule's and does not move. Completion would stale on the acts that close a slot, and no act creates one."
-    },
-    needed: [
-      "per-tab completion, which is the same slot closure §1 records as having no address",
-      "a document parameter on the review-scoped tabs: 1b.9(r) reevaluation operates on a PUBLISHED DOCUMENT, so on a proposal that has published more than one, one tab cannot say which it is about"
-    ],
-    notes: [
-      "Nine of the ten are answered once for the proposal and travel across a level change; reevaluation and programmatic reliance are per level. TabSpec.scope carries the split, so carry-forward is a property a test can check rather than a rule someone follows.",
-      "They are ten TABS under one rail entry at a single step segment, not ten steps. The generated handoff said otherwise and was wrong about the built shape before any of this."
-    ]
-  },
   useSteps: {
     serves: "the step list for the determined pathway, and each step's tabs",
     requires: [

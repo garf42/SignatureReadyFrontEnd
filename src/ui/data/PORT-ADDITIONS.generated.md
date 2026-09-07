@@ -13,7 +13,7 @@ Where the front end needs something the ontology does not yet support, the
 ontology is what changes. A declared gap is a note for the FDE, never a
 reason to redesign the screen.
 
-17 surfaces declared · 16 with gaps · 1 answerable today · 17 acts · 59 names still to confirm.
+16 surfaces declared · 15 with gaps · 1 answerable today · 17 acts · 59 names still to confirm.
 
 ## Read this first: the names that are not measured
 
@@ -90,7 +90,6 @@ before wiring it. A wrong name here fails silently and forever.
 | --- | --- | --- |
 | `useArchive` — recently-deleted projects, ordered by archived date, with restore and purge | absent | an archived state on project; an archive act; a restore act; a purge act; an archivedAt property, and an archivedBy if that becomes recordable |
 | `useCatalogue` — the categorical-exclusion catalogue, and the 1b.4(c) / 1b.4(d) split | backlog | category populated from ce_categories.json — 87 rows already in the repository, no egress and no retrieval. §3 names it the single cheapest high-value population in the build, with five obligations blocked behind it |
-| `useCrossCutting` — the ten tabs reachable from every step on every level | backlog | per-tab completion, which is the same slot closure §1 records as having no address; a document parameter on the review-scoped tabs: 1b.9(r) reevaluation operates on a PUBLISHED DOCUMENT, so on a proposal that has published more than one, one tab cannot say which it is about |
 | `useElement` — one tab: its rows, their answers and the one act that closes it | backlog | the submission-time Function; eight named preconditions wait on one, including adopt's rule that adoptedValue must be present unless adoptionState is 'rejected'; element and slot rows, as above; an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered |
 | `useExpertQueue` — the open expert requests, overdue first, and what came back | backlog | anything that creates a slot row — eleven of seventeen acts wait on this, and the queue is empty until it exists; an actor on identify-expert-requirement, package-expert-request and state-factor-finding; none writes one, so the queue cannot show who sent a request; a holder-to-slot join (B.5.12); nothing joins a holder to the slot needing one, so a recipient is a suggestion the officer confirms; a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert |
 | `useExpertRequest` — the drafted request in the compose overlay, and sending it | backlog | the same slot row the queue waits on; an actor on package-expert-request; an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline |
@@ -231,39 +230,6 @@ Rendered rather than hidden:
 - 39 categories at 1b.4(c) require no documentation; 48 at 1b.4(d) require a FANEC. §2 re-derives 87 from the pinned text, so the file and the rule agree.
 - project_screened_against_category is the correct link type and is vacuous at the target end: both it and category hold zero rows.
 - Until the rows land the section renders empty and says why (§6.6).
-
-### `useCrossCutting`
-
-the ten tabs reachable from every step on every level. Verdict: **backlog**. Required by §7.7.
-
-| | |
-| --- | --- |
-| object types | `project`, `proposalRecordItem` |
-| properties | — |
-| acts | — |
-| datasets | — |
-| links traversed | — |
-| addressed by | `:projectRef` |
-| query | not a list, sort unaddressed, search none, counts length |
-| freshness | tolerant |
-
-**Identity.** The tabs themselves come from the rule and have no ontology identity; :tabId is pathways.ts's own id and nothing resolves it.
-
-**Query.** What a live implementation supplies is their COMPLETION, which is the same slot closure every other completion count waits on.
-
-**Authority.** No gate. §7.2 requires every row to be reachable and workable without agency credentials.
-
-**Freshness.** The tab set is the rule's and does not move. Completion would stale on the acts that close a slot, and no act creates one.
-
-Needed:
-
-- per-tab completion, which is the same slot closure §1 records as having no address
-- a document parameter on the review-scoped tabs: 1b.9(r) reevaluation operates on a PUBLISHED DOCUMENT, so on a proposal that has published more than one, one tab cannot say which it is about
-
-Rendered rather than hidden:
-
-- Nine of the ten are answered once for the proposal and travel across a level change; reevaluation and programmatic reliance are per level. TabSpec.scope carries the split, so carry-forward is a property a test can check rather than a rule someone follows.
-- They are ten TABS under one rail entry at a single step segment, not ten steps. The generated handoff said otherwise and was wrong about the built shape before any of this.
 
 ### `useElement`
 

@@ -17,9 +17,15 @@ const rail = (container: HTMLElement) =>
   container.querySelector("aside[aria-label='Steps']") as HTMLElement;
 
 /** A row is closed until it is opened, so anything about an answer has to open
- *  it first. That is the design and not an accident of the test. */
+ *  it first. That is the design and not an accident of the test.
+ *
+ *  Scoped to the row headers deliberately. Blueprint gives an UNSELECTED TAB
+ *  `aria-expanded="false"` too, so a helper that clicked every collapsed thing
+ *  navigated to another tab and then asserted about the wrong panel. That was
+ *  invisible while an assembly step had a single tab and rendered no strip. */
 function openRows(container: HTMLElement) {
-  for (const header of container.querySelectorAll("[aria-expanded='false']")) {
+  const panel = container.querySelector("[class*='panelBox']") ?? container;
+  for (const header of panel.querySelectorAll("button[aria-expanded='false']")) {
     fireEvent.click(header);
   }
   return container;
@@ -60,14 +66,40 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
     expect(steps.length).toBe(3);
   });
 
-  it("keeps the cross-cutting tabs reachable from every step", () => {
-    const { container } = at("/projects/p1/steps/x/proposal-record");
-    // One rail entry, ten tabs — the rail lists parents, the strip lists parts.
-    expect(within(rail(container)).getByText("Across the project")).toBeTruthy();
-    expect(within(rail(container)).queryByText("Interdisciplinary preparation")).toBeNull();
-    const tabs = within(container.querySelector("[role='tablist']") as HTMLElement).getAllByRole("tab");
-    expect(tabs.map((t) => (t.textContent ?? "").trim())).toContain("Interdisciplinary preparation");
-    expect(screen.getByText(/eleven categories of material/)).toBeTruthy();
+  /* THE SHAPE THIS TEST USED TO PIN. Ten tabs hung off a rail entry called
+     "across the project" that belonged to no step and no level of review —
+     which is where content with no home ends up, and it broke the containment
+     law the whole page rests on: a pathway's steps complete it, a step's tabs
+     complete the step, a tab's elements complete the tab. Every one of those
+     duties is now inside the step whose completion it conditions. */
+  it("puts every duty inside a step, and carries no step-less rail entry", () => {
+    const { container } = at("/projects/p1/steps/S.0/proposed-action");
+    const pane = rail(container);
+    expect(within(pane).queryByText("Across the project")).toBeNull();
+    // 1b.9(a)'s proposal record is a tab of Intake, because it is what the
+    // proposal record IS before any level of review is fixed.
+    const tabs = within(container.querySelector("[role='tablist']") as HTMLElement)
+      .getAllByRole("tab")
+      .map((t) => (t.textContent ?? "").trim());
+    expect(tabs).toContain("Proposal record");
+    expect(tabs).toContain("Applicant or third party");
+  });
+
+  it("attaches a duty to every step whose completion it conditions", () => {
+    // 1b.9(r) reevaluation operates on a published document, so it is asked on
+    // the step where a level ends — on every pathway, including the two that
+    // produce no document at all.
+    for (const [url, step] of [
+      ["/projects/p1/steps/E1.P0.3/close?levels=P0", "Close the review"],
+      ["/projects/p1/steps/E1.P3.7/notify?levels=P3", "Notification"]
+    ]) {
+      const { container } = at(url);
+      const tabs = within(container.querySelector("[role='tablist']") as HTMLElement)
+        .getAllByRole("tab")
+        .map((t) => (t.textContent ?? "").trim());
+      expect(tabs, step).toContain("Reevaluation");
+      cleanup();
+    }
   });
 });
 
@@ -100,21 +132,21 @@ describe("the signature gate — §7.2", () => {
   });
 
   it("leaves the EA ungated at every row", () => {
-    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const { container } = at("/projects/p1/steps/E1.P3.4/ea?levels=P3");
     expect(container.querySelector("[data-gated]")).toBeNull();
   });
 });
 
 describe("retrieval that could not run — §7.8", () => {
   it("reports unresolved, not absent", () => {
-    const container = openRows(at("/projects/p1/steps/4/ea?pathway=P3&retrieval=down").container);
+    const container = openRows(at("/projects/p1/steps/E1.P3.4/ea?levels=P3&retrieval=down").container);
     const unresolved = container.querySelectorAll("[data-state='unresolved']");
     expect(unresolved.length).toBeGreaterThan(0);
     expect(screen.getAllByText(/the drafting lane could not run/).length).toBeGreaterThan(0);
   });
 
   it("draws a proposal as a proposal while the lane is up", () => {
-    const container = openRows(at("/projects/p1/steps/4/ea?pathway=P3").container);
+    const container = openRows(at("/projects/p1/steps/E1.P3.4/ea?levels=P3").container);
     expect(container.querySelectorAll("[data-state='unresolved']").length).toBe(0);
     expect(screen.getAllByText(/Drafted by AI from/).length).toBeGreaterThan(0);
   });
@@ -200,12 +232,11 @@ describe("tabs are the step's parts, not a copy of the step", () => {
     expect(wrap?.getAttribute("data-overflow-left")).toBe("no");
   });
 
-  it("marks no step active while a cross-cutting tab is open", () => {
-    const { container } = at("/projects/p1/steps/x/proposal-record");
+  it("marks exactly one step active, and it is the step being worked", () => {
+    const { container } = at("/projects/p1/steps/S.0/participants");
     const active = rail(container).querySelectorAll("[class*='active']");
-    // Only the cross-cutting entry itself, never a step in the sequence.
     expect(active.length).toBe(1);
-    expect(active[0].textContent).toContain("Across the project");
+    expect(active[0].textContent).toContain("Intake");
   });
 
   it("never shows the same name in the rail and in the tab strip", () => {

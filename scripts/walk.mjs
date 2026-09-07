@@ -86,6 +86,19 @@ const MODALITY = {
   ]
 };
 
+/* How each element gets its value, in the words the interface uses. */
+const FILL = {
+  intake: "you enter this",
+  carried: "carried forward",
+  catalogue: "looked up",
+  computed: "worked out",
+  drafted: "drafted for you",
+  choice: "you choose",
+  authored: "you write this",
+  attested: "signed or dated",
+  referenced: "incorporated"
+};
+
 const TEXTSTATE = {
   verbatim: ["verbatim", "The row carries the rule's own words."],
   restated: ["restated", "The rule's requirement, restated."],
@@ -103,11 +116,11 @@ const byLevelRow = LEVEL_IDS.map(
     `<td class="q">${esc(LEVELS[l].question)}</td><td class="n">${c.totals.byLevel[l]}</td></tr>`
 ).join("");
 
-const levelsTable = c.levels
+const levelsTable = c.pathways
   .map(
     (l) =>
-      `<tr><td class="pid">${l.pathway}</td><td>${esc(l.name)}</td><td class="n">${l.steps}</td>` +
-      `<td class="n">${l.tabs}</td><td class="n">${l.rows}</td>` +
+      `<tr><td class="pid">${l.pathway}</td><td>${esc(l.name)}</td><td class="n">${l.steps.length}</td>` +
+      `<td class="n">${l.tabs}</td><td class="n">${l.elements}</td>` +
       `<td class="n${l.placeholders ? " flagn" : ""}">${l.placeholders || "—"}</td>` +
       `<td>${l.levelsCovered.map((x) => `<span class="chip lvl">L${x}</span>`).join(" ")}</td></tr>`
   )
@@ -162,6 +175,20 @@ const rowHtml = (r) => {
     <td><span class="chip mod t-${esc(r.text)}" title="${esc(tgloss)}">${esc(tword)}</span></td>
     <td><span class="chip lvl">L${r.level}</span></td>
     <td>${r.gated ? '<span class="chip gate">reserved</span>' : ""}</td>
+  </tr>
+  <tr class="fillrow${r.text === "placeholder" ? " ph" : ""}">
+    <td></td>
+    <td colspan="7">
+      <span class="fill f-${esc(r.fill)}">${esc(FILL[r.fill])}</span>
+      ${r.source ? `<span class="detail">from ${esc(r.source)}</span>` : ""}
+      ${r.rule ? `<span class="detail">${esc(r.rule)}</span>` : ""}
+      ${r.from ? `<span class="detail">from <code>${esc(r.from)}</code></span>` : ""}
+      ${
+        r.produces.template
+          ? `<div class="tplwrap"><span class="sect">${esc(r.produces.section)}</span><pre class="tpl">${esc(r.produces.template)}</pre></div>`
+          : `<span class="notpl">no template — informs a determination rather than a document, or its text is not written</span>`
+      }
+    </td>
   </tr>`;
 };
 
@@ -171,13 +198,14 @@ const groups = [];
 for (const tab of c.tabs) {
   const last = groups.at(-1);
   if (last && last.key === tab.stepKey) last.tabs.push(tab);
-  else groups.push({ key: tab.stepKey, name: tab.stepName, n: tab.stepN, tabs: [tab] });
+  else groups.push({ key: tab.stepKey, name: tab.stepName, purpose: tab.stepPurpose, n: tab.stepN, tabs: [tab] });
 }
 
 const walkHtml = groups
   .map(
     (g) => `<section class="step">
       <h2><span class="key">${esc(g.key)}</span> ${esc(g.name)}</h2>
+      <p class="purpose">${esc(g.purpose)}</p>
       ${g.tabs
         .map(
           (t) => `<div class="tab">
@@ -188,14 +216,15 @@ const walkHtml = groups
               ${t.documentType ? `<span class="chip doc">${esc(t.documentType)}</span>` : ""}
               <span class="tabid"><code>${esc(t.stepKey)}/${esc(t.tabId)}</code></span>
             </h3>
-            <p class="tabmeta">${t.rows.length} rows${
+            <p class="purpose">${esc(t.tabPurpose)}</p>
+            <p class="tabmeta">${t.elements.length} elements${
               t.placeholders ? ` · <b>${t.placeholders} not written</b>` : ""
             }${t.permissions ? ` · ${t.permissions} permissions` : ""}${
               t.gates ? ` · ${t.gates} reserved` : ""
             }${t.unstatedOptions ? ` · ${t.unstatedOptions} sets unstated` : ""}</p>
             <table class="rows">
               <thead><tr><th>anchor</th><th>citation</th><th>row</th><th>form</th><th>the rule</th><th>text</th><th>level</th><th></th></tr></thead>
-              <tbody>${t.rows.map(rowHtml).join("")}</tbody>
+              <tbody>${t.elements.map(rowHtml).join("")}</tbody>
             </table>
           </div>`
         )
@@ -426,6 +455,32 @@ tr.ph{background:var(--unresolved-wash)}
 
 /* The one place the sticky nav must not hide an anchor it just jumped to. */
 tr[id],article[id]{scroll-margin-top:56px}
+
+/* What completing a step or a tab achieves. A step is what is needed to
+   complete a pathway and a tab is what is needed to complete a step, so both
+   have to be able to say what that is. */
+.purpose{font-family:var(--serif);font-size:13.5px;line-height:1.5;color:var(--ink-soft);
+  margin:2px 0 10px;max-width:74ch}
+
+/* How each element fills, and the text it produces. These two are what
+   "complete" means: an element nobody can say how to fill is not designed, and
+   one with no template is one the filed document cannot carry. */
+.fillrow td{border-bottom:1px solid var(--rule);padding-top:0;padding-bottom:10px}
+.fill{display:inline-block;font-size:10.5px;padding:0 5px;border:1px solid currentColor;
+  border-radius:var(--radius);margin-right:6px;white-space:nowrap}
+.f-drafted{color:var(--link)}
+.f-authored{color:var(--unresolved)}
+.f-attested{color:var(--blocked)}
+.f-computed,.f-carried{color:var(--ok)}
+.f-catalogue,.f-referenced,.f-intake,.f-choice{color:var(--ink-faint)}
+.detail{font-size:11.5px;color:var(--ink-soft);margin-right:8px}
+.detail code{font-family:var(--mono);font-size:10.5px}
+.tplwrap{margin-top:6px}
+.sect{display:block;font-family:var(--mono);font-size:10px;color:var(--ink-faint);margin-bottom:3px}
+.tpl{margin:0;padding:8px 10px;background:var(--well);border-left:2px solid var(--rule);
+  font-family:var(--mono);font-size:11px;line-height:1.5;white-space:pre-wrap;
+  overflow-x:auto;color:var(--ink);max-width:80ch}
+.notpl{font-size:11.5px;color:var(--ink-faint);font-style:italic}
 `;
 
 /* --- the document ------------------------------------------------------- */
@@ -468,7 +523,7 @@ const BODY = `<div class="wrap">
 
 <div class="tiles">
   <div class="tile"><b>${c.totals.distinctTabs}</b><span>tabs</span></div>
-  <div class="tile"><b>${c.totals.distinctRows}</b><span>rows</span></div>
+  <div class="tile"><b>${c.totals.distinctElements}</b><span>rows</span></div>
   <div class="tile${c.totals.placeholders ? " flag" : ""}"><b>${c.totals.placeholders}</b><span>not written</span></div>
   <div class="tile${c.totals.unstatedOptions ? " flag" : ""}"><b>${c.totals.unstatedOptions}</b><span>sets unstated</span></div>
   <div class="tile"><b>${c.totals.permissions}</b><span>permissions</span></div>
@@ -553,7 +608,7 @@ if (external.length > 0) {
 }
 
 process.stdout.write(
-  `walk.html — ${c.totals.distinctTabs} tabs, ${c.totals.distinctRows} rows, ` +
+  `walk.html — ${c.totals.distinctTabs} tabs, ${c.totals.distinctElements} rows, ` +
     `${c.findings.length} findings, ${Math.round(standalone.length / 1024)} KB, ` +
     "no external requests\n" +
     `walk.artifact.html — the same page as a fragment, ${Math.round(fragment.length / 1024)} KB\n`

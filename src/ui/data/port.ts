@@ -84,8 +84,7 @@ import type {
   Session,
   SourceDocument,
   SourceKind,
-  StepRail,
-  TabSpec
+  StepRail
 } from "@/ui/data/types";
 
 export { sourceTitle, sectionsFor } from "@/ui/data/fixtures";
@@ -100,6 +99,7 @@ export {
 } from "@/ui/data/project";
 export {
   DISCRETIONS,
+  FILL_SAYS,
   LEVELS,
   LEVEL_IDS,
   PATHWAYS,
@@ -169,10 +169,6 @@ export interface DataPort {
    *  and returned one gate for the whole application whose citation was all
    *  three joined, so per-document authority was inexpressible. */
   useGate(documentType: DocumentType | null): Region<Gate>;
-  /** §7.7's ten tabs. They were a static import in the screen, so a backend
-   *  could not hide, rename, reorder or complete one without editing a file
-   *  inside the tree — which is exactly what the handoff goal forbids. */
-  useCrossCutting(projectRef: string): Region<TabSpec[]>;
   useElement(projectRef: string, stepKey: string, tabId: string): Region<ElementPanel>;
   useSource(kind: SourceKind): Region<SourceDocument>;
   useArchive(): Region<Archive>;

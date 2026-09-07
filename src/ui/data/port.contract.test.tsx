@@ -16,7 +16,7 @@ import type { DataPort, Region, Session } from "@/ui/data/port";
  *  surface, and that the fifth state cannot be swallowed by a default clause.
  */
 
-/** Calls all seventeen members, unconditionally and in one render — which is
+/** Calls all sixteen members, unconditionally and in one render — which is
  *  itself the first constraint the contract states, so a member that cannot be
  *  called during render fails here rather than at integration. */
 function useEverySurface(): Record<string, Region<unknown>> {
@@ -28,7 +28,6 @@ function useEverySurface(): Record<string, Region<unknown>> {
     useLevels: p.useLevels("p1"),
     useSteps: p.useSteps("p1", "S.0"),
     useGate: p.useGate("FANEC"),
-    useCrossCutting: p.useCrossCutting("p1"),
     useElement: p.useElement("p1", "S.0", "proposed-action"),
     useSource: p.useSource("rule"),
     useArchive: p.useArchive(),
@@ -69,7 +68,7 @@ describe("pending reaches every surface — §6.1 and the five-state mapping", (
   // state nobody can see.
   const pendingAll = () => at("/?state=pending&shell=pending&session=pending");
 
-  it("puts every one of the seventeen into pending, so no default clause swallows it", () => {
+  it("puts every one of the sixteen into pending, so no default clause swallows it", () => {
     const wrong = Object.entries(pendingAll())
       .filter(([, region]) => region.state !== "pending")
       .map(([name, region]) => `${name} is ${region.state}`);

@@ -26,8 +26,7 @@ import type {
   Session,
   SourceDocument,
   SourceKind,
-  StepRail,
-  TabSpec
+  StepRail
 } from "@/ui/data/types";
 
 /** The default implementation of the port: fixtures, one per state per screen,
@@ -206,21 +205,6 @@ function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
   }
 }
 
-/** §7.7's ten tabs, through the port rather than as a static import. */
-function useCrossCutting(_projectRef: string): Region<TabSpec[]> {
-  const o = useOverrides();
-  if (o.state === "pending") {
-    return fx.pending("⟨element.byDocument · the ten cross-cutting surfaces⟩");
-  }
-  if (o.state === "unresolved") {
-    return fx.unresolved(
-      "The cross-cutting tabs could not be read",
-      "no object type carries a cross-cutting surface; they come from the rule and not from data"
-    );
-  }
-  return fx.filled(pj.CROSS_CUTTING);
-}
-
 /** The three surfaces the rule reserves to the responsible official. The
  *  interface presents the gate and cannot verify a credential: a gate held
  *  only in the client is not a gate. */
@@ -391,7 +375,6 @@ export const fixturePort: DataPort = {
   useLevels,
   useSteps,
   useGate,
-  useCrossCutting,
   useElement,
   useSource,
   useArchive,
