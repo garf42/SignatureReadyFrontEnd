@@ -4,9 +4,9 @@ import { ACTS } from "@/ui/data/acts";
 import { BINDINGS } from "@/ui/data/bindings";
 
 /** The rules acts.ts states, held as tests so they cannot be stated and then
- *  broken. Nothing here reads guidance/: those documents govern this build and
- *  do not travel with the packet, so a test that needed one would fail the
- *  moment the tree arrived anywhere else. */
+ *  broken. Nothing here reads the register or either amendment: those
+ *  documents govern this build and do not travel with the packet, so a test
+ *  that needed one would fail the moment the tree arrived anywhere else. */
 
 const acts = Object.values(ACTS);
 const surfaces = Object.keys(BINDINGS);

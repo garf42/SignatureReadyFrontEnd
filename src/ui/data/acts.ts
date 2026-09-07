@@ -304,7 +304,7 @@ export const ACTS: Record<string, ActDecl> = {
         status: "proposed",
         type: "string",
         required: true,
-        note: "Proposed, and normalised from the object type. §1 names the property a modify act writes and never the parameter that carries the row it edits; nothing in guidance/ fixes this name."
+        note: "Proposed, and normalised from the object type. §1 names the property a modify act writes and never the parameter that carries the row it edits; nothing in the register or either amendment fixes this name."
       },
       {
         name: "outcome",

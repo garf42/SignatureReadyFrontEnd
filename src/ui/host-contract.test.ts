@@ -201,3 +201,31 @@ describe("the router shape is the one the tree was built for", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("the packet is readable on its own terms", () => {
+  /** The register and the two amendments govern this build and are NOT part of
+   *  the packet: they are not uploaded, so a shipped file that points at one
+   *  is a dangling pointer for everyone downstream. The § numbers stay — they
+   *  are a citation vocabulary, and every fact they cite is restated where it
+   *  is used — but the folder must not be named. */
+  it("names no build-side document by path", () => {
+    const offenders = allSources
+      .filter(([, text]) => /guidance\//.test(text))
+      .map(([path]) => path);
+    expect(offenders).toEqual([]);
+  });
+
+  it("reads nothing at runtime or test time from outside the tree, but for the host itself", () => {
+    // ?raw and JSON imports are how a file becomes load-bearing across the
+    // move. Everything the tree reads that way must be inside it.
+    const offenders = allSources
+      .filter(([path]) => path.startsWith("/src/ui/"))
+      .flatMap(([path, text]) =>
+        [...text.matchAll(/from\s+"([^"]+(?:\?raw|\.json))"/g)]
+          .map((m) => m[1])
+          .filter((spec) => !spec.startsWith("@/ui/"))
+          .map((spec) => `${path} reads ${spec}`)
+      );
+    expect(offenders).toEqual([]);
+  });
+});

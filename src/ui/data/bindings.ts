@@ -1053,7 +1053,7 @@ export const BINDINGS: Record<string, Binding> = {
         name: "byteLength",
         objectType: "corpusArtifact",
         status: "proposed",
-        note: "The camelCase string never appears in guidance/: §1 and §6.6 both write 'byte length' as two words. types.ts and support.ts already use byteLength, so the front end has settled on a spelling the register has not."
+        note: "The camelCase string is nowhere in the register: §1 and §6.6 both write 'byte length' as two words. types.ts and support.ts already use byteLength, so the front end has settled on a spelling the register has not."
       }
     ],
     acts: [],
@@ -1321,7 +1321,7 @@ export const BINDINGS: Record<string, Binding> = {
         name: "targetKind",
         objectType: "assignment",
         status: "confirmed",
-        note: "Written by identify-expert-requirement, which is a create writing slot; §1 names the edge an act writes as assignment.slot, so the row it creates is an assignment and not an engagement. Closed 3, written by identify-expert-requirement. §1's action table names the parameter without naming the object type the create writes; identify-expert-requirement is the only create in the expert chain while package-expert-request modifies both assignment and engagement, so the created type is one of those two and guidance/ does not say which. engagement is the reading taken here and it must be read off the action's edit set before the adapter binds it."
+        note: "Closed at three, written by identify-expert-requirement. The act is a create that writes slot, and §1 names the edge an act writes as assignment.slot — so the row it creates is an assignment, not an engagement. That is an inference from one line and not a measurement: §1's action table names what each act writes and never the object type a create produces. Read it off the action's edit set before binding it. Note also that nothing in the seventeen creates an engagement at all, while package-expert-request modifies one."
       },
       {
         name: "targetName",
