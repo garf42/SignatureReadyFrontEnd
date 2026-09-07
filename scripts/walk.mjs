@@ -28,7 +28,20 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { createServer } from "vite";
 
 const OUT_DIR = new URL("../dist-walk/", import.meta.url);
+/** Two files, one generator, so they cannot drift.
+ *
+ *  `walk.html` is standalone and makes NO external request of any kind — that
+ *  is the constraint that made this a generator rather than a route, because a
+ *  previous review preview was excluded from this repository for loading fonts
+ *  from a CDN the platform CSP refuses.
+ *
+ *  `walk.artifact.html` is the same page as a fragment for publishing, with the
+ *  three faces this application already uses linked from the one font host that
+ *  surface admits. Both declare the same fallback stacks, so the standalone
+ *  file renders correctly on system faces and neither is a different document
+ *  from the other. */
 const OUT = new URL("walk.html", OUT_DIR);
+const OUT_ARTIFACT = new URL("walk.artifact.html", OUT_DIR);
 
 const server = await createServer({
   configFile: new URL("../vite.config.ts", import.meta.url).pathname,
@@ -86,28 +99,28 @@ const TEXTSTATE = {
 
 const byLevelRow = LEVEL_IDS.map(
   (l) =>
-    `<tr><td class="lv lv${l}">Level ${l}</td><td>${esc(LEVELS[l].name)}</td>` +
+    `<tr><td class="lvname">Level ${l}</td><td>${esc(LEVELS[l].name)}</td>` +
     `<td class="q">${esc(LEVELS[l].question)}</td><td class="n">${c.totals.byLevel[l]}</td></tr>`
 ).join("");
 
 const levelsTable = c.levels
   .map(
     (l) =>
-      `<tr><td class="p">${l.pathway}</td><td>${esc(l.name)}</td><td class="n">${l.steps}</td>` +
+      `<tr><td class="pid">${l.pathway}</td><td>${esc(l.name)}</td><td class="n">${l.steps}</td>` +
       `<td class="n">${l.tabs}</td><td class="n">${l.rows}</td>` +
-      `<td class="n${l.placeholders ? " bad" : ""}">${l.placeholders || "—"}</td>` +
-      `<td>${l.levelsCovered.map((x) => `<span class="chip lv${x}">L${x}</span>`).join(" ")}</td></tr>`
+      `<td class="n${l.placeholders ? " flagn" : ""}">${l.placeholders || "—"}</td>` +
+      `<td>${l.levelsCovered.map((x) => `<span class="chip lvl">L${x}</span>`).join(" ")}</td></tr>`
   )
   .join("");
 
 const transitionCards = [...TRANSITIONS, ...COMPETENCE_CONDITIONS]
   .map((t) => {
     const [word, gloss] = MODALITY[t.modality];
-    return `<article class="tr" id="${esc(t.id)}">
+    return `<article class="tr m-${esc(t.modality)}" id="${esc(t.id)}">
       <header>
         <span class="tid">${esc(t.id)}</span>
         <h3>${esc(t.label)}</h3>
-        <span class="mod m-${esc(t.modality)}" title="${esc(gloss)}">${esc(word)}</span>
+        <span class="chip mod m-${esc(t.modality)}" title="${esc(gloss)}">${esc(word)}</span>
         <span class="dir">${esc(t.direction)}</span>
       </header>
       <p class="cites">${t.citations.map((x) => `<code>${esc(x)}</code>`).join(" · ")}</p>
@@ -143,12 +156,12 @@ const rowHtml = (r) => {
       }
     </td>
     <td class="frm">${esc(r.form)}${
-      r.optionsKind ? `<span class="opt o-${esc(r.optionsKind)}">${esc(r.optionsKind)}</span>` : ""
+      r.optionsKind ? `<span class="chip o-${esc(r.optionsKind)}">${esc(r.optionsKind)}</span>` : ""
     }</td>
-    <td><span class="mod m-${esc(r.modality)}" title="${esc(mgloss)}">${esc(mword)}</span></td>
-    <td><span class="txt t-${esc(r.text)}" title="${esc(tgloss)}">${esc(tword)}</span></td>
-    <td class="lvc"><span class="chip lv${r.level}">L${r.level}</span></td>
-    <td class="gt">${r.gated ? "<span class=gate>reserved</span>" : ""}</td>
+    <td><span class="chip mod m-${esc(r.modality)}" title="${esc(mgloss)}">${esc(mword)}</span></td>
+    <td><span class="chip mod t-${esc(r.text)}" title="${esc(tgloss)}">${esc(tword)}</span></td>
+    <td><span class="chip lvl">L${r.level}</span></td>
+    <td>${r.gated ? '<span class="chip gate">reserved</span>' : ""}</td>
   </tr>`;
 };
 
@@ -170,13 +183,13 @@ const walkHtml = groups
           (t) => `<div class="tab">
             <h3>
               ${esc(t.tabName)}
-              <span class="chip lv${t.level}">L${t.level} ${esc(LEVELS[t.level].name)}</span>
+              <span class="chip lvl">L${t.level} ${esc(LEVELS[t.level].name)}</span>
               <span class="chip sc">${esc(t.scope)}</span>
               ${t.documentType ? `<span class="chip doc">${esc(t.documentType)}</span>` : ""}
               <span class="tabid"><code>${esc(t.stepKey)}/${esc(t.tabId)}</code></span>
             </h3>
             <p class="tabmeta">${t.rows.length} rows${
-              t.placeholders ? ` · <b class=bad>${t.placeholders} not written</b>` : ""
+              t.placeholders ? ` · <b>${t.placeholders} not written</b>` : ""
             }${t.permissions ? ` · ${t.permissions} permissions` : ""}${
               t.gates ? ` · ${t.gates} reserved` : ""
             }${t.unstatedOptions ? ` · ${t.unstatedOptions} sets unstated` : ""}</p>
@@ -207,162 +220,341 @@ const findingsHtml = Object.entries(byOwner)
               : "A code change."
       )}</p>
       <ul>${list
-        .map((f) => `<li><a href="#${esc(f.where)}"><code>${esc(f.where)}</code></a> ${esc(f.what)}</li>`)
+        .map(
+          (f) =>
+            `<li><a href="#${esc(f.where)}">${esc(f.where)}</a><span>${esc(f.what)}</span></li>`
+        )
         .join("")}</ul>
     </div>`
   )
   .join("");
 
-const html = `<!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SignatureReady — the project page, walked</title>
-<style>
-:root{color-scheme:light dark;
- --bg:#fbfaf8;--panel:#fff;--ink:#1a1a1c;--soft:#5c5f66;--rule:#dedad4;
- --bad:#8a2b1f;--badbg:#fdf1ef;--ok:#2c5f3a;
- --l0:#6b5b95;--l1:#2f6f8f;--l2:#1a1a1c;--l3:#8a6a1f;--l4:#2c5f3a;}
-@media (prefers-color-scheme:dark){:root:not([data-theme=light]){
- --bg:#141416;--panel:#1c1c1f;--ink:#e9e7e3;--soft:#9a9ca3;--rule:#33343a;
- --bad:#e08b7d;--badbg:#2a1c19;--ok:#8fc9a3;
- --l0:#b3a4d8;--l1:#8ec4de;--l2:#e9e7e3;--l3:#d9b96a;--l4:#8fc9a3;}}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);
- font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-code,.rid,.key,.tabid{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.wrap{max-width:1180px;margin:0 auto;padding:2.5rem 1.25rem 6rem}
-h1{font-size:1.9rem;line-height:1.15;margin:0 0 .4rem;letter-spacing:-.01em}
-.sub{color:var(--soft);margin:0 0 2rem;max-width:62ch}
-h2{font-size:1.05rem;margin:2.4rem 0 .6rem;padding-bottom:.35rem;border-bottom:2px solid var(--ink)}
-h3{font-size:.95rem;margin:1.4rem 0 .3rem;font-weight:600}
-h4{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--soft);margin:0 0 .3rem}
-.lead{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:1.1rem 1.25rem;margin:0 0 2rem}
-.lead p{margin:.5rem 0}
-.lead p:first-child{margin-top:0}
-.lead p:last-child{margin-bottom:0}
-table{border-collapse:collapse;width:100%;font-size:.82rem}
-th{text-align:left;font-weight:600;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;
- color:var(--soft);border-bottom:1px solid var(--rule);padding:.35rem .5rem}
-td{padding:.4rem .5rem;border-bottom:1px solid var(--rule);vertical-align:top}
-.n{text-align:right;font-variant-numeric:tabular-nums}
-.bad{color:var(--bad)}
-.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
-.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;margin:0 0 1.5rem}
-.card{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:.7rem .85rem}
-.card b{display:block;font-size:1.6rem;line-height:1.1;font-variant-numeric:tabular-nums}
-.card span{font-size:.72rem;color:var(--soft);text-transform:uppercase;letter-spacing:.05em}
-.chip{display:inline-block;font-size:.66rem;padding:.08rem .38rem;border-radius:3px;
- border:1px solid currentColor;letter-spacing:.03em;vertical-align:middle;white-space:nowrap}
-.lv0{color:var(--l0)}.lv1{color:var(--l1)}.lv2{color:var(--l2)}.lv3{color:var(--l3)}.lv4{color:var(--l4)}
-.chip.sc,.chip.doc{color:var(--soft)}
-.chip.doc{border-style:dashed}
-.step{margin-top:2.2rem}
-.step h2 .key{color:var(--soft);font-size:.78rem;font-weight:400;margin-right:.5rem}
-.tab{background:var(--panel);border:1px solid var(--rule);border-radius:6px;
- padding:.85rem 1rem 1rem;margin:.9rem 0}
-.tab h3{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:0}
-.tabid{margin-left:auto;font-size:.7rem;color:var(--soft)}
-.tabmeta{margin:.15rem 0 .6rem;font-size:.76rem;color:var(--soft)}
-.rid a{color:var(--soft);text-decoration:none;font-size:.68rem;white-space:nowrap}
-.rid a:hover{color:var(--ink);text-decoration:underline}
-.ref code{font-size:.72rem;white-space:nowrap}
-.lbl{max-width:34rem}
-.echo,.exp{display:block;font-size:.7rem;color:var(--soft);margin-top:.15rem}
-.frm{font-size:.72rem;color:var(--soft);white-space:nowrap}
-.opt{display:inline-block;margin-left:.3rem;font-size:.64rem;padding:0 .25rem;
- border:1px solid var(--rule);border-radius:2px}
-.o-unstated{color:var(--bad);border-color:currentColor}
-.o-open{color:var(--l1);border-color:currentColor}
-.mod,.txt{display:inline-block;font-size:.68rem;padding:.05rem .3rem;border-radius:3px;
- border:1px solid var(--rule);white-space:nowrap;cursor:help}
-.m-permission{color:var(--l1);border-color:currentColor}
-.m-derived{color:var(--l0);border-color:currentColor;font-weight:600}
-.m-duty-to-consider{color:var(--l3);border-color:currentColor}
-.m-outbound-request{color:var(--soft)}
-.t-placeholder{color:var(--bad);border-color:currentColor;background:var(--badbg)}
-.t-verbatim{color:var(--ok);border-color:currentColor}
-tr.ph{background:var(--badbg)}
-.gate{font-size:.66rem;color:var(--bad);border:1px solid currentColor;border-radius:3px;padding:.05rem .3rem}
-.tr{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:.9rem 1.1rem;margin:.8rem 0}
-.tr header{display:flex;flex-wrap:wrap;gap:.5rem;align-items:baseline}
-.tr h3{margin:0;flex:1 1 20rem}
-.tid{font-family:ui-monospace,monospace;font-weight:700;color:var(--soft)}
-.dir{font-size:.68rem;color:var(--soft)}
-.cites{margin:.35rem 0;font-size:.75rem}
-.stmt{margin:.4rem 0 .7rem;font-size:.85rem;max-width:70ch}
-.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1rem}
-.cols ul{margin:0;padding-left:1.1rem;font-size:.78rem}
-.cols li{margin:.15rem 0}
-li.none{list-style:none;margin-left:-1.1rem;color:var(--soft)}
-.where{font-size:.72rem;color:var(--soft);margin:.6rem 0 0}
-.unres{margin:.6rem 0 0;padding:.5rem .7rem;background:var(--badbg);border-left:3px solid var(--bad);
- font-size:.79rem;border-radius:0 3px 3px 0}
-.own{background:var(--panel);border:1px solid var(--rule);border-radius:6px;padding:.85rem 1.1rem;margin:.8rem 0}
-.own h3{margin-top:0}
-.own h3 .n{color:var(--soft);font-weight:400}
-.ownwhy{font-size:.79rem;color:var(--soft);margin:.2rem 0 .6rem;max-width:70ch}
-.own ul{margin:0;padding-left:1.1rem;font-size:.78rem}
-.own li{margin:.2rem 0}
-.own a{color:inherit}
-.q{color:var(--soft);font-size:.78rem}
-.p{font-weight:600}
-:target{outline:2px solid var(--l1);outline-offset:2px;border-radius:3px}
-</style></head><body><div class="wrap">
+/* --- the styles --------------------------------------------------------
 
-<h1>The project page, walked</h1>
-<p class="sub">Every level of review, every step, every tab, every row — generated from
-<code>src/ui/data/pathways.ts</code>, so it cannot drift from what the application holds.
-Each row carries its anchor. Quote one when you leave a comment and it resolves to exactly that row.</p>
+   Lifted from the application's own theme rather than invented: the same three
+   faces, the same oklch ink and paper, the same 3px radius, and — the part that
+   matters — the same STATE COLOURS. A modality chip is not decorated by hand.
+   It takes the colour of the region the row actually renders in: a permission
+   is the link blue, a duty-to-consider is the blocked ochre, a row whose text
+   is not in the build is the unresolved red, because that is exactly what the
+   screen shows for one. The review surface looks like the thing under review.
+   ------------------------------------------------------------------------ */
 
-<div class="lead">
-<p><strong>Part 1b contains no cross-pathway dependency.</strong> P0&ndash;P4 are the five mutually
-exclusive outcomes of one ordered elimination at 1b.2(f)(2), not a ladder. A finding of no
-significant impact after an assessment (1b.6(a)) and a record of decision after a statement
-(1b.8(a)) are ordering <em>within</em> a level — and either may be one physical document with its
-predecessor. Four transitions move a proposal between levels, and their modalities differ.</p>
-<p><strong>Nothing here was checked against 7 CFR part 1b itself.</strong> The pinned text lives in
-another repository and outbound retrieval is blocked. Every row marked <span class="txt t-placeholder">not
-written</span> is a place where the rule's own words are missing, and no amount of work on this side
-closes one.</p>
+const STYLE = `
+:root{
+  --ink:oklch(0.24 0.012 250); --ink-soft:oklch(0.47 0.01 250); --ink-faint:oklch(0.645 0.008 250);
+  --paper:oklch(0.982 0.003 85); --well:oklch(0.951 0.004 85); --panel:oklch(1 0 0);
+  --rule:oklch(0.855 0.005 250); --rule-soft:oklch(0.915 0.004 250);
+  --link:oklch(0.5 0.14 252); --ok:oklch(0.44 0.075 152);
+  --blocked:oklch(0.5 0.095 72); --unresolved:oklch(0.5 0.155 25);
+  --derived:oklch(0.46 0.14 300);
+  --unresolved-wash:oklch(0.965 0.018 25);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --serif:Spectral,Georgia,"Times New Roman",serif;
+  --radius:3px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ink:oklch(0.93 0.006 250); --ink-soft:oklch(0.72 0.008 250); --ink-faint:oklch(0.56 0.008 250);
+  --paper:oklch(0.185 0.008 250); --well:oklch(0.225 0.008 250); --panel:oklch(0.235 0.009 250);
+  --rule:oklch(0.34 0.009 250); --rule-soft:oklch(0.285 0.008 250);
+  --link:oklch(0.74 0.11 252); --ok:oklch(0.75 0.09 152);
+  --blocked:oklch(0.78 0.1 72); --unresolved:oklch(0.72 0.13 25);
+  --derived:oklch(0.76 0.12 300);
+  --unresolved-wash:oklch(0.26 0.035 25);
+}}
+:root[data-theme="dark"]{
+  --ink:oklch(0.93 0.006 250); --ink-soft:oklch(0.72 0.008 250); --ink-faint:oklch(0.56 0.008 250);
+  --paper:oklch(0.185 0.008 250); --well:oklch(0.225 0.008 250); --panel:oklch(0.235 0.009 250);
+  --rule:oklch(0.34 0.009 250); --rule-soft:oklch(0.285 0.008 250);
+  --link:oklch(0.74 0.11 252); --ok:oklch(0.75 0.09 152);
+  --blocked:oklch(0.78 0.1 72); --unresolved:oklch(0.72 0.13 25);
+  --derived:oklch(0.76 0.12 300);
+  --unresolved-wash:oklch(0.26 0.035 25);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:var(--link)}
+:focus-visible{outline:2px solid var(--link);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.wrap{max-width:1140px;margin:0 auto;padding:0 24px 96px}
+
+/* The masthead states the thesis. No hero: this is a document to work
+   through, and a viewport-tall opener would push the work off the first
+   frame. */
+.mast{padding:56px 0 8px;border-bottom:1px solid var(--ink)}
+h1{font-family:var(--serif);font-weight:600;font-size:38px;line-height:1.08;
+  letter-spacing:-0.015em;margin:0 0 10px;text-wrap:balance}
+.stand{font-family:var(--serif);font-size:17px;line-height:1.5;color:var(--ink-soft);
+  max-width:62ch;margin:0 0 22px}
+.stand code{font-size:0.92em}
+
+nav.jump{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:18px;
+  padding:10px 0;margin-bottom:28px;background:var(--paper);
+  border-bottom:1px solid var(--rule);font-size:11.5px;letter-spacing:0.07em;
+  text-transform:uppercase;font-weight:500}
+nav.jump a{color:var(--ink-soft);text-decoration:none}
+nav.jump a:hover{color:var(--ink)}
+
+h2{font-family:var(--serif);font-weight:600;font-size:24px;letter-spacing:-0.01em;
+  margin:52px 0 6px;padding-bottom:6px;border-bottom:1px solid var(--ink);text-wrap:balance}
+h2:first-of-type{margin-top:36px}
+.note{color:var(--ink-soft);max-width:66ch;margin:0 0 18px;font-size:13.5px}
+
+/* The two claims a reader must not miss, set as pull quotes in the
+   regulation's own voice rather than as another bordered card. */
+.claims{display:grid;gap:20px;margin:24px 0 30px;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.claim{border-left:3px solid var(--ink);padding-left:16px}
+.claim h3{font-family:var(--sans);font-size:11px;letter-spacing:0.09em;
+  text-transform:uppercase;color:var(--ink-soft);margin:0 0 6px;font-weight:600}
+.claim p{font-family:var(--serif);font-size:15.5px;line-height:1.52;margin:0;max-width:52ch}
+.claim.warn{border-left-color:var(--unresolved)}
+
+/* Big numbers, because the reader's question IS a count: are the tabs built
+   out, and how much is missing. */
+.tiles{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
+  grid-template-columns:repeat(auto-fit,minmax(132px,1fr));margin:0 0 8px}
+.tile{background:var(--panel);padding:14px 16px 12px}
+.tile b{display:block;font-family:var(--mono);font-size:27px;line-height:1;
+  font-variant-numeric:tabular-nums;font-weight:500}
+.tile span{display:block;margin-top:6px;font-size:10.5px;letter-spacing:0.07em;
+  text-transform:uppercase;color:var(--ink-soft)}
+.tile.flag b{color:var(--unresolved)}
+
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-weight:600;font-size:10.5px;text-transform:uppercase;
+  letter-spacing:0.07em;color:var(--ink-soft);padding:6px 10px 6px 0;
+  border-bottom:1px solid var(--rule);white-space:nowrap}
+td{padding:7px 10px 7px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+td:last-child,th:last-child{padding-right:0}
+.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;
+  white-space:nowrap;font-size:12px}
+.flagn{color:var(--unresolved)}
+.q{color:var(--ink-soft);font-size:12.5px}
+.lvname{font-family:var(--mono);font-size:12px;white-space:nowrap}
+.pid{font-family:var(--mono);font-weight:500;white-space:nowrap}
+
+/* Chips carry the row's own state, and they say the same thing the screen
+   says: the rule's force, and where the words came from. */
+.chip{display:inline-block;font-size:10.5px;line-height:1.6;padding:0 5px;
+  border:1px solid currentColor;border-radius:var(--radius);white-space:nowrap;
+  letter-spacing:0.02em;vertical-align:baseline}
+.mod{cursor:help}
+.m-duty{color:var(--ink-faint)}
+.m-duty-to-consider{color:var(--blocked)}
+.m-derived{color:var(--derived);font-weight:600}
+.m-permission{color:var(--link)}
+.m-outbound-request{color:var(--ink-faint);border-style:dashed}
+.t-verbatim{color:var(--ok)}
+.t-restated{color:var(--ink-faint);border-color:var(--rule)}
+.t-placeholder{color:var(--unresolved);font-weight:600}
+.o-unstated{color:var(--unresolved)}
+.o-open{color:var(--ok)}
+.o-closed,.o-catalogue,.o-register{color:var(--ink-faint);border-color:var(--rule)}
+.lvl{color:var(--ink-faint);border-color:var(--rule);font-family:var(--mono)}
+.sc,.doc{color:var(--ink-faint);border-color:var(--rule)}
+.doc{font-family:var(--mono);font-weight:500;color:var(--ink-soft)}
+.gate{color:var(--unresolved);font-weight:600}
+
+/* Transition cards. The rail on the left is the modality, so a reader learns
+   the four forces by colour before reading a word of any of them. */
+.tr{border:1px solid var(--rule);border-left:4px solid var(--ink-faint);
+  border-radius:var(--radius);background:var(--panel);padding:16px 20px;margin:14px 0}
+.tr.m-duty-to-consider{border-left-color:var(--blocked)}
+.tr.m-derived{border-left-color:var(--derived)}
+.tr.m-permission{border-left-color:var(--link)}
+.tr.m-outbound-request{border-left-color:var(--ink-faint)}
+.tr header{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline}
+.tr h3{font-family:var(--sans);font-size:15.5px;font-weight:600;margin:0;flex:1 1 22rem}
+.tid{font-family:var(--mono);font-weight:600;font-size:13px;color:var(--ink-soft)}
+.dir{font-size:11px;color:var(--ink-faint);font-family:var(--mono)}
+.cites{margin:8px 0 0;font-size:12px;color:var(--ink-soft)}
+.cites code{font-family:var(--mono)}
+.stmt{font-family:var(--serif);font-size:14.5px;line-height:1.55;
+  margin:10px 0 14px;max-width:70ch}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+.cols h4{font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;
+  color:var(--ink-soft);margin:0 0 4px;font-weight:600}
+.cols ul{margin:0;padding-left:16px;font-size:12.5px;color:var(--ink-soft)}
+.cols li{margin:3px 0}
+li.none{list-style:none;margin-left:-16px}
+.where{font-size:11.5px;color:var(--ink-faint);margin:14px 0 0;font-family:var(--mono)}
+.unres{margin:12px 0 0;padding:10px 14px;background:var(--unresolved-wash);
+  border-left:3px solid var(--unresolved);font-size:13px;line-height:1.5;max-width:74ch}
+.unres b{font-weight:600}
+
+/* Findings, grouped by who can actually close one. */
+.own{border-top:1px solid var(--rule);padding:16px 0 4px}
+.own h3{font-family:var(--sans);font-size:14px;margin:0;font-weight:600;
+  display:flex;align-items:baseline;gap:10px}
+.own h3 .n{color:var(--ink-soft);font-weight:400;font-size:13px}
+.ownwhy{font-size:12.5px;color:var(--ink-soft);margin:5px 0 10px;max-width:72ch}
+.own ul{margin:0;padding-left:0;list-style:none;font-size:12.5px}
+.own li{margin:4px 0;padding-left:0;display:flex;gap:10px;align-items:baseline}
+.own li a{font-family:var(--mono);font-size:11px;white-space:nowrap;flex:0 0 auto;
+  text-decoration:none;min-width:16rem}
+.own li a:hover{text-decoration:underline}
+.own li span{color:var(--ink-soft)}
+
+/* The walk. Steps are the spine, tabs the parts of each. */
+.step{margin-top:38px}
+.step h2{display:flex;align-items:baseline;gap:12px;margin-bottom:10px}
+.step h2 .key{font-family:var(--mono);font-size:12px;font-weight:400;
+  color:var(--ink-soft);letter-spacing:0}
+.tab{border:1px solid var(--rule);border-radius:var(--radius);
+  background:var(--panel);padding:14px 18px 16px;margin:12px 0}
+.tab h3{font-family:var(--sans);font-size:14.5px;font-weight:600;margin:0 0 3px;
+  display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.tabid{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.tabmeta{font-size:11.5px;color:var(--ink-soft);margin:0 0 10px}
+.tabmeta b{color:var(--unresolved);font-weight:600}
+.rid{font-family:var(--mono);font-size:10.5px;white-space:nowrap}
+.rid a{color:var(--ink-faint);text-decoration:none}
+.rid a:hover{color:var(--link);text-decoration:underline}
+.ref{font-family:var(--mono);font-size:11.5px;white-space:nowrap;color:var(--ink-soft)}
+.lbl{max-width:36rem}
+.echo,.exp{display:block;font-size:11px;color:var(--ink-faint);margin-top:3px;line-height:1.45}
+.echo code,.exp code{font-family:var(--mono)}
+.frm{font-size:11px;color:var(--ink-faint);white-space:nowrap;font-family:var(--mono)}
+.frm .chip{margin-left:5px}
+tr.ph{background:var(--unresolved-wash)}
+:target{outline:2px solid var(--link);outline-offset:3px}
+
+/* The one place the sticky nav must not hide an anchor it just jumped to. */
+tr[id],article[id]{scroll-margin-top:56px}
+`;
+
+/* --- the document ------------------------------------------------------- */
+
+const TITLE = "The Project Page, Walked";
+
+const BODY = `<div class="wrap">
+
+<header class="mast">
+  <h1>The project page, walked</h1>
+  <p class="stand">Every level of NEPA review, every step, every tab, every row —
+  generated from <code>src/ui/data/pathways.ts</code>, so it cannot drift from what the
+  application holds. Each row carries its anchor. Quote one in a comment and it lands on
+  exactly that row.</p>
+</header>
+
+<nav class="jump" aria-label="Sections">
+  <a href="#levels">Levels</a>
+  <a href="#review">Levels of review</a>
+  <a href="#moves">How a proposal moves</a>
+  <a href="#gaps">What is not finished</a>
+  <a href="#walk">The walk</a>
+</nav>
+
+<div class="claims">
+  <div class="claim">
+    <h3>There is no ladder</h3>
+    <p>P0&ndash;P4 are the five mutually exclusive outcomes of <em>one</em> ordered elimination
+    at 1b.2(f)(2). A finding of no significant impact after an assessment &mdash; 1b.6(a) &mdash;
+    and a record of decision after a statement &mdash; 1b.8(a) &mdash; are ordering <em>within</em>
+    a level, and either may be one physical document with its predecessor.</p>
+  </div>
+  <div class="claim warn">
+    <h3>Nothing here was checked against the rule itself</h3>
+    <p>The pinned copy of 7 CFR part&nbsp;1b lives in another repository and outbound retrieval
+    is blocked. Every row marked <span class="chip t-placeholder">not written</span> is a place
+    where the rule&rsquo;s own words are missing, and no amount of work on this side closes one.</p>
+  </div>
 </div>
 
-<div class="summary">
-  <div class="card"><b>${c.totals.distinctTabs}</b><span>tabs</span></div>
-  <div class="card"><b>${c.totals.distinctRows}</b><span>rows</span></div>
-  <div class="card"><b class="${c.totals.placeholders ? "bad" : ""}">${c.totals.placeholders}</b><span>not written</span></div>
-  <div class="card"><b>${c.totals.permissions}</b><span>permissions</span></div>
-  <div class="card"><b>${c.totals.gates}</b><span>reserved signatures</span></div>
-  <div class="card"><b class="${c.totals.unstatedOptions ? "bad" : ""}">${c.totals.unstatedOptions}</b><span>sets unstated</span></div>
+<div class="tiles">
+  <div class="tile"><b>${c.totals.distinctTabs}</b><span>tabs</span></div>
+  <div class="tile"><b>${c.totals.distinctRows}</b><span>rows</span></div>
+  <div class="tile${c.totals.placeholders ? " flag" : ""}"><b>${c.totals.placeholders}</b><span>not written</span></div>
+  <div class="tile${c.totals.unstatedOptions ? " flag" : ""}"><b>${c.totals.unstatedOptions}</b><span>sets unstated</span></div>
+  <div class="tile"><b>${c.totals.permissions}</b><span>permissions</span></div>
+  <div class="tile"><b>${c.totals.gates}</b><span>reserved signatures</span></div>
 </div>
 
-<h2>The Levels framework</h2>
-<p class="sub" style="margin-bottom:.8rem">Lower levels enable higher ones and a level is never
-forced. This application's own job is <strong>Level 2</strong>: decision guidance driving a
-non-specialist to the correct <em>level of NEPA review</em>. The collision of the two senses of
-&ldquo;level&rdquo; is the design.</p>
+<h2 id="levels">The Levels framework</h2>
+<p class="note">A different scale entirely from a <em>level of NEPA review</em>, and the
+collision is the design: this is a <strong>Level&nbsp;2</strong> instrument whose job is to
+drive a non-specialist to the correct level of review. Lower levels enable higher ones, and a
+level is never forced.</p>
 <div class="scroll"><table>
-<thead><tr><th></th><th>name</th><th>the question it answers</th><th>rows</th></tr></thead>
+<thead><tr><th></th><th>name</th><th>the question it answers</th><th class="n">rows</th></tr></thead>
 <tbody>${byLevelRow}</tbody></table></div>
 
-<h2>The five levels of review</h2>
+<h2 id="review">The five levels of review</h2>
+<p class="note">Every level carries the three shared steps &mdash; intake, the threshold
+determination, and the level of review itself &mdash; and then its own.</p>
 <div class="scroll"><table>
-<thead><tr><th></th><th>name</th><th>steps</th><th>tabs</th><th>rows</th><th>not written</th><th>levels carried</th></tr></thead>
+<thead><tr><th></th><th>name</th><th class="n">steps</th><th class="n">tabs</th><th class="n">rows</th><th class="n">not written</th><th>levels carried</th></tr></thead>
 <tbody>${levelsTable}</tbody></table></div>
 
-<h2>How a proposal moves between levels</h2>
+<h2 id="moves">How a proposal moves between levels</h2>
+<p class="note">Four of them, and their modalities differ &mdash; which is the whole point,
+because reading a duty as a permission is the dangerous direction. The rail on each card is
+the modality. There is no de-escalation: <code>direction</code> has no <code>lower</code>
+member, so one is unauthorable rather than merely unrecommended. That is the rule&rsquo;s
+silence, not its prohibition.</p>
 ${transitionCards}
 
-<h2>What is not finished, and who owns it</h2>
+<h2 id="gaps">What is not finished, and who owns it</h2>
 ${findingsHtml}
 
-<h2>The walk</h2>
+<h2 id="walk">The walk</h2>
+<p class="note">In rail order, the way an officer walks the application. <code>S.n</code> is a
+shared step, <code>E&lt;level&gt;.&lt;pathway&gt;.&lt;step&gt;</code> a step of one level of
+review, <code>x</code> the tabs reachable from every step.</p>
 ${walkHtml}
 
-</div></body></html>`;
+</div>`;
+
+const FONTS =
+  '<link rel="preconnect" href="https://fonts.googleapis.com">\n' +
+  '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n' +
+  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?' +
+  "family=IBM+Plex+Mono:wght@400;500;600&" +
+  "family=IBM+Plex+Sans:wght@400;500;600&" +
+  "family=Spectral:ital,wght@0,400;0,600;1,400&display=swap\">";
+
+const standalone = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${TITLE}</title>
+<style>${STYLE}</style>
+</head><body>${BODY}</body></html>`;
+
+/* The publishable fragment: no doctype, html, head or body of its own — the
+   artifact surface supplies those — and the three faces linked from the one
+   font host that surface admits. Same style block, same body, same fallback
+   stacks, so it is not a different document. */
+const fragment = `${FONTS}
+<title>${TITLE}</title>
+<style>${STYLE}</style>
+${BODY}`;
 
 await mkdir(OUT_DIR, { recursive: true });
-await writeFile(OUT, html);
+await writeFile(OUT, standalone);
+await writeFile(OUT_ARTIFACT, fragment);
+
+/* The standalone file's whole reason for existing is that it asks for nothing.
+   Assert it rather than trust it: a font link or an image that crept in would
+   fail silently under the platform CSP, which is exactly how the last preview
+   was lost. */
+const external = standalone.match(/https?:\/\/[^"'\s)]+/g) ?? [];
+if (external.length > 0) {
+  process.stderr.write(
+    "walk.html must make no external request, and asks for:\n" +
+      external.map((u) => "  - " + u).join("\n") +
+      "\n"
+  );
+  process.exit(1);
+}
+
 process.stdout.write(
   `walk.html — ${c.totals.distinctTabs} tabs, ${c.totals.distinctRows} rows, ` +
-    `${c.findings.length} findings, ${Math.round(html.length / 1024)} KB, no external requests\n`
+    `${c.findings.length} findings, ${Math.round(standalone.length / 1024)} KB, ` +
+    "no external requests\n" +
+    `walk.artifact.html — the same page as a fragment, ${Math.round(fragment.length / 1024)} KB\n`
 );
