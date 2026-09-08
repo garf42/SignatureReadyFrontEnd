@@ -57,6 +57,25 @@ if (!theme) {
       "theme.css must keep normalize and Blueprint inside @layer vendor. Unlayered, they outrank this tree's own rules and every component reverts to stock Blueprint with no error anywhere."
     );
   }
+  /* A disabled button that lights up under the cursor promises a click it will
+     not take, and it is a cascade accident rather than a decision: an intent
+     class written as `.primary, .primary:hover` is one class plus a
+     pseudo-class — the same specificity as `.bp6-button:disabled` — so source
+     order decides and the module file loads last. Naming the hover and active
+     states on the disabled rule makes it (0,3,0) and puts it out of reach of
+     ANY single-class intent, including ones nobody has written yet. Trimming
+     them as redundant reopens it on every disabled button at once. */
+  for (const selector of [
+    ".bp6-button:disabled:hover",
+    ".bp6-button:disabled:active",
+    ".bp6-button.bp6-disabled:hover"
+  ]) {
+    if (!theme[1].includes(selector)) {
+      cssFailures.push(
+        `theme.css must carry ${selector}. Without it a disabled button loses to any intent class's own :hover on source order, and lights up under the cursor while refusing the click.`
+      );
+    }
+  }
 }
 for (const [file, text] of Object.entries(cssSource)) {
   if (/!\s*important/.test(text)) {

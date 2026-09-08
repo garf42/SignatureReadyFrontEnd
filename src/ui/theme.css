@@ -120,11 +120,25 @@ a:hover {
   box-shadow: none;
 }
 
+/* Disabled OUTRANKS intent, and the `:hover` halves are the load-bearing part.
+   A submit bar's `.primary, .primary:hover` is one class plus a pseudo-class —
+   the same specificity as `.bp6-button:disabled` — so on a disabled primary
+   button source order decided, and the later module file won: the button sat
+   grey and turned blue under the cursor, promising a click it would not take.
+   Naming the hover states here makes this rule (0,3,0) and puts it out of reach
+   of any single-class intent, including ones not yet written. That is the point
+   of fixing it here rather than adding `:not(:disabled)` to the five files that
+   have intent classes today. */
 .bp6-button:disabled,
-.bp6-button.bp6-disabled {
+.bp6-button:disabled:hover,
+.bp6-button:disabled:active,
+.bp6-button.bp6-disabled,
+.bp6-button.bp6-disabled:hover,
+.bp6-button.bp6-disabled:active {
   background: var(--well);
   color: var(--ink-faint);
-  border-color: var(--rule);
+  border: 1px solid var(--rule);
+  box-shadow: none;
   cursor: not-allowed;
 }
 
