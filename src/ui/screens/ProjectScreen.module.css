@@ -299,14 +299,12 @@
    band. Only the live band opens; a superseded band collapses to a summary
    that still names its step count and its documents. */
 
-.bandGroup {
-  border-top: 1px solid var(--rule);
-}
-
-.bandGroup:first-of-type {
-  border-top: none;
-}
-
+/* NO RULE OF ITS OWN. The band drew one and its header drew another, with the
+   header's own top margin between them — two grey lines a gap apart, which is
+   what a divider looks like when two elements both think they are the one that
+   separates things. The header's box carries the rule, because the header IS
+   the boundary; a band with no header (the shared steps) needs none, since the
+   next band's header is what marks the change. */
 /* The SAME box the seam draws on a project that has occupied one level: a well
    ground, a rule above it, and a bold left edge. One level or four, a level of
    review is headed the same way, so an escalated project is the ordinary one
