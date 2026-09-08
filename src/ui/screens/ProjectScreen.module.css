@@ -7,10 +7,6 @@
   border-bottom: 1px solid var(--rule);
 }
 
-.railHead[aria-expanded] {
-  cursor: pointer;
-}
-
 .bandHead {
   display: flex;
   align-items: baseline;
@@ -44,60 +40,59 @@
 
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--rail-width, 280px)) auto minmax(0, 1fr);
   align-items: start;
 }
 
-/* Same rule as the section pane: the collapsed rail keeps the item's own left
-   padding, so a step number does not shift when the rail closes. */
-.split[data-rail="closed"] {
-  grid-template-columns: 46px minmax(0, 1fr);
+/* The divider. Two pixels of rule with a generous invisible target either side,
+   because a hit area the width of a hairline is a control only a mouse in good
+   condition can find. */
+.handle {
+  align-self: stretch;
+  width: 9px;
+  margin: 0 -4px;
+  cursor: col-resize;
+  background: none;
+  border: 0;
+  touch-action: none;
+  position: relative;
+  z-index: 1;
+}
+
+.handle::after {
+  content: "";
+  position: absolute;
+  inset: 0 4px;
+  background: var(--rule);
+  transition: background 120ms ease;
+}
+
+.handle:hover::after,
+.handle[data-dragging="yes"]::after,
+.handle:focus-visible::after {
+  background: var(--link);
+}
+
+.handle:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handle::after {
+    transition: none;
+  }
 }
 
 .rail {
   overflow: hidden;
   padding: var(--s-3) 0 var(--s-4);
-  border-right: 1px solid var(--rule);
 }
 
 .rail :global(.bp6-menu) {
   min-width: 0;
 }
 
-/* Same cause as the section pane, different remedy: a collapsed step keeps its
-   number, so the filling span stays and centres its own text instead. */
-.split[data-rail="closed"] .rail :global(.bp6-menu-item) > :global(.bp6-fill) {
-  text-align: left;
-}
 
-.split[data-rail="closed"] .rail .number {
-  margin-right: 0;
-}
-
-.railHead {
-  display: flex;
-  width: 100%;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-2);
-  width: 100%;
-  appearance: none;
-  background: none;
-  border: 0;
-  padding: 0 var(--s-3) var(--s-2);
-  font-family: var(--mono);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-  cursor: pointer;
-}
-
-.railGlyph {
-  font-family: var(--sans);
-  font-size: var(--t-read);
-  font-weight: 500;
-  line-height: 1;
-  color: var(--ink);
-}
 
 .step {
   border-bottom: 1px solid var(--rule);
@@ -142,10 +137,13 @@
   margin-right: var(--s-2);
 }
 
-/* The tick sits in the slot the number had, so a finished step costs the rail
-   no width and an unfinished one is still just its number. Colour is the
-   secondary carrier: the glyph differs from a digit on its own. */
-.number[data-done="yes"] {
+/* The tick sits at the right edge, in the slot the rail already kept for a
+   step's own word, so a finished step costs the row no column and the number —
+   which is how a reader finds a step again — is never given up for it. */
+.tick {
+  margin-left: var(--s-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
   color: var(--ok);
 }
 

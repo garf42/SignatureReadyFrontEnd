@@ -1,4 +1,5 @@
-import { Fragment, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Icon, Menu, MenuItem } from "@blueprintjs/core";
 
@@ -42,7 +43,7 @@ export function ProjectScreen() {
   const project = port.useProject(projectRef);
   const levels = port.useLevels(projectRef);
   const rail = port.useSteps(projectRef, stepId);
-  const [railShut, setRailShut] = useState(false);
+  const [railWidth, setRailWidth] = useState(RAIL_DEFAULT);
   const [openBands, setOpenBands] = useState<Record<string, boolean>>({});
 
   const go = (path: string) => navigate(withSearch(path, search));
@@ -140,18 +141,11 @@ export function ProjectScreen() {
         </Region>
       </div>
 
-      <div className={css.split} data-rail={railShut ? "closed" : "open"}>
+      <div
+        className={css.split}
+        style={{ "--rail-width": `${String(railWidth)}px` } as CSSProperties}
+      >
         <aside className={css.rail} aria-label="Steps">
-          <button
-            type="button"
-            className={css.railHead}
-            aria-expanded={!railShut}
-            aria-label={railShut ? "Show the steps" : "Hide the steps"}
-            onClick={() => setRailShut((v) => !v)}
-          >
-            <span>{railShut ? "" : "Steps"}</span>
-            <span className={css.railGlyph}>{railShut ? "+" : "−"}</span>
-          </button>
 
           <Region region={rail}>
             {(value: StepRail) => {
@@ -189,7 +183,6 @@ export function ProjectScreen() {
                       {index === 1 ? (
                         <AssembleGate
                           assembly={value.assembly}
-                          shut={railShut}
                           banded={banded}
                           onAssembled={() => go(pathname)}
                         />
@@ -213,10 +206,8 @@ export function ProjectScreen() {
                               size={12}
                             />
                             <span className={css.bandWords}>
-                              <span className={css.bandTitle}>{railShut ? key : band.title}</span>
-                              {railShut ? null : (
-                                <span className={css.bandSummary}>{band.summary}</span>
-                              )}
+                              <span className={css.bandTitle}>{band.title}</span>
+                              <span className={css.bandSummary}>{band.summary}</span>
                             </span>
                           </button>
                         ) : null}
@@ -226,7 +217,6 @@ export function ProjectScreen() {
                               <StepItem
                                 key={step.key}
                                 step={step}
-                                shut={railShut}
                                 active={step.key === stepId || step.id === stepId}
                                 onOpen={() =>
                                   go(tabPath(projectRef, step.key, step.tabs[0]?.id ?? tabId))
@@ -247,7 +237,6 @@ export function ProjectScreen() {
                 {value.bands.filter((entry) => entry.band.kind === "episode").length === 0 ? (
                   <AssembleGate
                     assembly={value.assembly}
-                    shut={railShut}
                     banded={false}
                     onAssembled={() => go(pathname)}
                   />
@@ -262,6 +251,8 @@ export function ProjectScreen() {
               and no level of review. Those duties are inside the steps they
               condition now, so the rail is the pathway and nothing else. */}
         </aside>
+
+        <RailHandle width={railWidth} onWidth={setRailWidth} />
 
         <section className={css.panel}>
           <Region region={rail}>
@@ -290,12 +281,10 @@ export function ProjectScreen() {
  *  later steps look necessary in the first place. */
 function StepItem({
   step,
-  shut,
   active,
   onOpen
 }: {
   step: StepEntry;
-  shut: boolean;
   active: boolean;
   onOpen: () => void;
 }) {
@@ -303,26 +292,33 @@ function StepItem({
     <MenuItem
       className={css.step + " " + css[active ? "active" : step.mark]}
       title={step.waitingOn ? `${step.name} — waits on ${step.waitingOn}` : step.name}
+      /* The number is an address and is always shown — swapping it for the
+         tick cost the reader the one thing they use to find a step again. The
+         tick goes to the right edge instead, in the slot the rail already had
+         for a step's own word, so the row still gains no column. */
       text={
-        /* Complete or not, in the smallest mark that can carry it: the number
-           itself becomes a tick. Nothing is added to the row — a step that is
-           finished swaps one glyph for another in a slot that was already
-           there, so the rail does not grow a status column and an unfinished
-           step is still just its number.
-
-           The claim is exact and comes from the same rows the panel renders:
-           every tab in this step has nothing outstanding and no text missing
-           from the build. An unticked step is therefore never a step this
-           screen merely could not read. */
         <>
-          <span className={css.number} data-done={step.done ? "yes" : "no"}>
-            {step.done ? "✓" : step.n}
-          </span>
-          {shut ? null : step.name}
+          <span className={css.number}>{step.n}</span>
+          {step.name}
           {step.done ? <span className={css.only}> — done</span> : null}
         </>
       }
-      label={shut ? undefined : (step.meta ?? undefined)}
+      labelElement={
+        (
+          <>
+            {step.meta}
+            {/* The claim is exact and comes from the same rows the panel
+                renders: every tab in this step has nothing outstanding and no
+                text missing from the build. An unticked step is therefore
+                never one this screen merely could not read. */}
+            {step.done ? (
+              <span className={css.tick} data-done="yes">
+                ✓
+              </span>
+            ) : null}
+          </>
+        )
+      }
       onClick={onOpen}
     />
   );
@@ -358,12 +354,10 @@ export type { BandEntry };
  *  only thing the screen owns is saying that it asked. */
 function AssembleGate({
   assembly,
-  shut,
   banded,
   onAssembled
 }: {
   assembly: Assembly;
-  shut: boolean;
   /* On an escalated proposal each band already carries its own level heading,
      and a seam that also names one would name the LIVE level while sitting
      above a superseded band. There it stays the quiet line. */
@@ -371,11 +365,6 @@ function AssembleGate({
   onAssembled: () => void;
 }) {
   const [running, setRunning] = useState(false);
-
-  if (shut) {
-    return null;
-  }
-
   const state = running ? "running" : assembly.state;
 
   return (
@@ -437,5 +426,103 @@ function AssembleGate({
         </>
       )}
     </section>
+  );
+}
+
+
+/* The rail's width, in pixels. Wide enough for the longest step name at the
+   default, and clamped so a drag can neither hide the steps nor crowd out the
+   panel they open into. */
+const RAIL_MIN = 160;
+const RAIL_DEFAULT = 280;
+const RAIL_MAX = 520;
+
+const clampRail = (px: number) => Math.min(RAIL_MAX, Math.max(RAIL_MIN, px));
+
+/** The divider between the rail and the panel, dragged to resize.
+ *
+ *  REPLACES A COLLAPSE TOGGLE. That button had two states and the reader
+ *  wanted neither of them: full width crowds the panel on a narrow screen, and
+ *  collapsed-to-icons hides the step names, which are the only thing the rail
+ *  is for. A drag gives every width between, and it is the same gesture people
+ *  already use on every editor pane they have ever met.
+ *
+ *  Keyboard reaches it too, and this is not decoration: a divider that only
+ *  answers to a pointer is a control half this application's users cannot
+ *  operate. Arrows nudge, Home and End go to the stops, and the element
+ *  announces itself as a separator with its current and limit values. */
+function RailHandle({ width, onWidth }: { width: number; onWidth: (px: number) => void }) {
+  const bar = useRef<HTMLButtonElement>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const move = useCallback(
+    (clientX: number) => {
+      const left = bar.current?.parentElement?.getBoundingClientRect().left ?? 0;
+      onWidth(clampRail(clientX - left));
+    },
+    [onWidth]
+  );
+
+  useEffect(() => {
+    if (!dragging) {
+      return;
+    }
+    const onMove = (event: PointerEvent) => {
+      event.preventDefault();
+      move(event.clientX);
+    };
+    const stop = () => {
+      setDragging(false);
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    };
+  }, [dragging, move]);
+
+  /* role="slider" on a button, not role="separator" on a div. The ARIA
+     window-splitter pattern is a focusable separator that "behaves like a
+     slider", and of the two halves the SLIDER half is the one that carries
+     what a user needs told: a value, its limits, and arrow keys that change
+     it. A plain separator announces a line. Horizontal because the value moves
+     along x — the divider is what stands vertically, not the scale. */
+  return (
+    <button
+      ref={bar}
+      type="button"
+      role="slider"
+      aria-label="Width of the steps pane"
+      aria-valuenow={width}
+      aria-valuemin={RAIL_MIN}
+      aria-valuemax={RAIL_MAX}
+      className={css.handle}
+      data-dragging={dragging ? "yes" : "no"}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        setDragging(true);
+      }}
+      onDoubleClick={() => {
+        onWidth(RAIL_DEFAULT);
+      }}
+      onKeyDown={(event) => {
+        const step = event.shiftKey ? 48 : 16;
+        if (event.key === "ArrowLeft") {
+          onWidth(clampRail(width - step));
+        } else if (event.key === "ArrowRight") {
+          onWidth(clampRail(width + step));
+        } else if (event.key === "Home") {
+          onWidth(RAIL_MIN);
+        } else if (event.key === "End") {
+          onWidth(RAIL_MAX);
+        } else {
+          return;
+        }
+        event.preventDefault();
+      }}
+    />
   );
 }

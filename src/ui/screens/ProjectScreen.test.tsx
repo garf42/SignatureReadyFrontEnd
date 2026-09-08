@@ -322,6 +322,59 @@ describe("the band says which review this is, in plain words", () => {
 /** The band header inside the rail said the same thing as the level line above
  *  it and the step count below it. It earns its place only where there is more
  *  than one band to tell apart. */
+/** The rail is dragged, not toggled. A collapse button had two states and the
+ *  reader wanted neither: full width crowds the panel on a narrow screen, and
+ *  collapsed-to-icons hides the step names, which are the only thing the rail
+ *  is for. */
+describe("the steps pane is resizable", () => {
+  it("offers a divider with a value and its limits, not a collapse toggle", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    expect(screen.queryByLabelText("Hide the steps")).toBeNull();
+    const handle = screen.getByRole("slider", { name: "Width of the steps pane" });
+    expect(handle.getAttribute("aria-valuenow")).toBe("280");
+    expect(handle.getAttribute("aria-valuemin")).toBe("160");
+    expect(handle.getAttribute("aria-valuemax")).toBe("520");
+    /* The width itself is a custom property the pane reads; jsdom does not
+       serialise those, so the value is checked where it is announced. */
+    expect(container.querySelector("[class*='split']")).not.toBeNull();
+  });
+
+  /* A divider only a pointer can move is a control half this application's
+     users cannot operate. */
+  it("moves from the keyboard, and stops at both ends", () => {
+    at("/projects/p1/steps/0/proposed-action");
+    const handle = screen.getByRole("slider", { name: "Width of the steps pane" });
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+    expect(handle.getAttribute("aria-valuenow")).toBe("264");
+    fireEvent.keyDown(handle, { key: "ArrowRight", shiftKey: true });
+    expect(handle.getAttribute("aria-valuenow")).toBe("312");
+    fireEvent.keyDown(handle, { key: "Home" });
+    expect(handle.getAttribute("aria-valuenow")).toBe("160");
+    fireEvent.keyDown(handle, { key: "ArrowLeft" });
+    expect(handle.getAttribute("aria-valuenow")).toBe("160");
+    fireEvent.keyDown(handle, { key: "End" });
+    expect(handle.getAttribute("aria-valuenow")).toBe("520");
+  });
+
+  it("returns to its default on a double click", () => {
+    at("/projects/p1/steps/0/proposed-action");
+    const handle = screen.getByRole("slider", { name: "Width of the steps pane" });
+    fireEvent.keyDown(handle, { key: "Home" });
+    expect(handle.getAttribute("aria-valuenow")).toBe("160");
+    fireEvent.doubleClick(handle);
+    expect(handle.getAttribute("aria-valuenow")).toBe("280");
+  });
+
+  /* Whatever the width, the step names are there — which is the failure the
+     collapse toggle had at one of its two states. */
+  it("never hides the step names", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const handle = screen.getByRole("slider", { name: "Width of the steps pane" });
+    fireEvent.keyDown(handle, { key: "Home" });
+    expect(within(rail(container)).getByText("Intake")).toBeTruthy();
+  });
+});
+
 describe("the rail's band header", () => {
   it("is not drawn on a project that has occupied one level of review", () => {
     const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
@@ -510,18 +563,21 @@ describe("steps are numbered from one", () => {
  *  say: every tab answered `outstanding: null`, honest at the time because the
  *  rail had no way to reach the rows, so nothing was ever marked finished. */
 describe("finished work is marked, minimally", () => {
-  it("ticks a step whose every tab is answered, in the slot the number had", () => {
+  it("ticks a finished step at the right edge, and never gives up its number", () => {
     const { container } = at("/projects/p1/steps/E1.P3.3/scope?levels=P3");
-    const numbers = [...rail(container).querySelectorAll("[class*='number']")];
-    const ticked = numbers.filter((n) => n.getAttribute("data-done") === "yes");
-    const plain = numbers.filter((n) => n.getAttribute("data-done") === "no");
-    expect(ticked.length + plain.length).toBe(numbers.length);
-    for (const mark of ticked) {
-      expect(mark.textContent).toBe("✓");
+    const items = [...rail(container).querySelectorAll("li")];
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      /* The number is the address a reader finds a step by, so it survives
+         whatever the step's state is. */
+      expect(item.querySelector("[class*='number']")?.textContent).toMatch(/^\d+$/);
     }
-    /* A step with work left keeps its number, so the rail gains no width. */
-    for (const mark of plain) {
-      expect(mark.textContent).toMatch(/^\d+$/);
+    /* Any tick present is the tick, at the right edge, and never in place of
+       a number. The fixture's rows are markers, so whether a given step is
+       finished is not something to assert here — that a tick never costs the
+       number is. */
+    for (const tick of rail(container).querySelectorAll("[class*='tick']")) {
+      expect(tick.textContent).toBe("✓");
     }
   });
 
@@ -568,13 +624,12 @@ describe("completion is marked everywhere it is claimed", () => {
     expect(container.querySelector("[class*='progress']")?.getAttribute("data-done")).not.toBeNull();
   });
 
-  it("gives every step in the rail an explicit answer, never a blank", () => {
+  it("keeps every step's number visible, whatever its state", () => {
     const { container } = at("/projects/p1/steps/E1.P3.4/ea?levels=P3");
     const items = [...rail(container).querySelectorAll("li")];
     expect(items.length).toBeGreaterThan(0);
     for (const item of items) {
-      const mark = item.querySelector("[class*='number']");
-      expect(["yes", "no"]).toContain(mark?.getAttribute("data-done"));
+      expect(item.querySelector("[class*='number']")?.textContent).toMatch(/^\d+$/);
     }
   });
 
@@ -584,8 +639,7 @@ describe("completion is marked everywhere it is claimed", () => {
     const tabs = [...strip.querySelectorAll("[role='tab']")];
     const allTicked = tabs.every((tab) => (tab.textContent ?? "").includes("✓"));
     const active = rail(container).querySelector("[class*='active']");
-    const stepTicked =
-      active?.querySelector("[class*='number']")?.getAttribute("data-done") === "yes";
+    const stepTicked = active?.querySelector("[class*='tick']") !== null;
     expect(stepTicked).toBe(allTicked);
   });
 });
