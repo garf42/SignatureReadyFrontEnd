@@ -96,3 +96,39 @@
 .content[data-padded="yes"] {
   padding: var(--s-3) var(--s-4) var(--s-6);
 }
+
+/* The notification dot. Never the only carrier of the fact — it has an
+   accessible name saying how many and of what, because a coloured circle is
+   not information to a screen reader or to anyone who cannot see the hue. */
+.dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0.6rem;
+  height: 0.6rem;
+  margin-left: auto;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  background: var(--bad, #b4341f);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 0.5625rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* Collapsed pane: no room for a number, so the dot is just a dot, tucked onto
+   the icon rather than pushed to an edge that is not there. */
+.split[data-nav="closed"] .dot {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  min-width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  margin-left: 0;
+}
+
+.split[data-nav="closed"] .section {
+  position: relative;
+}

@@ -117,10 +117,25 @@ export const expertQueueAbsent: Region<ExpertQueue> = absent(
 );
 
 export const expertQueueFilled: Region<ExpertQueue> = filled<ExpertQueue>({
-  count: "⟨n⟩ open · ⟨n⟩ overdue",
-  filters: ["All requests", "Overdue", "Awaiting return", "Returned", "Accepted"],
+  count: "⟨n⟩ open · ⟨n⟩ drafted · ⟨n⟩ overdue",
+  filters: ["All requests", "Drafted, not sent", "Overdue", "Awaiting return", "Returned", "Accepted"],
   sorts: ["Overdue first", "Expected return", "Sent date", "Project", "Discipline"],
   rows: [
+    {
+      /* Assembled by the project workflow and not yet sent. This is what the
+         dot on the section counts, and it had no state before. */
+      id: "q0",
+      expert: "⟨expert.name⟩",
+      qualification: "⟨expert.qualification⟩",
+      discipline: "⟨discipline⟩",
+      project: "⟨project.name⟩",
+      awaiting: "⟨artifactAwaited⟩",
+      sent: "—",
+      expectedReturn: "—",
+      status: "drafted",
+      gapsFound: null,
+      sentBy: null
+    },
     {
       id: "q1",
       expert: "⟨expert.name⟩",
@@ -193,7 +208,8 @@ export const expertDraftFilled: Region<ExpertDraft> = filled<ExpertDraft>({
   artifactAwaited: "⟨artifactAwaited⟩",
   expectedReturn: "⟨expectedReturnDate⟩",
   regulatoryBasis: RULE,
-  proposedRecipient: "⟨holder.name, qualification⟩",
+  proposedRecipient: "⟨holder.email⟩",
+  subject: "Specialist input requested — ⟨project.name⟩ (⟨project.uniqueIdentificationNumber⟩)",
   body: "⟨request.body — drafted from the project and the finding that triggered it, fully editable⟩"
 });
 

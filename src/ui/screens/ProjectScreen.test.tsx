@@ -318,3 +318,21 @@ describe("the rail's band header", () => {
     expect(rail(container).querySelector("[class*='bandHeader']")).not.toBeNull();
   });
 });
+
+/** The rail is a rail. Anything it says that the centre of the screen already
+ *  says is a second line on every row, paid for in width the steps need. */
+describe("the rail says only what the step itself cannot", () => {
+  it("puts no tab count and no unwritten count on a step", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const pane = rail(container);
+    expect(pane.textContent).not.toMatch(/\d+ tabs?\b/);
+    expect(pane.textContent).not.toContain("unwritten");
+  });
+
+  it("still marks a superseded step read-only, because nothing else does", () => {
+    /* Stand inside the superseded level, so its band is open and its steps
+       are drawn rather than summarised. */
+    const { container } = at("/projects/p1/steps/E1.P3.4/ea?levels=P3,P4");
+    expect(rail(container).textContent).toContain("Read only");
+  });
+});

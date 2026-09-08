@@ -304,11 +304,11 @@ export function stepRail(levels: PathwayId[], activeKey: string): Region<StepRai
           : waitingOn
             ? ("blocked" as const)
             : ("waiting" as const),
-      meta: superseded
-        ? "Superseded — read only"
-        : waitingOn
-          ? "Waiting on an earlier document"
-          : `${String(entry.step.tabs.length)} ${entry.step.tabs.length === 1 ? "tab" : "tabs"}`,
+      /* Short, and only where the rail knows something the step itself does
+         not show. The tab count was on every row and the tab strip says it
+         better; the unwritten count was on every row and those rows announce
+         themselves in the panel. */
+      meta: superseded ? "Read only" : waitingOn ? "Waiting" : null,
       tabs: tabEntries(entry.step.tabs),
       band:
         entry.band.kind === "shared"

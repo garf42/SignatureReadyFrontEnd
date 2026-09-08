@@ -263,7 +263,6 @@ function StepItem({
   active: boolean;
   onOpen: () => void;
 }) {
-  const placeholders = step.tabs.reduce((n, tab) => n + tab.placeholders, 0);
   return (
     <MenuItem
       className={css.step + " " + css[active ? "active" : step.mark]}
@@ -278,7 +277,7 @@ function StepItem({
           </>
         )
       }
-      label={shut ? undefined : placeholders > 0 ? `${step.meta} · ${String(placeholders)} unwritten` : step.meta}
+      label={shut ? undefined : (step.meta ?? undefined)}
       onClick={onOpen}
     />
   );

@@ -176,12 +176,18 @@ export interface StepEntry {
   key: string;
   n: number;
   name: string;
+  /** The one thing the rail can say that the centre of the screen cannot, or
+   *  null where there is nothing. It carried "3 tabs · 3 unwritten" on every
+   *  step, which the tab strip and the panel's own count already say, and which
+   *  cost a second line on every row of the rail. What is left is only what a
+   *  reader cannot get by looking at the step: that it is read-only, or that it
+   *  is waiting on a document that does not exist yet. */
+  meta: string | null;
   /** What this step is for, in one or two plain sentences. Authored per step
    *  on `StepSpec`, so it is unique to the step wherever the step appears and
    *  no screen has to synthesise a description from the step's name. */
   purpose: string;
   mark: StepMark;
-  meta: string;
   tabs: TabEntry[];
   band: BandRef;
   /** The citation a blocked step waits on — 1b.6(a) for a FONSI, 1b.8(a) for a
@@ -213,6 +219,17 @@ export interface NavSection {
   icon: SectionIcon;
   href: string;
   current: boolean;
+}
+
+/** What the frame draws a dot for. Kept separate from `NavSection` because the
+ *  section list is application structure and must not travel through a region —
+ *  a page that cannot load its own contents still has to show the way out of
+ *  itself. A count that fails to load simply does not draw, which is the
+ *  correct failure for a badge and the wrong one for a nav. */
+export interface SectionBadge {
+  sectionId: string;
+  count: number;
+  says: string;
 }
 
 export interface ProjectRow {
@@ -392,7 +409,11 @@ export interface Archive {
   rows: ArchiveRow[];
 }
 
-export type ExpertStatus = "overdue" | "awaiting" | "returned" | "accepted";
+/** `drafted` is the state the workflow creates and nothing else did: a request
+ *  the project page assembled automatically that nobody has sent yet. Without
+ *  it there is no way to say a request is WAITING ON THE OFFICER rather than on
+ *  the specialist, and no way to count what a notification should point at. */
+export type ExpertStatus = "drafted" | "overdue" | "awaiting" | "returned" | "accepted";
 
 export interface ExpertRow {
   id: string;
@@ -429,6 +450,10 @@ export interface ExpertDraft {
   expectedReturn: string;
   regulatoryBasis: SourceRef;
   proposedRecipient: string;
+  /** The subject line. The request leaves this application through the
+   *  officer's own mail client, so what is assembled has to be a whole
+   *  message and not a body someone has to title themselves. */
+  subject: string;
   body: string;
 }
 
