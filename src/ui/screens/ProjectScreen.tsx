@@ -441,9 +441,9 @@ function AssembleGate({
 /* The rail's width, in pixels. Wide enough for the longest step name at the
    default, and clamped so a drag can neither hide the steps nor crowd out the
    panel they open into. */
-const RAIL_MIN = 160;
+const RAIL_MIN = 120;
 const RAIL_DEFAULT = 280;
-const RAIL_MAX = 520;
+const RAIL_MAX = 420;
 
 const clampRail = (px: number) => Math.min(RAIL_MAX, Math.max(RAIL_MIN, px));
 

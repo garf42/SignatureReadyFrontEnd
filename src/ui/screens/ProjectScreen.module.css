@@ -49,8 +49,10 @@
    condition can find. */
 .handle {
   align-self: stretch;
+  box-sizing: border-box;
   width: 9px;
   margin: 0 -4px;
+  padding: 0;
   cursor: col-resize;
   background: none;
   border: 0;
@@ -59,10 +61,19 @@
   z-index: 1;
 }
 
+/* Exactly one pixel, the same grey as every other rule on the page. It was
+   drawn by arithmetic — a 9px box inset 4px each side — which is 1px only if
+   the box is 9px, and a <button> carries user-agent padding that this had not
+   zeroed. The line came out heavier than the rules it sits among. Stating the
+   width outright means it cannot drift again. */
 .handle::after {
   content: "";
   position: absolute;
-  inset: 0 4px;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
   background: var(--rule);
   transition: background 120ms ease;
 }

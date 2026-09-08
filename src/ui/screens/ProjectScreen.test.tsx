@@ -337,8 +337,8 @@ describe("the steps pane is resizable", () => {
     expect(screen.queryByLabelText("Hide the steps")).toBeNull();
     const handle = screen.getByRole("slider", { name: "Width of the steps pane" });
     expect(handle.getAttribute("aria-valuenow")).toBe("280");
-    expect(handle.getAttribute("aria-valuemin")).toBe("160");
-    expect(handle.getAttribute("aria-valuemax")).toBe("520");
+    expect(handle.getAttribute("aria-valuemin")).toBe("120");
+    expect(handle.getAttribute("aria-valuemax")).toBe("420");
     /* The width itself is a custom property the pane reads; jsdom does not
        serialise those, so the value is checked where it is announced. */
     expect(container.querySelector("[class*='split']")).not.toBeNull();
@@ -354,18 +354,18 @@ describe("the steps pane is resizable", () => {
     fireEvent.keyDown(handle, { key: "ArrowRight", shiftKey: true });
     expect(handle.getAttribute("aria-valuenow")).toBe("312");
     fireEvent.keyDown(handle, { key: "Home" });
-    expect(handle.getAttribute("aria-valuenow")).toBe("160");
+    expect(handle.getAttribute("aria-valuenow")).toBe("120");
     fireEvent.keyDown(handle, { key: "ArrowLeft" });
-    expect(handle.getAttribute("aria-valuenow")).toBe("160");
+    expect(handle.getAttribute("aria-valuenow")).toBe("120");
     fireEvent.keyDown(handle, { key: "End" });
-    expect(handle.getAttribute("aria-valuenow")).toBe("520");
+    expect(handle.getAttribute("aria-valuenow")).toBe("420");
   });
 
   it("returns to its default on a double click", () => {
     at("/projects/p1/steps/0/proposed-action");
     const handle = screen.getByRole("slider", { name: "Width of the steps pane" });
     fireEvent.keyDown(handle, { key: "Home" });
-    expect(handle.getAttribute("aria-valuenow")).toBe("160");
+    expect(handle.getAttribute("aria-valuenow")).toBe("120");
     fireEvent.doubleClick(handle);
     expect(handle.getAttribute("aria-valuenow")).toBe("280");
   });
