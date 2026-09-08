@@ -15,10 +15,26 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
+/** `@fontsource/*` resolves to nothing.
+ *
+ *  `enforce: "pre"` is load-bearing and was missing. Without it Vite's own
+ *  resolver reaches the specifier first and hands back a real path, so this
+ *  plugin never sees `@fontsource/...` and every face is bundled — 38
+ *  `@font-face` rules and 1.25 MB of base64 woff, inlined because
+ *  `assetsInlineLimit` is set to swallow everything into one file. The page
+ *  then shipped each face TWICE, since it also links the same three from
+ *  Google Fonts, and the assertion below only ever checked that no OTHER
+ *  request survived.
+ *
+ *  The path test is the belt to that brace: whatever a resolver returns, a
+ *  fontsource file is a fontsource file. */
 const NO_FONT_FILES = {
   name: "no-fontsource",
+  enforce: "pre" as const,
   resolveId(id: string) {
-    return id.startsWith("@fontsource/") ? "\0empty-font" : null;
+    return id.startsWith("@fontsource/") || id.includes("/@fontsource/")
+      ? "\0empty-font"
+      : null;
   },
   load(id: string) {
     return id === "\0empty-font" ? "" : null;
