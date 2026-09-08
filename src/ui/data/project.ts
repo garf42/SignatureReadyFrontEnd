@@ -349,7 +349,7 @@ function assemblyFor(
     return {
       state: "waiting",
       level: null,
-      label: "Assemble",
+      label: "Assemble review",
       says: live
         ? "Assembly reads every answer above it, so those steps have to be finished before the review can be built from them."
         : "Nothing can be built until the level of review is fixed. The three steps above decide it, and this is where the review it calls for gets built.",
@@ -362,7 +362,7 @@ function assemblyFor(
     return {
       state: "ready",
       level: PATHWAYS[live].name,
-      label: "Assemble",
+      label: "Assemble review",
       says:
         produces.length > 0
           ? `Opens ${produces.join(" and ")}, pulls the references they incorporate, and drafts from the answers already given. This takes a while.`

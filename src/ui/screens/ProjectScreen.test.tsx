@@ -461,6 +461,7 @@ describe("assembly is an act at the seam, not a state flip", () => {
 
   it("offers the act once a level is fixed and the steps above are answered", () => {
     const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=ready");
+    expect(screen.getByText("Assemble review")).toBeTruthy();
     const pane = rail(container);
     const gate = pane.querySelector("[class*='gate']") as HTMLElement;
     expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(false);

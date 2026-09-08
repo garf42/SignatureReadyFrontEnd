@@ -388,8 +388,14 @@
   background: var(--well);
 }
 
+/* Sized to its own label, not to the pane. It filled the rail's width, so the
+   same button grew and shrank as the divider moved — a control whose size is a
+   side effect of a layout choice reads as a different control at each width.
+   The cap is the one concession: below its natural size there is nothing to do
+   but clip it, and a clipped button is worse than a narrow one. */
 .gateButton {
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
   font-size: var(--t-meta);
 }
 
