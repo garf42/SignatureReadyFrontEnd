@@ -205,8 +205,16 @@ export function ProjectScreen() {
                               icon={open ? "chevron-down" : "chevron-right"}
                               size={12}
                             />
+                            {/* The same two lines the seam sets on a project
+                                that has occupied one level, so an escalated
+                                proposal reads like an ordinary one with more
+                                than one of them rather than like another
+                                screen. */}
                             <span className={css.bandWords}>
-                              <span className={css.bandTitle}>{band.title}</span>
+                              {band.overline ? (
+                                <span className={css.gateOverline}>{band.overline}</span>
+                              ) : null}
+                              <span className={css.gateLevel}>{band.heading}</span>
                               <span className={css.bandSummary}>{band.summary}</span>
                             </span>
                           </button>

@@ -322,23 +322,16 @@
   flex: 1 1 auto;
 }
 
-.bandTitle {
-  display: block;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
-
 .bandSummary {
   display: block;
+  margin-top: 0.2rem;
   margin-top: 0.15rem;
   font-size: 0.75rem;
   color: var(--ink-soft);
 }
 
-.bandGroup[data-status="superseded"] .bandTitle,
+.bandGroup[data-status="superseded"] .gateOverline,
+.bandGroup[data-status="superseded"] .gateLevel,
 .bandGroup[data-status="superseded"] .bandSummary {
   font-style: italic;
 }
@@ -414,7 +407,10 @@
   border-left: 3px solid var(--link);
 }
 
+/* Shared with the band headers, so the seam on a one-level project and a band
+   header on an escalated one are the same two lines set the same way. */
 .gateOverline {
+  display: block;
   margin: 0;
   font-family: var(--mono);
   font-size: var(--t-micro);
@@ -424,6 +420,7 @@
 }
 
 .gateLevel {
+  display: block;
   margin: 0.15rem 0 0;
   font-size: 0.9375rem;
   font-weight: 600;

@@ -416,7 +416,15 @@ export type BandRef =
 
 export interface BandEntry {
   band: BandRef;
-  title: string;
+  /** The small line above the heading: which level of review this is out of
+   *  how many, and whether it has been superseded. Never the pathway id — the
+   *  reader is not a specialist and "P3" means nothing to them. */
+  overline: string;
+  /** The level of review, in the words a non-expert reads. This is the same
+   *  claim the seam makes on a project that has occupied ONE level, and it is
+   *  set the same way, so an escalated proposal reads like an ordinary one with
+   *  more than one of them rather than like a different screen. */
+  heading: string;
   status: "shared" | "live" | "superseded" | "cross";
   /** One line that stands in for the band when it is collapsed, so a reader
    *  who never expands it still knows what is inside. */

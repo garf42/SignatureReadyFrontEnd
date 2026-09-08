@@ -466,7 +466,8 @@ export function stepRail(
   const bands: BandEntry[] = [
     {
       band: { kind: "shared" },
-      title: "Every review",
+      overline: "",
+      heading: "Every review",
       status: "shared",
       summary: `${String(SHARED_STEPS.length)} steps · intake, the threshold determination and the level of review`,
       documents: [],
@@ -480,12 +481,26 @@ export function stepRail(
       const docs = DOCUMENTS_FOR[level.pathway](level.seq);
       return {
         band: { kind: "episode", seq: level.seq, pathway: level.pathway, superseded },
-        title: `Level ${String(level.seq)} · ${level.pathway} ${PATHWAYS[level.pathway].name}`,
+        /* The same two lines the seam sets on a project that has occupied one
+           level: what kind of review this is, over a small line saying which
+           one it is. An escalated proposal then reads like an ordinary one with
+           more than one of them, rather than like a different screen — the band
+           header used to be a single small-caps line reading
+           "Level 1 · P3 Environmental assessment", which buried the only words
+           that mean anything to a non-specialist inside a pathway id that means
+           nothing to them. */
+        overline: [
+          `Level ${String(level.seq)} of ${String(withSeq.length)}`,
+          superseded ? "superseded" : null
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        heading: PATHWAYS[level.pathway].name,
         status: superseded ? "superseded" : "live",
         summary: [
           `${String(own.length)} steps`,
           PATHWAYS[level.pathway].terminalOutput,
-          superseded ? "superseded — read only" : null
+          superseded ? "read only" : null
         ]
           .filter(Boolean)
           .join(" · "),

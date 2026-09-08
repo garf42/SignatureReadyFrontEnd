@@ -204,11 +204,16 @@ describe("the element panel", () => {
     const { container } = at("/projects/p1/steps/E1.P3.4/ea?levels=P3,P4");
     expect(screen.getByText("Environmental assessment — 7 elements")).toBeTruthy();
     expect(container.querySelector("[data-state='blocked']")).toBeNull();
-    // Both bands are in the rail, and the superseded one says so.
+    /* Both bands are in the rail, each headed by its level in plain words —
+       the same two lines the seam sets on a project that has occupied one
+       level — and the superseded one says so. Never the pathway id: "P3" means
+       nothing to the person doing the work. */
     const pane = rail(container);
-    expect(within(pane).getByText(/Level 1 · P3/)).toBeTruthy();
-    expect(within(pane).getByText(/Level 2 · P4/)).toBeTruthy();
-    expect(pane.textContent).toContain("superseded");
+    expect(within(pane).getByText("Environmental assessment")).toBeTruthy();
+    expect(within(pane).getByText("Environmental impact statement")).toBeTruthy();
+    expect(within(pane).getByText(/Level 1 of 2 · superseded/)).toBeTruthy();
+    expect(within(pane).getByText("Level 2 of 2")).toBeTruthy();
+    expect(pane.textContent).not.toMatch(/\bP3\b|\bP4\b/);
   });
 });
 
