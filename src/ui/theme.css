@@ -166,6 +166,24 @@ a:hover {
   color: var(--ink);
 }
 
+/* A SHORTHAND OVERWROTE A LONGHAND A VARIANT DEPENDS ON. Blueprint positions a
+   callout's icon absolutely at left:16px and makes room for it with
+   padding-left:40px on the icon variant. The `padding` shorthand above resets
+   all four sides, so that room vanished and the icon sat on top of the title —
+   the same class of defect as an intent class outranking `:disabled`: a rule
+   that looks like it sets one thing quietly unsets another.
+
+   Restored in the vocabulary's own spacing rather than Blueprint's pixels, and
+   the icon is re-placed to match, so the two cannot drift apart. */
+.bp6-callout.bp6-callout-icon {
+  padding-left: calc(var(--s-3) + 24px);
+}
+
+.bp6-callout.bp6-callout-icon > .bp6-icon:first-child {
+  left: var(--s-3);
+  top: calc(var(--s-3) + 2px);
+}
+
 .bp6-menu {
   background: transparent;
   padding: 0;
@@ -248,6 +266,12 @@ textarea.bp6-input {
   border-radius: var(--radius-overlay);
   box-shadow: var(--shadow-overlay);
   padding-bottom: 0;
+  /* Wider than Blueprint's 500px default, which was narrow enough to make a
+     three-tab strip scroll — a strip that scrolls to reach its third of three
+     tabs hides a choice for no reason. Set here rather than per overlay, so
+     the four of them cannot drift apart, and capped against the viewport
+     because the app is embedded and a frame can be narrower than the page. */
+  width: min(640px, calc(100vw - 48px));
   /* A fixed ceiling as well as a viewport one. The app is embedded, and in a
      frame taller than the reader's view a viewport-relative cap is no cap at
      all — the dialog centres in the frame and its top sits above the view. */
