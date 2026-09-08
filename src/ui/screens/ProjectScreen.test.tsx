@@ -649,3 +649,64 @@ describe("completion is marked everywhere it is claimed", () => {
     expect(stepTicked).toBe(allTicked);
   });
 });
+
+/** The band's two blocks fold, on the same chevron the rail's bands use. Both
+ *  open by default: the three sentences are what teach a non-specialist which
+ *  review they are doing, and a reader who has to find them is a reader who was
+ *  not told. */
+describe("the band folds, and keeps its top line either way", () => {
+  const heads = (container: HTMLElement) =>
+    [...(container.querySelector("[class*='band']") as HTMLElement).querySelectorAll(
+      "button[aria-expanded]"
+    )];
+
+  it("opens both blocks by default", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const open = heads(container);
+    expect(open.length).toBe(2);
+    for (const head of open) {
+      expect(head.getAttribute("aria-expanded")).toBe("true");
+    }
+  });
+
+  it("keeps the sentence that has to be read when the rest is put away", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const [level] = heads(container);
+    fireEvent.click(level);
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    expect(band.textContent).toContain("This project needs an environmental assessment.");
+    expect(band.textContent).not.toContain("1b.2(f)(2)(iv)(A)");
+    fireEvent.click(level);
+    expect(band.textContent).toContain("1b.2(f)(2)(iv)(A)");
+  });
+
+  it("folds the step line the same way, keeping where you are standing", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const step = heads(container)[1];
+    fireEvent.click(step);
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    expect(band.textContent).toContain("Step 2 of 5 · Assembly");
+    expect(container.querySelector("[class*='herePurpose']")).toBeNull();
+  });
+
+  /* One gesture, learned once. The chevron is the rail's, turning the same
+     way, because folding a band and folding this are the same act. */
+  it("uses the rail's chevron, and turns it the same way", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const [level] = heads(container);
+    expect(level.querySelector("[data-icon='chevron-down']")).not.toBeNull();
+    fireEvent.click(level);
+    expect(level.querySelector("[data-icon='chevron-right']")).not.toBeNull();
+  });
+
+  /* 80ch is a reading measure for a column of prose. These are three sentences
+     across the full width of the page, and the cap was wrapping them at a third
+     of the room they had — three lines becoming nine. */
+  it("caps no line at a reading measure", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    for (const el of band.querySelectorAll<HTMLElement>("[class*='level'], [class*='here']")) {
+      expect(getComputedStyle(el).maxWidth).not.toBe("80ch");
+    }
+  });
+});

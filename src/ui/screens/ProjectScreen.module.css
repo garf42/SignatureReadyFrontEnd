@@ -217,14 +217,18 @@
    takes them in — what the review IS, then why it is that one, then what it
    ends in — so a person who reads only the first line has still been told the
    thing the page exists to tell them. */
+/* NO MEASURE CAP. 80ch is a reading measure for a column of prose; these are
+   three sentences across the full width of the page, and the cap was wrapping
+   them at a third of the room they had, turning three lines into nine and
+   spending vertical space the steps need. They wrap where the band ends. */
 .levelSays {
+  display: block;
   margin: 0;
   font-size: var(--t-body);
   font-weight: 500;
   line-height: 1.4;
   color: var(--ink);
   text-wrap: pretty;
-  max-width: 80ch;
 }
 
 .levelWhy,
@@ -234,7 +238,6 @@
   line-height: 1.5;
   color: var(--ink-soft);
   text-wrap: pretty;
-  max-width: 80ch;
 }
 
 .levelLine .levelNote {
@@ -250,6 +253,7 @@
 }
 
 .hereWhere {
+  display: block;
   margin: 0;
   font-family: var(--mono);
   font-size: var(--t-micro);
@@ -264,7 +268,6 @@
   line-height: 1.55;
   color: var(--ink);
   text-wrap: pretty;
-  max-width: 80ch;
 }
 
 .levelLine[data-level="none"] .levelNote {
@@ -503,4 +506,37 @@
     animation: none;
     opacity: 0.6;
   }
+}
+
+
+/* --- the fold ------------------------------------------------------------
+   A top line that is also the control, over a body that can be put away. The
+   same chevron the rail's bands use, so a reader learns the gesture once. */
+.fold {
+  min-width: 0;
+}
+
+.foldHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* The chevron sits on the first line's baseline rather than the block's, so it
+   does not drift down as the head wraps. */
+.foldHead .bandChevron {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+}
+
+.foldBody {
+  padding-left: 1.15rem;
 }

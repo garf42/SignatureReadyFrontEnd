@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Icon, Menu, MenuItem } from "@blueprintjs/core";
 
@@ -44,6 +44,11 @@ export function ProjectScreen() {
   const levels = port.useLevels(projectRef);
   const rail = port.useSteps(projectRef, stepId);
   const [railWidth, setRailWidth] = useState(RAIL_DEFAULT);
+  /* Both open. The three sentences are what teach a non-specialist which review
+     they are doing, and a reader who has to find them is a reader who was not
+     told. Closing is theirs to choose; it is not the state they arrive in. */
+  const [levelOpen, setLevelOpen] = useState(true);
+  const [hereOpen, setHereOpen] = useState(true);
   const [openBands, setOpenBands] = useState<Record<string, boolean>>({});
 
   const go = (path: string) => navigate(withSearch(path, search));
@@ -84,35 +89,45 @@ export function ProjectScreen() {
         <Region region={levels}>
           {(history) => (
             <div className={css.levelLine} data-level={history.liveSeq === null ? "none" : "set"}>
-              {history.plain ? (
-                <>
-                  <p className={css.levelSays}>{history.plain.says}</p>
-                  <p className={css.levelWhy}>{history.plain.because}</p>
-                  <p className={css.levelEnds}>{history.plain.ends}</p>
-                </>
-              ) : (
-                <p className={css.levelNote}>{history.note}</p>
-              )}
-              {history.plain && history.note ? (
-                <p className={css.levelNote}>{history.note}</p>
-              ) : null}
-              {history.documents.length > 0 ? (
-                <p className={css.levelDocs}>
-                  {history.documents
-                    .map((entry) =>
-                      [entry.documentType, entry.uniqueIdentificationNumber]
-                        .filter(Boolean)
-                        .join(" · ")
-                    )
-                    .join("   ")}
-                </p>
-              ) : null}
-              {history.foreclosed.length > 0 ? (
-                <p className={css.foreclosed}>
-                  The other levels of review are not open to this project.{" "}
-                  {history.foreclosed[0].limb} decided it.
-                </p>
-              ) : null}
+              {/* The top line is the one that has to be read, so it is what
+                  stays when the rest is put away — and it doubles as the
+                  control, in the same chevron the rail's bands use. */}
+              <Fold
+                open={levelOpen}
+                onToggle={() => setLevelOpen((v) => !v)}
+                head={
+                  <span className={css.levelSays}>
+                    {history.plain ? history.plain.says : history.note}
+                  </span>
+                }
+              >
+                {history.plain ? (
+                  <>
+                    <p className={css.levelWhy}>{history.plain.because}</p>
+                    <p className={css.levelEnds}>{history.plain.ends}</p>
+                  </>
+                ) : null}
+                {history.plain && history.note ? (
+                  <p className={css.levelNote}>{history.note}</p>
+                ) : null}
+                {history.documents.length > 0 ? (
+                  <p className={css.levelDocs}>
+                    {history.documents
+                      .map((entry) =>
+                        [entry.documentType, entry.uniqueIdentificationNumber]
+                          .filter(Boolean)
+                          .join(" · ")
+                      )
+                      .join("   ")}
+                  </p>
+                ) : null}
+                {history.foreclosed.length > 0 ? (
+                  <p className={css.foreclosed}>
+                    The other levels of review are not open to this project.{" "}
+                    {history.foreclosed[0].limb} decided it.
+                  </p>
+                ) : null}
+              </Fold>
             </div>
           )}
         </Region>
@@ -131,10 +146,17 @@ export function ProjectScreen() {
               : [];
             return here ? (
               <div className={css.here}>
-                <p className={css.hereWhere}>
-                  Step {String(here.n)} of {String(own.length)} · {here.name}
-                </p>
-                <p className={css.herePurpose}>{here.purpose}</p>
+                <Fold
+                  open={hereOpen}
+                  onToggle={() => setHereOpen((v) => !v)}
+                  head={
+                    <span className={css.hereWhere}>
+                      Step {String(here.n)} of {String(own.length)} · {here.name}
+                    </span>
+                  }
+                >
+                  <p className={css.herePurpose}>{here.purpose}</p>
+                </Fold>
               </div>
             ) : null;
           }}
@@ -532,5 +554,39 @@ function RailHandle({ width, onWidth }: { width: number; onWidth: (px: number) =
         event.preventDefault();
       }}
     />
+  );
+}
+
+
+/** A top line that is also the control, over a body that can be put away.
+ *
+ *  The same chevron the rail's bands use, turning the same way, because they
+ *  are the same act: a reader who has learned it once in the rail should not
+ *  have to learn it again six inches above. The head stays whatever the state
+ *  is — it is the sentence that has to be read, and hiding it would leave a
+ *  collapsed block saying nothing at all. */
+function Fold({
+  open,
+  onToggle,
+  head,
+  children
+}: {
+  open: boolean;
+  onToggle: () => void;
+  head: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className={css.fold} data-open={open ? "yes" : "no"}>
+      <button type="button" className={css.foldHead} aria-expanded={open} onClick={onToggle}>
+        <Icon
+          className={css.bandChevron}
+          icon={open ? "chevron-down" : "chevron-right"}
+          size={12}
+        />
+        {head}
+      </button>
+      {open ? <div className={css.foldBody}>{children}</div> : null}
+    </div>
   );
 }
