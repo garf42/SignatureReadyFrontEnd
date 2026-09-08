@@ -56,7 +56,7 @@ export function ArchiveScreen() {
                 <>
                   <Button className={table.secondary}>Restore</Button>
                   <Button className={table.destructive} onClick={() => setPurging(row.id)}>
-                    Delete permanently
+                    Purge
                   </Button>
                 </>
               )}
@@ -75,8 +75,11 @@ export function ArchiveScreen() {
               <Button className={css.secondary} onClick={() => setPurging(null)}>
                 Cancel
               </Button>
+              {/* One verb, and it is the one that carries the finality: purge
+                  says unrecoverable where a bare "delete" says undoable. The
+                  overlay title and its note state the consequence in full. */}
               <Button className={css.destructive} onClick={() => setPurging(null)}>
-                Delete permanently
+                Purge
               </Button>
             </OverlayActions>
           }

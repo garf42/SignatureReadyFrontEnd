@@ -175,3 +175,15 @@
     transition: none !important;
   }
 }
+
+/* One width and one face across a group, so a row of choices reads as one
+   control. Without it the pathway picker's own labels size it: "P0" is a chip
+   and "P3 › P4 › P4" is a paragraph, and they stop looking like the same kind
+   of thing. */
+.hseg[data-even="yes"] .hbtn {
+  min-width: 96px;
+  justify-content: center;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.01em;
+}

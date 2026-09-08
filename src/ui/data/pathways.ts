@@ -346,17 +346,17 @@ export interface PathwaySpec {
 const SIGN_FANEC: GateSpec = {
   reservedTo: "responsible official",
   citation: "1b.3(g)(2)(vi)",
-  routeLabel: "Route for signature"
+  routeLabel: "Route"
 };
 const SIGN_FONSI: GateSpec = {
   reservedTo: "responsible official",
   citation: "1b.6(b)(5)",
-  routeLabel: "Route for signature"
+  routeLabel: "Route"
 };
 const SIGN_ROD: GateSpec = {
   reservedTo: "responsible official",
   citation: "1b.8(b)(8)",
-  routeLabel: "Route for signature"
+  routeLabel: "Route"
 };
 
 /* --------------------------------------------------------------------------

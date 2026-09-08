@@ -99,7 +99,7 @@ export function ReferenceBrowser({ onClose }: { onClose: () => void }) {
                           disabled
                           title="Nothing in this build writes. The FDE wires this to the incorporation record."
                         >
-                          Incorporate this
+                          Incorporate
                         </Button>
                         <Link
                           className={css.open}

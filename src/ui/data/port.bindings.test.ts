@@ -252,16 +252,32 @@ describe("the actions and the states say what they mean", () => {
       )
     );
 
-  it("never labels an act with a bare verb that names no object", () => {
-    const bare = new Set<string>();
+  /* ONE VERB EACH. "Accept" failed not because it was short but because it was
+     generic — accept is what you do to a cookie banner. The fix is a better
+     verb, not a longer label, and a button that needs a sentence is a button
+     whose verb is wrong. */
+  it("labels every act with a single word", () => {
+    const long = new Set<string>();
     for (const region of everyRegion()) {
       for (const action of region.actions) {
-        if (/^(Accept|Search|Submit|Send|Open|Go|Attach)$/.test(action.label)) {
-          bare.add(action.label);
+        if (/\s/.test(action.label)) {
+          long.add(action.label);
         }
       }
     }
-    expect([...bare]).toEqual([]);
+    expect([...long]).toEqual([]);
+  });
+
+  it("never falls back to the generic verbs it started with", () => {
+    const generic = new Set<string>();
+    for (const region of everyRegion()) {
+      for (const action of region.actions) {
+        if (/^(Accept|Search|Change|Edit|Go|Attach|Send)$/.test(action.label)) {
+          generic.add(action.label);
+        }
+      }
+    }
+    expect([...generic]).toEqual([]);
   });
 
   it("never tells a reader only that something is not ready", () => {

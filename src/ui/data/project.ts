@@ -73,20 +73,21 @@ export {
   TRIGGERS
 };
 
-const CHANGE: Action = { id: "change", label: "Change answer", look: "secondary", enabled: true };
-/* Every label here says what the act DOES, in the words of the work rather
-   than the words of the widget. "Accept" was the worst of them: one word,
-   addressed to someone being asked to rubber-stamp text they will sign, and it
-   named no object — accept what, into what? A drafted paragraph becomes part of
-   the document the responsible official signs, so the button says so. "Search"
-   named no haystack. "Write your own answer" said "your own" to a professional
-   whose own answer is the only kind there is. */
-const ACCEPT: Action = { id: "accept", label: "Use this draft", look: "primary", enabled: true };
-const EDIT: Action = { id: "edit", label: "Edit the draft", look: "secondary", enabled: true };
-const SEARCH: Action = { id: "search", label: "Search the project record", look: "primary", enabled: true };
+const CHANGE: Action = { id: "change", label: "Amend", look: "secondary", enabled: true };
+/* ONE VERB EACH, and the verb is chosen rather than defaulted.
+   "Accept" failed not because it was short but because it was generic — accept
+   is what you do to a cookie banner. The fix is a better verb, not a longer
+   label: a drafted paragraph the responsible official takes as their own is
+   ADOPTED, which is the rule's own word for taking another agency's categorical
+   exclusion at 1b.3(c). Amend is what you do to a record. Retrieve is what the
+   drafting lane does. Trace follows an answer back to where it was asked.
+   A button that needs a sentence is a button whose verb is wrong. */
+const ACCEPT: Action = { id: "accept", label: "Adopt", look: "primary", enabled: true };
+const EDIT: Action = { id: "edit", label: "Revise", look: "secondary", enabled: true };
+const SEARCH: Action = { id: "search", label: "Retrieve", look: "primary", enabled: true };
 const SAVE: Action = { id: "save", label: "Save", look: "primary", enabled: true };
-const WRITE_OWN: Action = { id: "write", label: "Write this yourself", look: "link", enabled: true };
-const REPORT: Action = { id: "report", label: "Report a problem", look: "link", enabled: true };
+const WRITE_OWN: Action = { id: "write", label: "Compose", look: "link", enabled: true };
+const REPORT: Action = { id: "report", label: "Flag", look: "link", enabled: true };
 
 /* --- the level history, and the state before a level is fixed -------------
 
@@ -141,11 +142,25 @@ export function levelHistory(levels: PathwayId[]): Region<LevelHistory> {
     liveSeq,
     note:
       liveSeq === null
-        ? "The level of review is fixed at Step 2. Until then no level step exists and none is named."
+        ? ""
         : episodes.length > 1
           ? `Level ${String(liveSeq)} of ${String(episodes.length)} — this project has moved up. Everything from the earlier levels is still here and still readable.`
           : "",
-    plain: live ? PATHWAYS[live.pathway].plain : null,
+    /* The undecided case gets the same three sentences as every decided one,
+       because it is the state a reader is in first and the one that has to
+       teach them what this page is going to do. It used to read "The level of
+       review is fixed at Step 2. Until then no level step exists and none is
+       named" — which names a step by an internal number that is no longer what
+       the rail shows, and calls the thing that does not exist a "level step",
+       which is this build's phrase and nobody else's. */
+    plain: live
+      ? PATHWAYS[live.pathway].plain
+      : {
+          says: "The level of review for this project has not been decided yet.",
+          because: `It is decided at Step ${String(SHARED_STEPS[2].n + 1)}, ${SHARED_STEPS[2].name}, by working the ordered elimination at 1b.2(f)(2) against the answers to the steps before it.`,
+          ends:
+            "Nothing is produced until then. Once the level is decided, the review it calls for is built, and the steps that carry it appear below."
+        },
     documents: live ? DOCUMENTS_FOR[live.pathway](live.seq) : [],
     foreclosed
   });
@@ -235,9 +250,9 @@ export function gateFor(documentType: DocumentType | null, held: boolean): Regio
  *  requires no signature and that approval to publish indicates concurrence, so
  *  the EA and the EIS carry no gate at any point. */
 const GATE_BY_DOCUMENT: Partial<Record<DocumentType, GateSpec>> = {
-  FANEC: { reservedTo: "responsible official", citation: "1b.3(g)(2)(vi)", routeLabel: "Route for signature" },
-  FONSI: { reservedTo: "responsible official", citation: "1b.6(b)(5)", routeLabel: "Route for signature" },
-  ROD: { reservedTo: "responsible official", citation: "1b.8(b)(8)", routeLabel: "Route for signature" }
+  FANEC: { reservedTo: "responsible official", citation: "1b.3(g)(2)(vi)", routeLabel: "Route" },
+  FONSI: { reservedTo: "responsible official", citation: "1b.6(b)(5)", routeLabel: "Route" },
+  ROD: { reservedTo: "responsible official", citation: "1b.8(b)(8)", routeLabel: "Route" }
 };
 
 export const gateUnresolved: Region<Gate> = unresolved(
@@ -299,16 +314,43 @@ const WAITS_ON: Record<string, string> = {
  *  in-between state — a level fixed, nothing built from it yet — through
  *  `?assembled=no`, because it is the state nothing else in the build could
  *  produce and the one the control exists for. */
-function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
+function assemblyFor(
+  levels: PathwayId[],
+  assembled: boolean,
+  /* The shared steps that are not finished, in order. Assembly reads
+     everything answered above it — the proposal record, the threshold grounds,
+     the limb sequence — so a review built on a half-answered intake is built on
+     nothing. The control is grey until they are done, and it NAMES the first
+     one rather than being grey for an unstated reason. */
+  unfinished: string[]
+): Assembly {
   const live = levels.length > 0 ? levels[levels.length - 1] : null;
-  if (!live) {
+  /* Built is built. Once the documents are open the control is spent, and
+     whether the steps above are still being worked has no bearing on that —
+     checking readiness first would un-assemble a review that exists. */
+  if (live && assembled) {
+    const built = DOCUMENTS_FOR[live](levels.length).map((entry) => entry.documentType);
+    return {
+      state: "done",
+      level: PATHWAYS[live].name,
+      label: "Assembled",
+      says:
+        built.length > 0
+          ? `${built.join(" and ")} ${built.length === 1 ? "is" : "are"} open. The steps below carry this level of review and nothing else.`
+          : "This level produces no document. The steps below close the review out.",
+      waitingOn: null,
+      produces: built
+    };
+  }
+  if (!live || unfinished.length > 0) {
     return {
       state: "waiting",
       level: null,
-      label: "Assemble the review",
-      says:
-        "Nothing can be built until the level of review is fixed. The three steps above decide it, and this is where the review it calls for gets built.",
-      waitingOn: SHARED_STEPS[2].name,
+      label: "Assemble",
+      says: live
+        ? "Assembly reads every answer above it, so those steps have to be finished before the review can be built from them."
+        : "Nothing can be built until the level of review is fixed. The three steps above decide it, and this is where the review it calls for gets built.",
+      waitingOn: unfinished[0] ?? SHARED_STEPS[2].name,
       produces: []
     };
   }
@@ -317,7 +359,7 @@ function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
     return {
       state: "ready",
       level: PATHWAYS[live].name,
-      label: "Assemble the review",
+      label: "Assemble",
       says:
         produces.length > 0
           ? `Opens ${produces.join(" and ")}, pulls the references they incorporate, and drafts from the answers already given. This takes a while.`
@@ -326,14 +368,13 @@ function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
       produces
     };
   }
+  /* Unreachable: `assembled` is answered above, and everything after the
+     waiting branch has a live level and nothing outstanding. */
   return {
-    state: "done",
+    state: "ready",
     level: PATHWAYS[live].name,
-    label: "Assembled",
-    says:
-      produces.length > 0
-        ? `${produces.join(" and ")} ${produces.length === 1 ? "is" : "are"} open. The steps below carry this level of review and nothing else.`
-        : "This level produces no document. The steps below close the review out.",
+    label: "Assemble",
+    says: "Ready to build.",
     waitingOn: null,
     produces
   };
@@ -349,7 +390,13 @@ export function stepRail(
      produces rows nobody can answer. A rail computed from different inputs
      would tick a step the panel still shows work in. */
   held = false,
-  retrievalUp = true
+  retrievalUp = true,
+  /* DEMO OVERRIDE, and the only one in this file. The fixture's rows are
+     markers, so no shared step is ever genuinely finished and the ready state
+     would be unreachable — a control nobody can see is a control nobody can
+     review. `?assembled=ready` says "treat the steps above as answered". A
+     backend answers this from the real rows and never needs it. */
+  sharedComplete: boolean | null = null
 ): Region<StepRail> {
   /* A level that has been DETERMINED but not yet ASSEMBLED has no steps. The
      determination says which review this is; the steps exist once the review
@@ -452,7 +499,16 @@ export function stepRail(
     })
   ];
 
-  return filled<StepRail>({ bands, steps, assembly: assemblyFor(levels, assembled) });
+  const unfinished =
+    sharedComplete === true
+      ? []
+      : steps.filter((step) => step.band.kind === "shared" && !step.done).map((step) => step.name);
+
+  return filled<StepRail>({
+    bands,
+    steps,
+    assembly: assemblyFor(levels, assembled, unfinished)
+  });
 }
 
 export const stepsAbsentSpec: Region<StepRail> = absent(
@@ -525,7 +581,7 @@ function gatedRow(base: ReturnType<typeof stem>, spec: RowSpec, held: boolean): 
       mark: "ready",
       gate: asGate,
       answer: filled(answerFor(spec), [RULE, SUBMITTING], [
-        { id: "sign", label: "Sign and issue", look: "primary", enabled: true }
+        { id: "sign", label: "Sign", look: "primary", enabled: true }
       ])
     };
   }
@@ -587,7 +643,7 @@ function echoRow(base: ReturnType<typeof stem>, spec: RowSpec): QuestionRow {
     ...base,
     mark: "accepted",
     answer: filled(answerFor(spec), [RECORD], [
-      { id: "goto", label: "Open where this is asked", look: "link", enabled: true }
+      { id: "goto", label: "Trace", look: "link", enabled: true }
     ])
   };
 }
@@ -677,6 +733,7 @@ export function panelFor(
 ): ElementPanel {
   const rows = rowsFor(stepKey, tab, held, retrievalUp);
   const left = outstanding(rows);
+  const unwritten = tab.elements.filter((row) => row.text === "placeholder").length;
   const done = rows.length - left;
   const gated = rows.some((row) => row.gate && !row.gate.held);
   const document = tab.documentType;
@@ -685,12 +742,13 @@ export function panelFor(
     title: document ? `${tab.name} — ${String(elementRows(tab).length)} elements` : tab.name,
     help: helpFor(tab),
     progress: `${String(done)} of ${String(rows.length)} answered`,
+    done: left === 0 && unwritten === 0,
     rows,
     submit: {
-      /* "Submit element" named an internal noun the reader never sees, and
-         "Undo submit" named the button rather than the state it returns to. */
-      label: document ? `Submit ${document}` : "Submit these answers",
-      undoLabel: "Reopen for edits",
+      /* One verb. The panel heading already names what is being submitted —
+         the document, or the tab — so the button does not repeat it. */
+      label: "Submit",
+      undoLabel: "Reopen",
       enabled: left === 0,
       note: gated
         ? `The signature at ${rows.find((row) => row.gate)?.gate?.citation ?? ""} is reserved; the row above routes it`

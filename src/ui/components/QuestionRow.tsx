@@ -213,7 +213,7 @@ function AnswerBody({ answer }: { answer: Answer }) {
       return (
         <div className={css.browseRow}>
           <Button className={css.browse} icon="search-template" onClick={() => setBrowsing(true)}>
-            Find a document to incorporate…
+            Browse
           </Button>
           {browsing ? <ReferenceBrowser onClose={() => setBrowsing(false)} /> : null}
         </div>

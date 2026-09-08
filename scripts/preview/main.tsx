@@ -97,11 +97,25 @@ function useKnobs() {
   return { pathname, params, set, setMany, go };
 }
 
-function Group({ label, children }: { label: string; children: React.ReactNode }) {
+function Group({
+  label,
+  even,
+  children
+}: {
+  label: string;
+  /* Sets every segment to one width and one face. The pathway picker's labels
+     run from "P0" to "P3 › P4 › P4", so left to size themselves they read as
+     three different kinds of control rather than as one row of the same
+     choice. */
+  even?: boolean;
+  children: React.ReactNode;
+}) {
   return (
     <div className="hgroup">
       <span className="hlabel">{label}</span>
-      <div className="hseg">{children}</div>
+      <div className="hseg" data-even={even ? "yes" : "no"}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -200,7 +214,7 @@ function Harness({ children }: { children: React.ReactNode }) {
               </Seg>
             </Group>
 
-            <Group label="Pathway — the levels of review this proposal has occupied">
+            <Group even label="Pathway — the levels of review this proposal has occupied">
               {LEVEL_SETS.map((s) => (
                 <Seg
                   key={s.label}
@@ -304,20 +318,27 @@ function Harness({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="hrow">
-              <Group label="Review assembled">
+              <Group even label="Review assembled">
                 <Seg
-                  on={params.get("assembled") !== "no"}
+                  on={!["no", "ready"].includes(params.get("assembled") ?? "")}
                   title="The documents are open and the pathway steps exist."
                   onClick={() => set("assembled", null)}
                 >
-                  yes
+                  built
                 </Seg>
                 <Seg
                   on={params.get("assembled") === "no"}
-                  title="Step 2 has fixed a level and nothing has been built from it yet — the state the assemble control at the seam exists for. Pick a pathway above to see it offered."
+                  title="A level fixed, nothing built from it, and the steps above still unanswered — so the control is grey and names the first step it waits on."
                   onClick={() => set("assembled", "no")}
                 >
                   not yet
+                </Seg>
+                <Seg
+                  on={params.get("assembled") === "ready"}
+                  title="The same, with the steps above treated as answered, which is the only way to see the control live: the fixture's rows are markers and no step in it is ever genuinely finished."
+                  onClick={() => set("assembled", "ready")}
+                >
+                  ready
                 </Seg>
               </Group>
 

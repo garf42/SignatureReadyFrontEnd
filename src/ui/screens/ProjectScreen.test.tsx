@@ -114,7 +114,7 @@ describe("the signature gate — §7.2", () => {
     openRows(at("/projects/p1/steps/4/fanec?pathway=P2").container);
     expect(screen.getByText(/Date issued and signature of the responsible official/)).toBeTruthy();
     expect(screen.getAllByText(/Reserved to the responsible official — 1b.3\(g\)\(2\)\(vi\)/).length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Route for signature").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Route").length).toBeGreaterThan(0);
   });
 
   it("is blocked, never absent — the precondition is a credential, not a missing record", () => {
@@ -127,8 +127,8 @@ describe("the signature gate — §7.2", () => {
 
   it("offers the act itself where the caller is shown to hold the credential", () => {
     openRows(at("/projects/p1/steps/4/fanec?pathway=P2&gate=held").container);
-    expect(screen.getAllByText("Sign and issue").length).toBeGreaterThan(0);
-    expect(screen.queryByText("Route for signature")).toBeNull();
+    expect(screen.getAllByText("Sign").length).toBeGreaterThan(0);
+    expect(screen.queryByText("Route")).toBeNull();
   });
 
   it("names the gate without explaining the backend behind it", () => {
@@ -168,7 +168,7 @@ describe("discretion is never a requirement — §7.9", () => {
     const { container } = at("/projects/p1/steps/3/public-involvement?pathway=P3");
     const rows = container.querySelectorAll("[data-discretionary='yes']");
     expect(rows.length).toBe(2);
-    expect(screen.getAllByText("2 of 2 answered").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/2 of 2 answered/).length).toBeGreaterThan(0);
   });
 });
 
@@ -302,11 +302,20 @@ describe("the band says which review this is, in plain words", () => {
     expect(second).not.toBe(first);
   });
 
-  it("says nothing about a level of review before Step 2 fixes one", () => {
+  /* The undecided case gets the same three sentences as every decided one:
+     it is the state a reader is in first, and the one that has to teach them
+     what the page is going to do. It must not claim a level, and it must not
+     name the step by a number the rail no longer shows. */
+  it("says the level is undecided, and where it gets decided", () => {
     const { container } = at("/projects/p1/steps/0/proposed-action");
     const band = container.querySelector("[class*='band']") as HTMLElement;
     expect(band.textContent).not.toContain("This project needs");
-    expect(band.textContent).toContain("fixed at Step 2");
+    expect(band.textContent).toContain("has not been decided yet");
+    expect(band.textContent).toContain("Step 3, Level of review");
+    expect(band.textContent).toContain("1b.2(f)(2)");
+    /* The rail counts from one, so prose that says "Step 2" points at the
+       wrong row. */
+    expect(band.textContent).not.toContain("Step 2");
   });
 });
 
@@ -371,15 +380,29 @@ describe("the rail says only what the step itself cannot", () => {
  *  answered above. It takes real time, and a transition nobody can see start —
  *  or see running — is one they cannot tell apart from a hang. */
 describe("assembly is an act at the seam, not a state flip", () => {
-  it("names the step it waits on before a level is fixed, and offers nothing", () => {
+  it("names the first unfinished step, and offers nothing", () => {
     const { container } = at("/projects/p1/steps/0/proposed-action");
     const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
-    expect(gate.textContent).toContain("Waiting on Level of review");
+    /* The first thing outstanding, not the last thing needed: telling a reader
+       the level of review is not fixed when intake is half-answered points them
+       at the wrong end of the work. */
+    expect(gate.textContent).toContain("Waiting on Intake");
+    expect(gate.textContent).toContain("until the level of review is fixed");
     expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(true);
   });
 
-  it("offers the act once a level is fixed and nothing is built from it", () => {
+  /* Grey until the steps it reads from are finished, and it names the first
+     one that is not. Assembly reads every answer above it, so a review built on
+     a half-answered intake is built on nothing. */
+  it("stays grey while a step above it is unanswered, and names that step", () => {
     const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(true);
+    expect(gate.textContent).toContain("Waiting on Intake");
+  });
+
+  it("offers the act once a level is fixed and the steps above are answered", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=ready");
     const pane = rail(container);
     const gate = pane.querySelector("[class*='gate']") as HTMLElement;
     expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(false);
@@ -389,14 +412,14 @@ describe("assembly is an act at the seam, not a state flip", () => {
   });
 
   it("names what it will produce before it runs", () => {
-    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=ready");
     const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
     expect(gate.textContent).toContain("EA");
     expect(gate.textContent).toContain("FONSI");
   });
 
   it("announces the wait rather than only animating it", () => {
-    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=ready");
     const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
     fireEvent.click(gate.querySelector("button") as HTMLElement);
     const live = rail(container).querySelector("[role='status']") as HTMLElement;
@@ -520,5 +543,49 @@ describe("finished work is marked, minimally", () => {
       (tab.textContent ?? "").includes("✓")
     );
     expect(ticked.length).toBeGreaterThan(0);
+  });
+});
+
+/** One predicate, three surfaces. The rail ticks a step, the strip ticks a tab,
+ *  and the panel ticks the tab it is showing — all from the same rows, so they
+ *  cannot disagree, and a step with a single tab (which renders no strip) is
+ *  still marked. */
+describe("completion is marked everywhere it is claimed", () => {
+  it("marks the panel of a finished tab", () => {
+    /* Public involvement: nothing outstanding and no unwritten text. Scope, on
+       the same step, has neither outstanding rows NOR its own words — its three
+       elements are placeholders — which is exactly the case the predicate is
+       strict about. */
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    const progress = container.querySelector("[class*='progress']") as HTMLElement;
+    expect(progress.getAttribute("data-done")).toBe("yes");
+    expect(progress.textContent).toContain("✓");
+  });
+
+  it("marks it on a step that has one tab and therefore no strip", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.6/fonsi?levels=P3");
+    expect(container.querySelector("[role='tablist']")).toBeNull();
+    expect(container.querySelector("[class*='progress']")?.getAttribute("data-done")).not.toBeNull();
+  });
+
+  it("gives every step in the rail an explicit answer, never a blank", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.4/ea?levels=P3");
+    const items = [...rail(container).querySelectorAll("li")];
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      const mark = item.querySelector("[class*='number']");
+      expect(["yes", "no"]).toContain(mark?.getAttribute("data-done"));
+    }
+  });
+
+  it("never ticks a step while any of its tabs is unticked", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/scope?levels=P3");
+    const strip = container.querySelector("[role='tablist']") as HTMLElement;
+    const tabs = [...strip.querySelectorAll("[role='tab']")];
+    const allTicked = tabs.every((tab) => (tab.textContent ?? "").includes("✓"));
+    const active = rail(container).querySelector("[class*='active']");
+    const stepTicked =
+      active?.querySelector("[class*='number']")?.getAttribute("data-done") === "yes";
+    expect(stepTicked).toBe(allTicked);
   });
 });

@@ -142,6 +142,12 @@ export interface ElementPanel {
   title: string;
   help: string;
   progress: string;
+  /** Nothing outstanding and no text missing from the build — the SAME
+   *  predicate the rail ticks a step with, so the two can never disagree.
+   *  Carried on the panel as well as the strip because a step with one tab
+   *  renders no strip at all, and a tab whose completion shows only when it has
+   *  siblings is not consistently marked. */
+  done: boolean;
   rows: QuestionRow[];
   submit: SubmitBar;
 }

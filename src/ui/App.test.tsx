@@ -197,7 +197,7 @@ describe("Archive carries the inbox row, not a lookalike — §6.3", () => {
     fireEvent.click(within(group).getByLabelText("Show the details"));
     expect(group.getAttribute("data-open")).toBe("yes");
     expect(within(group).getByText("Restore")).toBeTruthy();
-    expect(within(group).getByText("Delete permanently")).toBeTruthy();
+    expect(within(group).getByText("Purge")).toBeTruthy();
   });
 
   it("says the archiver is not recorded, without explaining the backend", () => {
@@ -462,7 +462,7 @@ describe("the expert request is copied, not sent", () => {
   it("offers no send", () => {
     openDraft();
     expect(screen.queryByText("Send request")).toBeNull();
-    expect(screen.getByText("Copy message to clipboard")).toBeTruthy();
+    expect(screen.getByText("Copy")).toBeTruthy();
   });
 
   it("assembles a whole message — recipient, subject and body", () => {
@@ -476,7 +476,7 @@ describe("the expert request is copied, not sent", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
     openDraft();
-    fireEvent.click(screen.getByText("Copy message to clipboard"));
+    fireEvent.click(screen.getByText("Copy"));
     await screen.findByText("Copied — this version is held");
     const message = writeText.mock.calls[0][0] as string;
     expect(message).toContain("To: ");
@@ -487,7 +487,7 @@ describe("the expert request is copied, not sent", () => {
       [...document.querySelectorAll("textarea")].some((area) => area.readOnly)
     ).toBe(true);
     expect(document.querySelector("[data-locked='yes']")).not.toBeNull();
-    fireEvent.click(screen.getByText("Reopen for edits"));
+    fireEvent.click(screen.getByText("Reopen"));
     expect(screen.queryByText("Copied — this version is held")).toBeNull();
     vi.unstubAllGlobals();
   });
@@ -500,10 +500,10 @@ describe("the expert request is copied, not sent", () => {
       clipboard: { writeText: vi.fn().mockRejectedValue(new Error("denied")) }
     });
     openDraft();
-    fireEvent.click(screen.getByText("Copy message to clipboard"));
+    fireEvent.click(screen.getByText("Copy"));
     await screen.findByText("The clipboard was refused");
     expect(screen.queryByText("Copied — this version is held")).toBeNull();
-    expect(screen.getByText("Copy message to clipboard")).toBeTruthy();
+    expect(screen.getByText("Copy")).toBeTruthy();
     expect(screen.getByText("The whole message, to copy by hand")).toBeTruthy();
     vi.unstubAllGlobals();
   });

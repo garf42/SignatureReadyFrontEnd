@@ -65,13 +65,27 @@ export interface Overrides {
    *  bookmark and test keeps working. */
   levels: PathwayId[];
   /** Whether the level's review has been BUILT — documents opened, references
-   *  pulled, drafting done. `?assembled=no` is the only way to reach the state
-   *  the assemble control exists for: a level fixed by Step 2 with nothing yet
-   *  built from it. Default true, so every existing link keeps its steps. */
-  assembled: boolean;
+   *  pulled, drafting done. Default true, so every existing link keeps its
+   *  steps. `?assembled=no` reaches the state the assemble control exists for:
+   *  a level fixed by Step 2 with nothing yet built from it, and the steps
+   *  above it still unanswered, so the control is grey and names what it waits
+   *  on. `?assembled=ready` is the same with those steps treated as answered,
+   *  which is the only way to see the control live — the fixture's rows are
+   *  markers and no step in it is ever genuinely finished. */
+  assembled: "yes" | "no" | "ready";
   session: "in" | "out" | "pending";
   held: boolean;
   retrievalUp: boolean;
+}
+
+function assembledKnob(raw: string | null): Overrides["assembled"] {
+  if (raw === "no") {
+    return "no";
+  }
+  if (raw === "ready") {
+    return "ready";
+  }
+  return "yes";
 }
 
 function sessionKnob(raw: string | null): Overrides["session"] {
@@ -101,7 +115,7 @@ export function readOverrides(params: URLSearchParams): Overrides {
        half-wired backend produces most often was unreachable. */
     rail: STATES.find((s) => s === rail) ?? null,
     levels,
-    assembled: params.get("assembled") !== "no",
+    assembled: assembledKnob(params.get("assembled")),
     session: sessionKnob(params.get("session")),
     held: params.get("gate") === "held",
     retrievalUp: params.get("retrieval") !== "down"
@@ -207,7 +221,14 @@ function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
     case "unresolved":
       return pj.stepsUnresolvedSpec;
     default:
-      return pj.stepRail(o.levels, stepKey || "S.0", o.assembled, o.held, o.retrievalUp);
+      return pj.stepRail(
+        o.levels,
+        stepKey || "S.0",
+        o.assembled === "yes",
+        o.held,
+        o.retrievalUp,
+        o.assembled === "ready" ? true : null
+      );
   }
 }
 

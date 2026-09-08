@@ -197,11 +197,11 @@ function ComposeOverlay({ onClose }: { onClose: () => void }) {
                 </Button>
                 {locked ? (
                   <Button className={css.secondary} onClick={() => setCopied(null)}>
-                    Reopen for edits
+                    Reopen
                   </Button>
                 ) : (
                   <Button className={css.primary} onClick={copy}>
-                    Copy message to clipboard
+                    Copy
                   </Button>
                 )}
               </OverlayActions>
@@ -215,7 +215,7 @@ function ComposeOverlay({ onClose }: { onClose: () => void }) {
               <Callout className={css.field} intent="success" title="Copied — this version is held">
                 These are the words that went to your clipboard, kept as the record of what was
                 sent. Nothing here reaches the specialist on its own: paste it into your mail
-                client and send it from there. Reopen for edits to change it and copy again.
+                client and send it from there. Reopen to change it and copy again.
               </Callout>
             ) : failed ? (
               <Callout className={css.field} intent="warning" title="The clipboard was refused">

@@ -37,7 +37,14 @@ export function ElementScreen() {
             <header className={css.head}>
               <div className={css.headLine}>
                 <h2 className={css.title}>{element.title}</h2>
-                <p className={css.progress}>{element.progress}</p>
+                {/* The same tick the rail and the strip use, on the same
+                    predicate. It is here as well because a step with one tab
+                    renders no strip, and a tab whose completion shows only when
+                    it has siblings is not consistently marked. */}
+                <p className={css.progress} data-done={element.done ? "yes" : "no"}>
+                  {element.done ? "✓ " : null}
+                  {element.progress}
+                </p>
               </div>
               <p className={css.help}>{element.help}</p>
               {/* Said in the words of the work. It used to read "This part

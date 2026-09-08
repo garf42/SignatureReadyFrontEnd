@@ -29,7 +29,7 @@ export function InboxScreen() {
         {inbox.state === "filled" ? (
           <ListControls filters={inbox.value.filters} sorts={inbox.value.sorts}>
             <Button className={table.primary} onClick={() => setIntake(true)}>
-              Initiate project
+              Initiate
             </Button>
           </ListControls>
         ) : null}
