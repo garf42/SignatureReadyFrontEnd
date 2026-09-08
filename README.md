@@ -370,12 +370,32 @@ non-specialist to the correct level of review.
 | **0** | Data processing | intake, the proposal record, withholding, agencies |
 | **1** | Search and visualisation | the categorical-exclusion catalogue, the forest-plan register, incorporation by reference |
 | **2** | Decision guidance | every determination, screen and drafted recommendation — the centre of gravity, and a test asserts it |
-| **3** | Feedback loops | reevaluation under 1b.9(r); the adopt disposition on every drafted row |
+| **3** | Feedback loops | reevaluation under 1b.9(r); the adopt disposition on every drafted row — **and the Learning page reports that the loop does not turn** |
 | **4** | Automation | the deadline computed from soonest-of-three with compelled publication at expiry, page count against the limit, the notification list |
 
 Lower levels enable higher ones and a level is never forced. `coverage.test.ts`
 asserts that every level is carried and that no Level 0 or 1 foundation is
 empty — the framework's own named failure pattern.
+
+**Level 3 is three legs, and this build performs two of them and keeps
+neither.** The system *proposes* a drafted paragraph; the officer *corrects* it
+by keeping, rewriting or rejecting it; and the correction should *improve* what
+is proposed next. `/learning` reports each leg with the one thing that holds it
+open, rather than showing eight numbers of which most cannot be counted.
+
+The load-bearing gap is one property. `adoption` records `adoptedValue`,
+`adoptionState` and `adoptedAt` and **not the value the officer was shown**, so
+an adoption state of "edited" is known to have happened and can never be read.
+An officer rewriting a drafted finding is a subject-matter expert correcting the
+system in the one place their expertise is dispositive, and the correction is
+discarded at the moment it is made. Nothing else on the Level 3 list is worth as
+much.
+
+Two more that a Level 3 backend has to carry: **a prompt, a version of one, and
+the provenance of a change to one** — none of the three has an address, so a
+change to how a federal document gets drafted leaves no record of who made it or
+why; and **a second reading** — every figure on that page is a single scalar,
+and improvement is a comparison between two moments.
 
 ## Integrating this into the host
 

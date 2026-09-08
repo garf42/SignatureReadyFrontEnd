@@ -520,6 +520,17 @@ export interface ExpertDraft {
 
 export type TileTone = "plain" | "warn" | "error";
 
+/** MEASURED or WAITING, and the page's whole job is to keep them apart.
+ *
+ *  Three of these figures are counted off this build and are true today. Three
+ *  are markers for a count that cannot run, because the five object-dataset
+ *  materializations hold zero rows and no transform can read an act-written
+ *  one. Rendered in one grid they read as six numbers, and a reader has no way
+ *  to tell a measured zero from a measurement that never happened — which is
+ *  the same distinction `absent` and `unresolved` draw on every other surface
+ *  in this application, and the one this page was not drawing. */
+export type TileState = "measured" | "waiting";
+
 export interface LearningTile {
   id: string;
   title: string;
@@ -527,12 +538,53 @@ export interface LearningTile {
   unit: string;
   tone: TileTone;
   note: string;
+  state: TileState;
+  /** When this figure was counted. Null where it has not been. */
+  measuredOn: string | null;
+  /** The one thing that would make this measurable, where it is not. A page
+   *  about feedback loops that names no gap is the only surface in this build
+   *  that reports a blockage without saying what it is. */
+  waitingOn: string | null;
+}
+
+/** A feedback loop has three legs, and a page that draws only the third cannot
+ *  say whether the loop turns.
+ *
+ *    proposes   what the system put in front of the officer, and on what
+ *    corrects   what the officer did with it — the capture leg, which this
+ *               build performs on every drafted row and then discards
+ *    improves   whether any of that changed the system's behaviour
+ *
+ *  The legs are DATA rather than three hard-coded sections, because which of
+ *  them is closed is exactly what changes as the backend lands, and a screen
+ *  that hard-codes "open" cannot report the day one of them closes. */
+export type LegState = "closed" | "open";
+
+export interface LoopLeg {
+  id: string;
+  /** The leg's own verb: proposes, corrects, improves. */
+  name: string;
+  /** What this leg is, in one sentence, to someone who does not know the
+   *  vocabulary. */
+  says: string;
+  state: LegState;
+  /** What holds this leg open, where it is open — the address that is missing,
+   *  never help prose an adapter has to parse. */
+  breaks: string | null;
+  tiles: LearningTile[];
 }
 
 export interface Learning {
-  /** Tiles 1 and 2 — grounding honesty and mechanism status. */
-  status: LearningTile[];
-  tiles: LearningTile[];
+  /** Said once, in words, above everything else. It was two cards inside the
+   *  same grid as the measurements, which made "nothing is connected" look
+   *  like one more number beside the six that depend on it. */
+  headline: string;
+  says: string;
+  /** Whether any figure here has a second reading. A single scalar cannot
+   *  answer "is it getting better", and this page was built entirely out of
+   *  single scalars while being the instrument that claims to answer it. */
+  trend: string | null;
+  legs: LoopLeg[];
 }
 
 export type Citable = "yes" | "no" | "not-declared";

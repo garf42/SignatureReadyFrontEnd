@@ -123,9 +123,50 @@ describe("Learning shows the honest zero — §6.5", () => {
     expect(screen.getByText(/live-model \/ cassette \/ template-substitution/)).toBeTruthy();
   });
 
-  it("states the mechanism gap plainly, in one banner", () => {
-    at("/learning");
-    expect(screen.getByText(/records the system can learn from/)).toBeTruthy();
+  /* Said once, in words, above everything else — not as one more card in the
+     same grid as the six measurements it invalidates. */
+  it("states the mechanism gap plainly, above everything else", () => {
+    const { container } = at("/learning");
+    expect(screen.getByText("Nothing here is learning yet.")).toBeTruthy();
+    const standing = container.querySelector("[class*='standing']") as HTMLElement;
+    expect(standing.textContent).toContain("three legs");
+    expect(standing.querySelector("[data-tone]")).toBeNull();
+  });
+
+  /* A single scalar cannot answer "is it getting better", and this page was
+     built entirely out of single scalars while being the instrument that
+     claims to answer it. It has to say so. */
+  it("says that no figure on it has a second reading", () => {
+    const { container } = at("/learning");
+    const standing = container.querySelector("[class*='standing']") as HTMLElement;
+    expect(standing.textContent).toMatch(/no figure here has a second reading/i);
+  });
+
+  /* A measured zero and a count that never ran are not the same fact, and they
+     were drawn the same way. Every figure now carries which it is. */
+  it("gives every figure a provenance, and never neither", () => {
+    const { container } = at("/learning");
+    const cards = [...container.querySelectorAll<HTMLElement>("[data-tone]")];
+    expect(cards.length).toBeGreaterThan(0);
+    for (const card of cards) {
+      const state = card.getAttribute("data-state");
+      expect(["measured", "waiting"]).toContain(state);
+      expect(card.textContent).toMatch(
+        state === "measured" ? /Counted \d{4}-\d{2}-\d{2}/ : /Not counted — .+/
+      );
+    }
+  });
+
+  /* Every other surface in this build names the address it waits on. This page
+     reported a blockage and never said what it was. */
+  it("names what holds each open leg of the loop open", () => {
+    const { container } = at("/learning");
+    const legs = [...container.querySelectorAll<HTMLElement>("[data-state='open']")];
+    expect(legs.length).toBeGreaterThan(0);
+    for (const leg of legs) {
+      expect((leg.querySelector("[class*='breaks']")?.textContent ?? "").length)
+        .toBeGreaterThan(30);
+    }
   });
 });
 
@@ -214,7 +255,7 @@ describe("Learning reads as rows — §6.5", () => {
     const rows = container.querySelector("section") as HTMLElement;
     // Nothing inside the page body toggles: every measurement is on the page.
     expect(rows.querySelectorAll("[data-tone] [aria-expanded]").length).toBe(0);
-    expect(rows.querySelectorAll("[data-tone]").length).toBe(8);
+    expect(rows.querySelectorAll("[data-tone]").length).toBe(10);
     expect(
       screen.getByText(/how much of what the system says is written by a model/i)
     ).toBeTruthy();
