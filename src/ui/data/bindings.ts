@@ -653,7 +653,7 @@ export const BINDINGS: Record<string, Binding> = {
       isPrimaryKey: false,
       displayNumber: null,
       resolver: null,
-      note: "The step list is per project and carries useProject's ambiguity unchanged — prefer the primary key, and resolve a number only where one is typed. :stepId and :tabId are NOT object identities: they are pathways.ts's own ids — '0', '1', '2' and then the pathway's, plus 'x' for §7.7's cross-cutting tabs — and no object type holds a step or a tab. Nothing resolves them and nothing should try; §7.1 makes a step a phase and a tab a part of it, which is the rule's structure and not the ontology's. The primary-key PROPERTY is not named anywhere in the register, so none is asserted here: the FDE reads it off the object type in Ontology Manager and fills `primaryKey` in. Until it is filled, `isPrimaryKey` stays false, which is a statement about what is known and not about the URL."
+      note: "The step list is per project and carries useProject's ambiguity unchanged — prefer the primary key, and resolve a number only where one is typed. :stepId and :tabId are NOT object identities: they are pathways.ts's own ids — '0', '1', '2' and then the pathway's — and no object type holds a step or a tab. There is no longer an 'x' segment: §7.7's ten cross-cutting tabs are inside the steps whose completion each one conditions, so a step key and a tab id address everything the page has. Nothing resolves them and nothing should try; §7.1 makes a step a phase and a tab a part of it, which is the rule's structure and not the ontology's. The primary-key PROPERTY is not named anywhere in the register, so none is asserted here: the FDE reads it off the object type in Ontology Manager and fills `primaryKey` in. Until it is filled, `isPrimaryKey` stays false, which is a statement about what is known and not about the URL."
     },
     query: {
       pageSize: null,
@@ -697,13 +697,19 @@ export const BINDINGS: Record<string, Binding> = {
       "per-step completion state, which is the same pathway state usePathway waits on",
       "pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9)",
       "the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row",
-      "uniqueness over (project, whichDetermination); nothing refuses a second det_review_level"
+      "uniqueness over (project, whichDetermination); nothing refuses a second det_review_level",
+      "WHETHER A LEVEL HAS BEEN ASSEMBLED — its documents opened, the references they incorporate pulled, drafting run against the answers above. `StepRail.assembly` carries it as waiting | ready | done, and a level that is DETERMINED but not ASSEMBLED has no steps at all: each step opens onto a document or a decision that assembly is what creates, so drawing them first shows work nobody can start. Nothing in the ontology says a level was built; open-document creates one document, not the whole level's shells. The fixture reaches the in-between state through ?assembled=no.",
+      "PER-TAB SUBMISSION — that the officer pressed Submit on a tab, addressed as <stepKey>/<tabId>. `TabEntry.submitted` and `StepEntry.submitted` carry it, and three surfaces read it: the tick in the rail, the tick on the tab strip, and the gate on the assemble control. Today it lives in sessionStorage (src/ui/data/submitted.ts) and the fixture port hands it to stepRail; the shape there is exactly what a backend answers. Submission belongs in the proposal record under 1b.9(a), not in a browser — this is the single highest-value addition on this surface, because everything the reader uses to tell finished work from unfinished is computed from it."
     ],
     notes: [
       "Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).",
       "Steps 0–2 are shared and exist before any pathway is fixed; Steps 3 and beyond are the pathway's and do not exist until Step 2 determines it (§7.1). Unknown significance routes to P3, not P4 — 1b.2(f)(2)(iv)(A).",
       "The rail is BANDED, and the wiring must preserve the banding. One shared band holds Steps 0–2 and exists from the start. One band per level of review the proposal has occupied, in order, each holding that level's own steps — a superseded band collapses to a summary and is never removed. §7.7's ten items are TEN TABS UNDER ONE RAIL ENTRY at a single step segment, not ten steps; the earlier description of them as steps of their own never matched the built shape.",
-      "A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all."
+      "A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all.",
+      "ANSWERED AND SUBMITTED ARE TWO FACTS AND MUST STAY TWO. `answered` is nothing outstanding and no text missing from the build — it enables the Submit control. `submitted` is that the officer pressed it — it draws the tick and gates assembly. They were one field, and the consequence was that the only tabs carrying a tick were the only tabs still offering Submit: the mark and the control contradicting each other on the same row. An implementation that answers `submitted` from `answered` reintroduces that exactly.",
+      "STEP NUMBERS ARE DISPLAY, IDS ARE ADDRESSES. `StepEntry.n` counts from ONE and restarts at the seam — the shared steps are 1-3 and the level's own steps begin again at 1, because they are two sequences separated by the determination. The step's id and key are unchanged and count from zero: S.0 and E1.P3.3 are in every URL, every row anchor and the rid map. Do not renumber the address to match the display.",
+      "THE SEAM. Between the shared steps and the level's steps the rail carries one act, `StepRail.assembly`. Where it is `done` it is also the HEADING the level's steps sit under — the level of review in plain words. On a proposal that has occupied more than one level the band headers are that heading instead, one per level, and no seam is drawn: two headings for two different levels stacked on each other is the defect that shape avoids.",
+      "The tab strip and the panel heading both draw the same tick from the same field, because a step with a single tab renders no strip and a tab marked only when it has siblings is not consistently marked."
     ]
   },
   useElement: {
@@ -965,7 +971,8 @@ export const BINDINGS: Record<string, Binding> = {
     needed: [
       "the submission-time Function; eight named preconditions wait on one, including adopt's rule that adoptedValue must be present unless adoptionState is 'rejected'",
       "element and slot rows, as above",
-      "an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered"
+      "an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered",
+      "A RECORD THAT THIS TAB WAS SUBMITTED, and one that a submission was reopened. The bar is a two-state control — Submit while anything binds, Reopen once it is submitted — and the state has to outlive the mount because the rail and the tab strip both draw a tick from it. It is sessionStorage today (src/ui/data/submitted.ts); see useSteps for the same gap stated where the rail reads it."
     ],
     notes: [
       "An 'adopted' with no value can be recorded today — the conditional is over another parameter's nullity and is not expressible without a Function (§1).",
@@ -1602,7 +1609,9 @@ export const BINDINGS: Record<string, Binding> = {
       "anything that creates a slot row — eleven of seventeen acts wait on this, and the queue is empty until it exists",
       "an actor on identify-expert-requirement, package-expert-request and state-factor-finding; none writes one, so the queue cannot show who sent a request",
       "a holder-to-slot join (B.5.12); nothing joins a holder to the slot needing one, so a recipient is a suggestion the officer confirms",
-      "a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert"
+      "a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert",
+      "A FIFTH STATUS: `drafted`. The four the queue had — overdue, awaiting, returned, accepted — all describe waiting on the SPECIALIST. A request the project workflow assembled and nobody has sent yet is waiting on the OFFICER, and there was no way to say so. It is also what the notification dot on the Expert Q section counts, so without it the dot has nothing to point at.",
+      "AN ADDRESS FOR WHETHER A DRAFTED REQUEST WAS SENT. Nothing here sends anything: the specialist is reached through the officer's own mail client, so the overlay assembles a whole message and copies it. What the record needs is that a message was copied, its exact text, and when — the surface holds that version and shows it as the record of what went out."
     ],
     notes: [
       "state-factor-finding closes at clear / present / undetermined. Present or undetermined is the condition that drafts a request and holds it in the queue (§6.4).",
@@ -1809,9 +1818,12 @@ export const BINDINGS: Record<string, Binding> = {
     needed: [
       "the same slot row the queue waits on",
       "an actor on package-expert-request",
-      "an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline"
+      "an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline",
+      "A SUBJECT LINE on the drafted request. The request leaves through the officer's mail client, so what this surface has to produce is a whole message; a body someone must title themselves is not one. `ExpertDraft.subject` carries it and nothing in the ontology writes one.",
+      "A RECORD OF THE COPY: the exact text that went to the clipboard, and when. The overlay holds that version afterwards as the record of what was sent — the fields go read-only and greyed in the same treatment a submitted element panel uses — and one click reopens it for another pass. Both the holding and the reopening are client state today."
     ],
     notes: [
+      "NOTHING IS SENT FROM THIS SURFACE, and it must not say otherwise. There is no mail transport and no address book. The primary act is Copy — recipient, subject and body assembled into one message — and a button labelled Send would promise a delivery that cannot happen and leave the officer believing a specialist had been contacted. Clipboard access can be refused (a sandboxed frame, an insecure origin, a browser setting); on refusal the whole message is shown selectable to copy by hand and the version is NOT held, because holding it would record a send that did not happen.",
       "package-expert-request is a modify ×2 — assignment.sentAt and expectedReturnDate, engagement.outcome='open' — and writes no actor. §1 records that as a named asymmetry.",
       "Expert identities are notional for this build; nothing is transmitted (§6.4)."
     ]
@@ -2139,7 +2151,7 @@ export const BINDINGS: Record<string, Binding> = {
       isPrimaryKey: false,
       displayNumber: "sha256",
       resolver: null,
-      note: "/reference takes no parameter (src/ui/routes.ts): the corpus / regulation / catalogue groups, the facet selection and the open artifact are all component state. The digest is on every row and must stay there — it is the evidence the integrity strip is about — but the list resolves nothing, because the row it displays already carries the object. The fix belongs in the adapter's favour rather than the screen's: a faceted view over 312 artifacts that cannot be linked to cannot be cited in a review, so facets and search belong in the query string and the open artifact's primary key belongs in a path segment, which is useReferenceArtifact's parameter."
+      note: "THE OPEN ARTIFACT IS NOW IN THE ADDRESS: /reference?view=<id> opens that document in the viewer, and the screen reads and writes the parameter rather than holding it in component state. That is what lets anywhere else in the application hand a reader a specific document — the source overlay's 'Open the full document' link is exactly this address and needed nothing new on the port to work — and it survives a reload and can be sent to a colleague. `Destination.href` on `SourceDocument.full` is that address, so a backend filling it only has to name the corpus id. The <id> is the artifact's primary key and the fixture's rows carry fixture ids; the FDE substitutes the real key. The GROUPS and the facet selection are still component state and still cannot be linked to: a faceted view over 312 artifacts that cannot be cited in a review is the remaining half of this, and it belongs in the query string beside `view`. `withSearch` in src/ui/routes.ts MERGES query strings rather than concatenating, which is what makes an address carrying its own parameter expressible at all — a second '?' parses as one key whose value swallows the rest."
     },
     query: {
       pageSize: 50,

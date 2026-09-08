@@ -53,8 +53,25 @@ No OSDK package is imported anywhere.
 | `/learning` | what was proposed, what was adopted, whether it is calibrated — §6.5, Level 3 |
 | `/reference` | the corpus, the pinned regulation, the CE catalogue — §6.6, Levels 0 and 1 |
 | `/projects/:projectRef/steps/:stepId/:tabId` | the shell + one part of the document — §7 |
-| `/projects/:projectRef/steps/x/:tabId` | the cross-cutting tabs, reachable from every step — §7.7 |
 | anything else | not found |
+
+**There is no `steps/x/` segment.** §7.7's ten cross-cutting tabs are inside the
+steps whose completion each one conditions — the proposal record, the agencies
+and the applicant on Intake; programmatic reliance and emergency where the level
+is decided; incorporation by reference and interdisciplinary preparation on the
+assembly steps; withholding where publication happens; reevaluation on every
+pathway's terminal step. A step key and a tab id address everything the project
+page has.
+
+**The steps are commitments, not containers.** A step is one point where
+something becomes fixed and later work depends on its having been fixed; its
+tabs are the parts of that one commitment, and its name says what the commitment
+IS rather than listing its tabs. `pathways.test.ts` holds the shape: no step
+name is a comma list, no step carries a tab of its own name, every pathway ends
+on exactly one terminal step, and only the statement pathway has a step after
+notification — because 1b.8(e) makes an act by ANOTHER agency (EPA's notice of
+availability) a precondition of lawful implementation, so notifying does not
+finish the review. Run `npm run walk` for the full decomposition.
 
 ## The five states
 
@@ -85,6 +102,45 @@ string: *"Asking: q"* becomes *"Searched: q"*. `pending` draws no spinner and no
 skeleton — it holds the room and names what it asked. A request that outlives
 its deadline becomes `unresolved`; the port owns that deadline, so no component
 holds a clock.
+
+## What the surface says, and why it says it that way
+
+These are conventions rather than decoration, and each one exists because its
+absence was a defect on the screen.
+
+- **One verb per button on an element row, and the verb is chosen.** *Adopt* a
+  drafted paragraph — the rule's own word at 1b.3(c) — with *Revise* beside it;
+  *Amend* a recorded answer; *Retrieve* from the project record; *Compose* when
+  the drafting lane could not run; *Trace* to where a question is canonically
+  asked; *Flag* a problem. "Accept" failed not because it was short but because
+  it was generic, and a button that needs a sentence is a button whose verb is
+  wrong. Three buttons elsewhere keep a second word because the second word IS
+  the meaning: *Sign in*, *Initiate project*, *Delete permanently* — a bare
+  "delete" reads undoable, and that one is not. A test in
+  `port.bindings.test.ts` holds both halves.
+- **No internal vocabulary reaches the reader.** The primary user is not a NEPA
+  subject-matter expert. The band states the determination in three plain
+  sentences — what the review is, why it is that one with the citation attached,
+  and what it ends in — and never the pathway id. A test forbids "P3" or "P4"
+  appearing anywhere in the step rail.
+- **Every step carries its own purpose**, authored on `StepSpec.purpose` and
+  rendered under the step line, so no screen synthesises a description from a
+  step's name.
+- **Step numbers are display; step ids are addresses.** The rail counts from
+  ONE and restarts at the seam — shared steps 1-3, then the level's own steps
+  from 1 — because they are two sequences separated by the determination. The
+  ids are unchanged and count from zero: `S.0`, `E1.P3.3` are in every URL,
+  every row anchor and the rid map.
+- **Disabled outranks intent.** An intent class written `.primary, .primary:hover`
+  is one class plus a pseudo-class, exactly the specificity of
+  `.bp6-button:disabled`, so on a tie source order decided and a disabled button
+  lit up under the cursor. `theme.css` names the hover and active states on the
+  disabled rule, which puts it out of reach of any single-class intent including
+  ones not yet written. `npm run port:additions` fails the build if those
+  selectors are trimmed as redundant.
+- **Pointer focus draws no ring.** Blueprint styles `:focus`, not
+  `:focus-visible`, at a 2px offset, so a click painted a ring outside the
+  control's own border. Suppressed once, globally, for pointer focus only.
 
 ## The seam
 
@@ -143,6 +199,8 @@ in one table at the top; work through that table first.
 | `?pathway=P0\|P1\|P2\|P3\|P4` | the pathway Step 2 fixed, and so which steps exist |
 | `?gate=held` | the caller holds the credential the rule reserves |
 | `?retrieval=down` | the drafting lane could not run |
+| `?levels=P3,P4` | the levels the proposal has occupied, in order — a whole escalation in one URL. `?pathway=` is the one-level alias |
+| `?assembled=no\|ready` | a level fixed with nothing built from it: `no` leaves the steps above unanswered so the assemble control is grey and names the first one; `ready` treats them as answered and submitted, which is the only way to see it live |
 
 These are the whole QA and demo surface and the acceptance tests depend on them,
 so they **stay enabled in the deployed app** — a stakeholder walkthrough of an
@@ -178,12 +236,33 @@ come from it and go stale; the file does not.
   total nine. **Do not build a picker for that until the list is read off the
   pinned text.** Such a row renders `unresolved`, is excluded from every submit
   count, and is listed under `owner: "regulation"` in the walk.
-- **Completion still has no property behind it.** `TabEntry.outstanding` is
-  `null` throughout, and null is not zero — a tab with no address must not
-  render as done. Nothing creates a `slot` row and eleven of the seventeen acts
-  are keyed on one.
+- **Completion is computed from the rows, and SUBMISSION is client state.**
+  `TabEntry.answered` is nothing outstanding and no text missing from the build
+  — it is what enables Submit, and it comes from the same rows the panel
+  renders, so the rail and the panel cannot disagree. `TabEntry.submitted` is
+  that the officer pressed Submit; it draws the tick and it gates assembly.
+  **They are two facts and must stay two** — they were one field, and the
+  consequence was that the only tabs carrying a tick were the only tabs still
+  offering Submit. Submission lives in `src/ui/data/submitted.ts`
+  (sessionStorage, every access wrapped) and the fixture port hands it to
+  `stepRail`, so the shape there is exactly what a backend answers. It belongs
+  in the proposal record under 1b.9(a), and it is the single highest-value
+  addition to `useSteps`. `slot` still holds zero rows.
+- **Assembly is an act, and nothing records it.** `StepRail.assembly` carries
+  `waiting | ready | done`. A level that is DETERMINED but not ASSEMBLED has no
+  steps at all — each step opens onto a document or a decision that assembly is
+  what creates. Nothing in the ontology says a level was built; `open-document`
+  creates one document, not a level's shells.
+- **Two more pieces of client state, both deliberate.**
+  `src/ui/data/seen.ts` holds which drafted expert requests this person has
+  opened, which is what clears the notification dot on the Expert Q section —
+  whether a request EXISTS is the backend's fact and travels through the port;
+  whether this person has looked at it is not a fact about the review at all.
+  Both stores are sessionStorage rather than local: state that stays cleared
+  forever on one machine hides work from the next person to sit down.
 - **Every action on the project page is inert.** `onAction` is threaded only on
-  the inbox and submit is local state. There is no write seam on the port.
+  the inbox. Submit and the expert-request copy are the two exceptions, and both
+  write only to the client stores above.
 - **One act has no surface anywhere.** `record-consistency-finding` is declared
   with `unplaced` saying so. Placing it is still open: it may instead be one of
   the three unnamed members of `determination.whichDetermination`, which has to
@@ -267,6 +346,18 @@ identification number belongs on the document, not the project.** 1b.9(u)
 attaches it to the environmental assessment (1b.5(c)(7)) and the statement
 (1b.7(h)(1)(v)) and makes it discretionary for a FANEC. One field on the project
 cannot carry two on an escalated proposal.
+
+**A fourth transition surface exists as data and is rendered by nothing.**
+`TRANSITIONS` and `COMPETENCE_CONDITIONS` in `pathways.ts` carry five moves,
+each with its citations, its statement, what carries forward and what stays
+behind, and an `offeredOn` address. **None of them is a menu item and none
+belongs in the inbox.** T1 is a duty to CONSIDER (1b.9(r)(2)), T2 is DERIVED
+from a chain of four paragraphs, T3 is a duty (1b.9(r)(3)), C1 is an outbound
+request to the Senior Agency Official (1b.4(a)), and only T4 — the responsible
+official redetermining after an assessment, 1b.11(a)(46) — is anything a person
+elects. Each is offered where the rule discovers the fact, not from a list of
+levels to pick from. `direction` has no member for a move to a LOWER level, so
+de-escalation is unauthorable rather than merely unimplemented.
 
 ## The Levels framework
 
