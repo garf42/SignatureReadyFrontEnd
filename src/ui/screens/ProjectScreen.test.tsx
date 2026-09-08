@@ -62,8 +62,13 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
 
   it("gives P0 no pathway step at all", () => {
     const { container } = at("/projects/p1/steps/1/does-nepa-apply?pathway=P0");
-    const steps = within(rail(container)).getAllByText(/Intake|Threshold determination|Level of review/);
-    expect(steps.length).toBe(3);
+    /* Counted over the rail's step items, not over its text: the seam names
+       the level of review as a heading, and matching on words alone would
+       count that heading as a step. */
+    const steps = [...rail(container).querySelectorAll("li")]
+      .map((li) => (li.textContent ?? "").trim())
+      .filter((text) => /Intake|Threshold determination|Level of review/.test(text));
+    expect(steps).toEqual(["1Intake", "2Threshold determination", "3Level of review"]);
   });
 
   /* THE SHAPE THIS TEST USED TO PIN. Ten tabs hung off a rail entry called
@@ -317,6 +322,28 @@ describe("the rail's band header", () => {
     const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
     expect(rail(container).querySelector("[class*='bandHeader']")).not.toBeNull();
   });
+
+  /* There is only ever one shared band, it is always the same three steps, and
+     its summary restated the steps listed directly beneath it. */
+  it("never heads the shared band, however many levels there are", () => {
+    const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
+    const headers = [...rail(container).querySelectorAll("[class*='bandHeader']")].map(
+      (header) => header.textContent ?? ""
+    );
+    expect(headers.some((text) => text.includes("Every review"))).toBe(false);
+    expect(headers.length).toBe(2);
+  });
+
+  /* A title with a summary under it reads as a caption, not as a control, and
+     these collapse a band's steps. */
+  it("says it is a control, and its direction says which way", () => {
+    const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
+    const headers = [...rail(container).querySelectorAll("[class*='bandHeader']")];
+    const shut = headers.find((header) => header.getAttribute("aria-expanded") === "false");
+    const open = headers.find((header) => header.getAttribute("aria-expanded") === "true");
+    expect(shut?.querySelector("[data-icon='chevron-right']")).not.toBeNull();
+    expect(open?.querySelector("[data-icon='chevron-down']")).not.toBeNull();
+  });
 });
 
 /** The rail is a rail. Anything it says that the centre of the screen already
@@ -382,5 +409,75 @@ describe("assembly is an act at the seam, not a state flip", () => {
     const gate = pane.querySelector("[class*='gate']") as HTMLElement;
     expect(gate.querySelector("button")).toBeNull();
     expect(within(pane).getByText("Assembly")).toBeTruthy();
+  });
+});
+
+/** Once assembly has run, the seam stops being a control and becomes the
+ *  heading the pathway steps sit under. Above it, the three steps every review
+ *  has; below it, the steps this determination created and nothing else — and
+ *  the seam is the only place that boundary gets named. */
+describe("the seam names the level of review", () => {
+  it("heads the pathway steps with the level, in plain words", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const gate = rail(container).querySelector("[data-state='done']") as HTMLElement;
+    expect(gate.textContent).toContain("Level of review");
+    expect(gate.querySelector("h2")?.textContent).toBe("Environmental assessment");
+    expect(gate.textContent).not.toMatch(/\bP3\b/);
+  });
+
+  /* On an escalated proposal each band carries its own level heading, and a
+     seam that also named one would name the LIVE level while sitting above a
+     superseded band. */
+  it("does not name a level where the bands already do", () => {
+    const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
+    const gate = rail(container).querySelector("[data-state='done']") as HTMLElement;
+    expect(gate.querySelector("h2")).toBeNull();
+  });
+});
+
+/** Nobody calls intake "step zero". The spec counts from zero because that is
+ *  the position in the list, and the step's ADDRESS keeps it — `S.0` is in
+ *  every URL and every row anchor — so the two are reconciled in one place. */
+describe("steps are numbered from one", () => {
+  it("starts the rail at 1", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const first = rail(container).querySelector("li") as HTMLElement;
+    expect((first.textContent ?? "").trim()).toBe("1Intake");
+  });
+
+  it("counts the whole rail from one on the step line", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const where = container.querySelector("[class*='hereWhere']") as HTMLElement;
+    expect(where.textContent).toContain("Step 1 of 3");
+  });
+
+  /* The address is unchanged, and has to be: renumbering it would break every
+     link, every comment anchor and the rid map. */
+  /* The address is unchanged, and has to be: renumbering it would break every
+     link, every comment anchor and the rid map. */
+  it("leaves the address alone", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const anchored = container.querySelector("[data-rid]");
+    expect((anchored?.getAttribute("data-rid") ?? "").startsWith("0/")).toBe(true);
+  });
+
+  /* Two sequences, not one. The shared steps are 1-3 and the level's own steps
+     start again at 1, because the seam between them separates what is true of
+     every review from what this determination created. */
+  it("restarts the count at the seam", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const steps = [...rail(container).querySelectorAll("li")].map((li) =>
+      (li.textContent ?? "").trim()
+    );
+    expect(steps).toEqual([
+      "1Intake",
+      "2Threshold determination",
+      "3Level of review",
+      "1Plan of analysis",
+      "2Assembly",
+      "3Publication",
+      "4FindingWaiting",
+      "5Notification"
+    ]);
   });
 });

@@ -269,7 +269,9 @@
 }
 
 .bandHeader {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
   width: 100%;
   padding: 0.5rem 0.75rem 0.35rem;
   border: 0;
@@ -277,6 +279,26 @@
   text-align: left;
   cursor: pointer;
   font: inherit;
+}
+
+/* The only thing on the header that says it is a control. Turns rather than
+   swaps, so its direction carries the state without a second glyph to learn. */
+.bandChevron {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--ink-soft);
+  transition: transform 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandChevron {
+    transition: none;
+  }
+}
+
+.bandWords {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .bandTitle {
@@ -361,10 +383,37 @@
   letter-spacing: 0.02em;
 }
 
+/* Done, the seam stops being a control and becomes the heading the pathway
+   steps sit under. It keeps a ground and loses its bottom rule, so it reads as
+   attached to what follows rather than as a band of its own. */
 .gate[data-state="done"] {
-  background: none;
+  margin-bottom: 0;
+  padding-bottom: var(--s-2);
   border-bottom: none;
-  padding-bottom: 0;
+  border-left: 3px solid var(--link);
+}
+
+.gateOverline {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.gateLevel {
+  margin: 0.15rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+
+.gate[data-state="done"] .gateDone {
+  margin-top: 0.3rem;
 }
 
 .gateRunning {

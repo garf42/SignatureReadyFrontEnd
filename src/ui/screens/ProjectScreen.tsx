@@ -1,6 +1,6 @@
 import { Fragment, useState } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Button, Menu, MenuItem } from "@blueprintjs/core";
+import { Button, Icon, Menu, MenuItem } from "@blueprintjs/core";
 
 import type { Assembly, BandEntry, BandRef, StepEntry, StepRail } from "@/ui/data/port";
 import { usePort } from "@/ui/data/port";
@@ -122,15 +122,16 @@ export function ProjectScreen() {
         <Region region={rail}>
           {(value: StepRail) => {
             const here = stepIn(value, stepId);
-            /* Counted over the rail as drawn, not over the step's own `n`.
-               `n` restarts inside each band, so on an escalated proposal two
-               different steps both call themselves 3 — true of the pathway,
-               useless as a position. */
-            const at = here ? value.steps.indexOf(here) + 1 : 0;
+            /* Counted inside the step's own band, so it agrees with the rail.
+               The two sequences are separated by the seam, and the seam names
+               the level the second one belongs to. */
+            const own = here
+              ? value.steps.filter((step) => bandId(step.band) === bandId(here.band))
+              : [];
             return here ? (
               <div className={css.here}>
                 <p className={css.hereWhere}>
-                  Step {String(at)} of {String(value.steps.length)} · {here.name}
+                  Step {String(here.n)} of {String(own.length)} · {here.name}
                 </p>
                 <p className={css.herePurpose}>{here.purpose}</p>
               </div>
@@ -163,16 +164,16 @@ export function ProjectScreen() {
                   .filter((band) => band.band.kind !== "cross")
                   .map((band, index) => {
                     const key = bandId(band.band);
-                    /* The band header earns its place only when a level has
-                       actually been SUPERSEDED and the reader has read-only
-                       steps to keep apart from live ones. On the ordinary
-                       project it restated the level line directly above it and
-                       the step count directly below it, so it was two
-                       redundancies in one control — and splitting "Every
-                       review" from the level's own steps told the reader
-                       nothing they could act on. Banding still exists in the
-                       data and is drawn the moment it means something. */
-                    const banded = episodes > 1;
+                    /* A band header earns its place only where there is
+                       something to tell it apart FROM: two or more levels of
+                       review, one of them superseded and read-only. The shared
+                       band never qualifies — there is only ever one of it, it
+                       is always the same three steps, and "Every review · 3
+                       steps · intake, the threshold determination and the level
+                       of review" restated the steps listed directly beneath it.
+                       So the shared band is never headed, and the level bands
+                       are headed only once there is more than one. */
+                    const banded = episodes > 1 && band.band.kind === "episode";
                     const steps = value.steps.filter((s) => bandId(s.band) === key);
                     /* A superseded band collapses — but never the one holding
                        the step being read, or the rail would show no entry for
@@ -189,6 +190,7 @@ export function ProjectScreen() {
                         <AssembleGate
                           assembly={value.assembly}
                           shut={railShut}
+                          banded={banded}
                           onAssembled={() => go(pathname)}
                         />
                       ) : null}
@@ -200,10 +202,22 @@ export function ProjectScreen() {
                             aria-expanded={open}
                             onClick={() => setOpenBands((state) => ({ ...state, [key]: !open }))}
                           >
-                            <span className={css.bandTitle}>{railShut ? key : band.title}</span>
-                            {railShut ? null : (
-                              <span className={css.bandSummary}>{band.summary}</span>
-                            )}
+                            {/* The chevron. These headers nest a band's steps
+                                and collapse them, and nothing on them said so —
+                                a title with a summary under it reads as a
+                                caption, not as a control. It turns with the
+                                band, so its direction is the state. */}
+                            <Icon
+                              className={css.bandChevron}
+                              icon={open ? "chevron-down" : "chevron-right"}
+                              size={12}
+                            />
+                            <span className={css.bandWords}>
+                              <span className={css.bandTitle}>{railShut ? key : band.title}</span>
+                              {railShut ? null : (
+                                <span className={css.bandSummary}>{band.summary}</span>
+                              )}
+                            </span>
                           </button>
                         ) : null}
                         {open ? (
@@ -234,6 +248,7 @@ export function ProjectScreen() {
                   <AssembleGate
                     assembly={value.assembly}
                     shut={railShut}
+                    banded={false}
                     onAssembled={() => go(pathname)}
                   />
                 ) : null}
@@ -335,10 +350,15 @@ export type { BandEntry };
 function AssembleGate({
   assembly,
   shut,
+  banded,
   onAssembled
 }: {
   assembly: Assembly;
   shut: boolean;
+  /* On an escalated proposal each band already carries its own level heading,
+     and a seam that also names one would name the LIVE level while sitting
+     above a superseded band. There it stays the quiet line. */
+  banded: boolean;
   onAssembled: () => void;
 }) {
   const [running, setRunning] = useState(false);
@@ -352,7 +372,20 @@ function AssembleGate({
   return (
     <section className={css.gate} data-state={state}>
       {state === "done" ? (
-        <p className={css.gateDone}>{assembly.says}</p>
+        /* A HEADING, not a footnote. This is the boundary of the whole page:
+           above it, the three steps every review has; below it, the steps this
+           determination created and nothing else. Naming the level here is the
+           only place that boundary gets said, and the steps under it read as
+           belonging to it rather than as a continuation of the list above. */
+        <>
+          {assembly.level && !banded ? (
+            <>
+              <p className={css.gateOverline}>Level of review</p>
+              <h2 className={css.gateLevel}>{assembly.level}</h2>
+            </>
+          ) : null}
+          <p className={css.gateDone}>{assembly.says}</p>
+        </>
       ) : state === "running" ? (
         <>
           {/* Announced, not merely animated: a spinner is not information to a

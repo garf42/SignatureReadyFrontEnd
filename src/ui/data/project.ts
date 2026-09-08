@@ -291,6 +291,7 @@ function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
   if (!live) {
     return {
       state: "waiting",
+      level: null,
       label: "Assemble the review",
       says:
         "Nothing can be built until the level of review is fixed. The three steps above decide it, and this is where the review it calls for gets built.",
@@ -302,6 +303,7 @@ function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
   if (!assembled) {
     return {
       state: "ready",
+      level: PATHWAYS[live].name,
       label: "Assemble the review",
       says:
         produces.length > 0
@@ -313,11 +315,12 @@ function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
   }
   return {
     state: "done",
+    level: PATHWAYS[live].name,
     label: "Assembled",
     says:
       produces.length > 0
-        ? `Built from the answers above. ${produces.join(" and ")} ${produces.length === 1 ? "is" : "are"} open below.`
-        : "Built from the answers above. The steps that close this review are below.",
+        ? `${produces.join(" and ")} ${produces.length === 1 ? "is" : "are"} open. The steps below carry this level of review and nothing else.`
+        : "This level produces no document. The steps below close the review out.",
     waitingOn: null,
     produces
   };
@@ -339,6 +342,13 @@ export function stepRail(
   const liveSeq = withSeq.length > 0 ? withSeq[withSeq.length - 1].seq : null;
   const rail = railFor(withSeq);
 
+  /* Numbered from one WITHIN each band. The shared steps are 1–3 and the
+     level's own steps start again at 1, because they are two sequences and not
+     one: everything above the seam is true of every review, everything below it
+     exists because of this determination. Continuing the count across the seam
+     said they were one list, and on an escalated proposal it produced a step 12
+     that nobody could find in any procedure. */
+  const seen = new Map<string, number>();
   const steps: StepEntry[] = rail.map((entry) => {
     const superseded = entry.band.kind === "episode" && entry.band.seq !== liveSeq;
     const waitKey =
@@ -348,7 +358,19 @@ export function stepRail(
     return {
       id: entry.step.id,
       key: entry.key,
-      n: entry.step.n,
+      /* Counted from one, for the reader. `StepSpec.n` counts from zero
+         because it is the position in the spec, and the step's ADDRESS keeps
+         that: `S.0` and `E1.P3.3` are in every URL and every row anchor, and
+         renumbering them would break links, comments and the rid map. Nobody
+         calls intake "step zero", so the two are allowed to differ, and this
+         is the one place they are reconciled. */
+      n: (() => {
+        const bandKey =
+          entry.band.kind === "episode" ? `E${String(entry.band.seq)}` : entry.band.kind;
+        const next = (seen.get(bandKey) ?? 0) + 1;
+        seen.set(bandKey, next);
+        return next;
+      })(),
       name: entry.step.name,
       purpose: entry.step.purpose,
       mark: superseded

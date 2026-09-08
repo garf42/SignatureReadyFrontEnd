@@ -212,6 +212,13 @@ export type AssemblyState = "waiting" | "ready" | "done";
 
 export interface Assembly {
   state: AssemblyState;
+  /** The level of review this seam opens onto, in the words a non-expert
+   *  reads — "Environmental assessment", never "P3". Null before Step 2 fixes
+   *  one. Once assembly has run, this is the heading the pathway steps sit
+   *  under: everything above the seam is true of every review, everything
+   *  below it exists because of this determination, and the seam is the only
+   *  place that boundary can be named. */
+  level: string | null;
   /** The act, on the control. */
   label: string;
   /** One line under it, in the words of the work. */
