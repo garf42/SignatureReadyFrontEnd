@@ -1529,7 +1529,8 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
     plain: {
       says: "This project needs an environmental assessment.",
       because: "Its impacts are not likely to be significant, or their significance is not yet known — 1b.2(f)(2)(iv)(A). Not knowing is an assessment trigger, not a reason to go higher.",
-      ends: "Two documents: an environmental assessment, then a finding of no significant impact. One year to finish."
+      ends:
+        "Two documents: an environmental assessment, then a finding of no significant impact. A one-year deadline applies, running from the earliest of the events at 1b.5(e) — the date is worked out in the plan of analysis, once the triggering event is on the record."
     },
     steps: [
       {
@@ -1878,7 +1879,8 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
     plain: {
       says: "This project needs an environmental impact statement.",
       because: "Its impacts are likely to be significant — 1b.2(f)(2)(iv)(B).",
-      ends: "Two documents: an environmental impact statement, then a record of decision. Two years to finish, and the statement is filed with EPA."
+      ends:
+        "Two documents: an environmental impact statement, then a record of decision. A two-year deadline applies, running from the earliest of the events at 1b.7(k) — the date is worked out in the plan of analysis. The statement is filed with EPA."
     },
     steps: [
       {

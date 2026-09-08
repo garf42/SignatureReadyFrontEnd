@@ -401,6 +401,20 @@ describe("the steps are commitments, not containers", () => {
     }
   });
 
+  /* A deadline stated as a bare duration is a claim about a date the reader is
+     not given: 1b.5(e) and 1b.7(k) each run from "the sooner of, as applicable"
+     several named events, so "one year to finish" from WHEN is the whole
+     question. Wherever a duration appears in the plain sentences, the paragraph
+     it runs from has to appear with it. */
+  it("never states a deadline without the paragraph it runs from", () => {
+    for (const id of PATHWAY_IDS) {
+      const { ends } = PATHWAYS[id].plain;
+      if (/\byear/.test(ends)) {
+        expect(ends, id).toMatch(/1b\.5\(e\)|1b\.7\(k\)/);
+      }
+    }
+  });
+
   it("says in plain words what each level of review is, why, and what it ends in", () => {
     for (const id of PATHWAY_IDS) {
       const { plain } = PATHWAYS[id];
