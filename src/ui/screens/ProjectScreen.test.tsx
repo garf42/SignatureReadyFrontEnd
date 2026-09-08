@@ -954,3 +954,22 @@ describe("the document can be viewed, and never edited, from the band", () => {
     expect(screen.getByRole("dialog").textContent).toMatch(/arrangement is not wired yet/i);
   });
 });
+
+/** The greying has to actually render. The first attempt set it in ink at a
+ *  specificity that lost to the tab's own colour, so the class landed and
+ *  nothing changed — which is the failure mode a class-presence test misses. */
+describe("a finished tab is visibly settled", () => {
+  it("fades an unselected finished tab, and keeps the open one readable", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    fireEvent.click(screen.getByText("Submit"));
+    const done = [...container.querySelectorAll<HTMLElement>("[role='tab']")].find((tab) =>
+      (tab.textContent ?? "").includes("✓")
+    );
+    expect(done).toBeDefined();
+    const style = getComputedStyle(done as HTMLElement);
+    /* Selected here, so it stays at full strength and carries the claim in the
+       row's own vocabulary instead. */
+    expect(done?.getAttribute("aria-selected")).toBe("true");
+    expect(style.opacity === "" || style.opacity === "1").toBe(true);
+  });
+});

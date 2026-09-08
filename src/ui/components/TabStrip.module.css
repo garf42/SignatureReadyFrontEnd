@@ -89,17 +89,26 @@
 }
 
 /* --- finished -------------------------------------------------------------
-   The convention an accepted row uses: greyed, and still perfectly readable.
-   A row is greyed by grounding on the well while unfinished rows are on paper.
-   In a strip the paper state is the SELECTED tab, so the transfer is exact
-   only there — a finished tab you are standing on grounds on the well instead
-   of rising to the panel. Unselected tabs are already on the well, so what is
-   left to say there is said in the ink. */
-.doneTab {
-  color: var(--ink-faint);
+   Greyed, and still perfectly readable — the settled look this build already
+   uses for a submitted element panel and a superseded step, both of which fade
+   rather than recolour. Fading is the transfer that works here: an UNSELECTED
+   tab already grounds on the well, so the row convention of "well instead of
+   paper" has nothing left to say about it, and the first attempt at this said
+   it in ink at a specificity that lost to the tab's own colour and rendered
+   nothing at all.
+
+   Scoped to `.scroller` so it ties with the rules it has to beat and wins on
+   order, which is the same reason those rules are written that way. */
+.scroller .doneTab {
+  opacity: 0.55;
 }
 
+/* The one you are standing on stays at full strength — it is the tab whose
+   panel is open, and fading it would fade the thing being read. It carries the
+   claim in the row's own vocabulary instead: the well, where an unfinished
+   selected tab rises to paper. */
 .scroller .doneTab[aria-selected="true"] {
+  opacity: 1;
   background: var(--well);
   color: var(--ink-soft);
 }
