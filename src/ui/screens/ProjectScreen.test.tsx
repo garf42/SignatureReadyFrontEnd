@@ -743,3 +743,27 @@ describe("the band's prose is one colour", () => {
     expect(colours.size).toBeLessThanOrEqual(1);
   });
 });
+
+/** A superseded level is headed the same way as a live one. It is the same
+ *  kind of thing — a level of review — and the words already say which is
+ *  which. Setting one of them in a different face makes the multi-level view a
+ *  different-looking screen for a fact that is already stated. */
+describe("a superseded level is headed like any other", () => {
+  it("sets both headings in the same face", () => {
+    const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
+    const faces = new Set(
+      [...rail(container).querySelectorAll<HTMLElement>("[class*='gateLevel']")].map(
+        (el) => getComputedStyle(el).fontStyle
+      )
+    );
+    expect(faces.size).toBe(1);
+    expect([...faces][0]).not.toBe("italic");
+  });
+
+  it("still says which one is superseded, in words", () => {
+    const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
+    const pane = rail(container);
+    expect(pane.textContent).toContain("Level 1 of 2 · superseded");
+    expect(pane.textContent).toContain("read only");
+  });
+});

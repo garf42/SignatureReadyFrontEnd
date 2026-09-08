@@ -347,17 +347,17 @@
 
 .bandSummary {
   display: block;
-  margin-top: 0.2rem;
   margin-top: 0.15rem;
   font-size: 0.75rem;
   color: var(--ink-soft);
 }
 
-.bandGroup[data-status="superseded"] .gateOverline,
-.bandGroup[data-status="superseded"] .gateLevel,
-.bandGroup[data-status="superseded"] .bandSummary {
-  font-style: italic;
-}
+/* NO ITALIC ON A SUPERSEDED BAND'S HEADING. A single-level project never has
+   one, so italicising it made the multi-level view a different-looking screen
+   for the sake of a fact the words already carry: the overline reads
+   "Level 1 of 2 · superseded" and the summary ends "read only". Setting the
+   same heading in two faces says they are two kinds of thing. They are not —
+   one of them is finished. */
 
 /* A superseded step is readable and read-only. It is not an error and not a
    step that was never started, and before this it had no representation at
