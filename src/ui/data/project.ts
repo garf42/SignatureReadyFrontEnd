@@ -607,19 +607,20 @@ export function documentPreview(
   }
   const seq = levels.length;
   const sections: DocumentSection[] = [];
-  let documentType: DocumentType | null = null;
+  const documentTypes: DocumentType[] = [];
 
   for (const step of stepsFor(live)) {
     for (const tab of step.tabs) {
       if (!tab.documentType) {
         continue;
       }
-      documentType = tab.documentType;
+      documentTypes.push(tab.documentType);
       const stepKey = `E${String(seq)}.${live}.${step.id}`;
       const filled = submitted.includes(`${stepKey}/${tab.id}`);
       for (const [i, element] of documentElements(tab).entries()) {
         sections.push({
           id: `${tab.id}-${String(i)}`,
+          documentType: tab.documentType,
           name: element.produces.section,
           ref: element.ref,
           template: element.produces.template,
@@ -631,13 +632,13 @@ export function documentPreview(
     }
   }
 
-  if (!documentType) {
+  if (documentTypes.length === 0) {
     return null;
   }
 
   return {
-    documentType,
-    title: documentType,
+    documentTypes,
+    title: documentTypes.join(", then "),
     says:
       "This is the document as it will be laid out. Its words are the answers adopted on the steps behind it and cannot be changed here — a second place to write them would be a second place a federal document comes from. Arrangement is yours: 1b.3(g)(2), 1b.5(c), 1b.6(b), 1b.7(h) and 1b.8(b) each preface their contents with “may apply any format they choose”.",
     sections

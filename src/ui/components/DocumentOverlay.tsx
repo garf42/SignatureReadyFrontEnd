@@ -56,7 +56,16 @@ export function DocumentOverlay({
 
       <div className={css.page}>
         {preview.sections.map((section, i) => (
-          <section key={section.id} className={css.section} data-state={section.state}>
+          <div key={section.id}>
+            {/* A level of review can produce TWO documents — an assessment then
+                a finding, a statement then a record of decision — and they are
+                separate documents that happen to be written in sequence. Run
+                together in one list they read as one document, which is a
+                claim about what gets filed. */}
+            {i === 0 || preview.sections[i - 1].documentType !== section.documentType ? (
+              <h3 className={css.document}>{section.documentType}</h3>
+            ) : null}
+          <section className={css.section} data-state={section.state}>
             <header className={css.head}>
               <span className={css.order}>{i + 1}</span>
               <span className={css.name}>{section.name}</span>
@@ -81,6 +90,7 @@ export function DocumentOverlay({
               </Link>
             </p>
           </section>
+          </div>
         ))}
       </div>
 

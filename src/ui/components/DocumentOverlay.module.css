@@ -101,3 +101,18 @@
   color: var(--ink-soft);
   text-wrap: pretty;
 }
+
+/* Each document in the review gets its own heading. Two documents run together
+   in one list read as one document, which is a claim about what gets filed. */
+.document {
+  margin: 0 0 var(--s-2);
+  padding-bottom: var(--s-1);
+  border-bottom: 2px solid var(--ink);
+  font-size: var(--t-read);
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.page > div + div .document {
+  margin-top: var(--s-5);
+}

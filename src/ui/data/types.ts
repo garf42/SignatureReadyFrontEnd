@@ -602,6 +602,12 @@ export interface Learning {
  *  authorised — and must never be presented as required. */
 export interface DocumentSection {
   id: string;
+  /** Which document this section belongs to. A level of review can produce
+   *  TWO — an assessment then a finding, a statement then a record of decision
+   *  — and they are separate documents that happen to be written in sequence.
+   *  Flattening them into one list presents two documents as one, which is a
+   *  claim about what gets filed. */
+  documentType: DocumentType;
   /** The heading this section carries in the document. */
   name: string;
   /** The citation the section's contents are required by. */
@@ -619,7 +625,9 @@ export interface DocumentSection {
 }
 
 export interface DocumentPreview {
-  documentType: DocumentType;
+  /** In the order they are written. One on the categorical-exclusion pathway,
+   *  two on the assessment and statement pathways. */
+  documentTypes: DocumentType[];
   title: string;
   /** The one line saying what this view is and is not. */
   says: string;

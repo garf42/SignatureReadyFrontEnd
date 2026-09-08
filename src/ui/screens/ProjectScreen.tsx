@@ -89,7 +89,7 @@ export function ProjectScreen() {
                     the document is empty rather than that it has not started. */}
                 {preview && preview.sections.some((section) => section.state === "filled") ? (
                   <Button className={css.viewDocument} onClick={() => setViewing(true)}>
-                    View {preview.documentType}
+                    View {preview.documentTypes.join(" and ")}
                   </Button>
                 ) : null}
               </div>

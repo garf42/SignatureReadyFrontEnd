@@ -916,6 +916,21 @@ describe("the document can be viewed, and never edited, from the band", () => {
     expect(screen.getByText("View FANEC")).toBeTruthy();
   });
 
+  /* A level of review can produce TWO documents — an assessment then a
+     finding, a statement then a record of decision. They are separate
+     documents written in sequence, and running them together in one list is a
+     claim about what gets filed. */
+  it("names both documents where the level produces two, and heads them apart", () => {
+    at("/projects/p1/steps/E1.P3.4/ea?levels=P3&submitted=all");
+    expect(screen.getByText("View EA and FONSI")).toBeTruthy();
+    fireEvent.click(screen.getByText("View EA and FONSI"));
+    const dialog = screen.getByRole("dialog");
+    const heads = [...dialog.querySelectorAll("h3")].map((h) => h.textContent);
+    expect(heads).toEqual(["EA", "FONSI"]);
+    /* Seven at 1b.5(c) and five at 1b.6(b), and the counts are frozen. */
+    expect(dialog.querySelectorAll("section[data-state]").length).toBe(12);
+  });
+
   it("shows every section in order, with the layout it renders through", () => {
     open(ready);
     const dialog = screen.getByRole("dialog");
