@@ -131,6 +131,34 @@ absence was a defect on the screen.
   from 1 — because they are two sequences separated by the determination. The
   ids are unchanged and count from zero: `S.0`, `E1.P3.3` are in every URL,
   every row anchor and the rid map.
+- **Finished work grounds on the well; unfinished work sits on paper.** One
+  convention, four places: an accepted element row, a superseded step, a
+  completed step in the rail, and a completed tab in the strip. Each also
+  carries a tick. The tab strip took three attempts because its resting fill
+  was ALREADY the well, so "well means done" had nothing left to say — ink at
+  a single class lost the specificity tie and rendered nothing while a
+  class-presence test passed, and fading it instead made the text too light.
+  The fix was to flip the resting fill to paper so the well was free to mean
+  what it means everywhere else. Text colour never carries this claim.
+- **Two facts, two names: `answered` and `submitted`.** A tab whose rows all
+  bind is answered; a tab the officer pressed Submit on is submitted. They were
+  one condition, which put the tick on exactly the tabs that could still be
+  submitted — the reverse of the truth. Ticks and the assemble gate read
+  `submitted`; the Submit control reads `answered`.
+- **A tab has one address.** A step is reachable by its canonical key (`E1.P2.4`)
+  and by the local id `pathways.ts` gives it (`4`), and an older link carries
+  the second. Submissions recorded under whichever the URL happened to say made
+  `4/fanec` and `E1.P2.4/fanec` one tab submitted twice and ticked never.
+  `tabAddress` resolves the local id against the rail before anything is stored.
+- **The document viewer shows the document; it cannot change it.** The overlay
+  renders a print-width sheet — the sections running on, set in the serif this
+  build reserves for a value of record, with unfilled markers drawn as slots so
+  nobody has to work out which words are the document's. The words are adopted
+  element values and belong to the step that adopted them; a document view that
+  let them be edited would create a second, unrecorded place a federal
+  document's text comes from. Arrangement is the opposite — five sections of
+  the rule say the officer "may apply any format they choose" — and has no
+  address yet.
 - **Disabled outranks intent.** An intent class written `.primary, .primary:hover`
   is one class plus a pseudo-class, exactly the specificity of
   `.bp6-button:disabled`, so on a tie source order decided and a disabled button
@@ -201,6 +229,7 @@ in one table at the top; work through that table first.
 | `?retrieval=down` | the drafting lane could not run |
 | `?levels=P3,P4` | the levels the proposal has occupied, in order — a whole escalation in one URL. `?pathway=` is the one-level alias |
 | `?assembled=no\|ready` | a level fixed with nothing built from it: `no` leaves the steps above unanswered so the assemble control is grey and names the first one; `ready` treats them as answered and submitted, which is the only way to see it live |
+| `?submitted=all` | every tab treated as submitted, without pressing Submit on each. What the ticks, the assemble gate and the review-document button all read; `as worked` is the default and reflects only what you pressed |
 
 These are the whole QA and demo surface and the acceptance tests depend on them,
 so they **stay enabled in the deployed app** — a stakeholder walkthrough of an
@@ -261,8 +290,24 @@ come from it and go stale; the file does not.
   Both stores are sessionStorage rather than local: state that stays cleared
   forever on one machine hides work from the next person to sit down.
 - **Every action on the project page is inert.** `onAction` is threaded only on
-  the inbox. Submit and the expert-request copy are the two exceptions, and both
-  write only to the client stores above.
+  the inbox. Three exceptions, none of which reaches a backend: Submit and the
+  expert-request copy write to the client stores above, and the review
+  document's download builds its text in the browser from what is already on
+  screen. The library overlay is inert throughout — filing, re-pinning and
+  retiring all preview and none commits, and the naming convention it shows is
+  marked on the surface as this interface's proposal rather than a measurement.
+- **The document is shown but not arranged, and not yet the issued one.**
+  `documentPreview` derives the sheet from the element lists frozen in
+  `pathways.ts` and the submission record — the same two sources the rail reads,
+  so there is one answer to what is in the document. Two things are open. The
+  rule authorises arrangement in five places — 1b.3(g)(2), 1b.5(c), 1b.6(b),
+  1b.7(h), 1b.8(b), each prefacing its contents with "may apply any format they
+  choose" — and a per-document section order with page breaks and figure slots
+  has no address, so today the order is the element order. And the download is a
+  re-render of current element values, which is right only while the document is
+  unsigned: once one is issued, a reader has to receive the issued artifact from
+  the record under 1b.9(e), or two copies of a federal document exist and only
+  one was signed.
 - **One act has no surface anywhere.** `record-consistency-finding` is declared
   with `unplaced` saying so. Placing it is still open: it may instead be one of
   the three unnamed members of `determination.whichDetermination`, which has to
@@ -370,12 +415,32 @@ non-specialist to the correct level of review.
 | **0** | Data processing | intake, the proposal record, withholding, agencies |
 | **1** | Search and visualisation | the categorical-exclusion catalogue, the forest-plan register, incorporation by reference |
 | **2** | Decision guidance | every determination, screen and drafted recommendation — the centre of gravity, and a test asserts it |
-| **3** | Feedback loops | reevaluation under 1b.9(r); the adopt disposition on every drafted row |
+| **3** | Feedback loops | reevaluation under 1b.9(r); the adopt disposition on every drafted row — **and the Learning page reports that the loop does not turn** |
 | **4** | Automation | the deadline computed from soonest-of-three with compelled publication at expiry, page count against the limit, the notification list |
 
 Lower levels enable higher ones and a level is never forced. `coverage.test.ts`
 asserts that every level is carried and that no Level 0 or 1 foundation is
 empty — the framework's own named failure pattern.
+
+**Level 3 is three legs, and this build performs two of them and keeps
+neither.** The system *proposes* a drafted paragraph; the officer *corrects* it
+by keeping, rewriting or rejecting it; and the correction should *improve* what
+is proposed next. `/learning` reports each leg with the one thing that holds it
+open, rather than showing eight numbers of which most cannot be counted.
+
+The load-bearing gap is one property. `adoption` records `adoptedValue`,
+`adoptionState` and `adoptedAt` and **not the value the officer was shown**, so
+an adoption state of "edited" is known to have happened and can never be read.
+An officer rewriting a drafted finding is a subject-matter expert correcting the
+system in the one place their expertise is dispositive, and the correction is
+discarded at the moment it is made. Nothing else on the Level 3 list is worth as
+much.
+
+Two more that a Level 3 backend has to carry: **a prompt, a version of one, and
+the provenance of a change to one** — none of the three has an address, so a
+change to how a federal document gets drafted leaves no record of who made it or
+why; and **a second reading** — every figure on that page is a single scalar,
+and improvement is a comparison between two moments.
 
 ## Integrating this into the host
 

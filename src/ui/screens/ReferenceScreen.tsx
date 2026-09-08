@@ -6,6 +6,7 @@ import type { Citable } from "@/ui/data/port";
 import { PAGES, usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { PageHead } from "@/ui/components/PageHead";
+import { LibraryOverlay } from "@/ui/components/LibraryOverlay";
 import { ListControls } from "@/ui/components/ListControls";
 import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
@@ -57,6 +58,7 @@ export function ReferenceScreen() {
     );
   };
   const [group, setGroup] = useState("corpus");
+  const [managing, setManaging] = useState(false);
 
   return (
     <AppFrame current="reference">
@@ -65,7 +67,17 @@ export function ReferenceScreen() {
           title={PAGES.reference.title}
           count={reference.state === "filled" ? reference.value.count : undefined}
           help={PAGES.reference.help}
-        />
+        >
+          {/* The three acts that change what the library HOLDS, kept out of the
+              list that reports what it holds. Only offered once the list has
+              answered: a control that manages a library nobody could read is a
+              control with nothing to manage. */}
+          {reference.state === "filled" ? (
+            <Button className={shared.secondary} onClick={() => setManaging(true)}>
+              Manage the library
+            </Button>
+          ) : null}
+        </PageHead>
 
         <TabStrip
           id="reference-groups"
@@ -167,6 +179,9 @@ export function ReferenceScreen() {
       </div>
 
       {viewing ? <ArtifactViewer id={viewing} onClose={() => setViewing(null)} /> : null}
+      {managing && reference.state === "filled" ? (
+        <LibraryOverlay rows={reference.value.rows} onClose={() => setManaging(false)} />
+      ) : null}
     </AppFrame>
   );
 }

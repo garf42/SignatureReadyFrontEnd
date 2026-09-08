@@ -43,6 +43,21 @@ if (other.length > 0) {
 }
 
 const css = await readFile(new URL(`assets/${cssFile}`, OUT_DIR), "utf8");
+
+/* NO FONT IS BUNDLED. The page links three faces from Google Fonts, so a face
+   inlined here is that same face shipped a second time — and it is 30 KB of
+   base64 each, so it is not a rounding error: it was 38 rules and 1.25 MB, and
+   the page was 44% font it never used. The check above only ever asked that no
+   OTHER request survive, which a bundled font passes by not being a request at
+   all. */
+const inlinedFonts = (css.match(/data:font\//g) ?? []).length;
+if (inlinedFonts > 0) {
+  throw new Error(
+    `${inlinedFonts} font files are inlined in the stylesheet. The page links its ` +
+      `faces from Google Fonts, so these are duplicates — check that the ` +
+      `no-fontsource plugin still runs before Vite's own resolver.`
+  );
+}
 const js = await readFile(new URL(`assets/${jsFiles[0]}`, OUT_DIR), "utf8");
 
 /* The three faces this tree already declares, from the one font host the

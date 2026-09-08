@@ -50,7 +50,7 @@ export const PAGES = {
   },
   learning: {
     title: "Learning",
-    help: "What the system proposed, what a human did with it, and whether it is calibrated. Every number was measured on 2026-09-04."
+    help: "What the system proposed, what a human did with it, and whether either changed what it proposes next. Each figure says whether it was counted or is waiting, and on what."
   },
   reference: {
     title: "Reference",
@@ -222,73 +222,169 @@ export const expertDraftUnresolved: Region<ExpertDraft> = unresolved(
  * §6.5 Learning — Level 3
  * ------------------------------------------------------------------------ */
 
+/** §6.5, Level 3. The measurement date every figure on this page was counted
+ *  on. One constant, so a tile cannot claim a reading the page did not take. */
+const MEASURED = "2026-09-04";
+
 export const learningFilled: Region<Learning> = filled<Learning>({
-  status: [
+  headline: "Nothing here is learning yet.",
+  says:
+    "A feedback loop has three legs: the system proposes something, a person corrects it, and the correction changes what the system proposes next. This build performs the first two on every drafted row and keeps neither, so the third has nothing to work from. What follows is which leg is closed, and what holds each open one open.",
+  trend:
+    "No figure here has a second reading. Every number is a single count taken on " +
+    MEASURED +
+    ", so nothing on this page can yet answer whether the system is getting better — only what it is doing now.",
+  legs: [
     {
-      id: "grounding",
-      title: "Grounding honesty",
-      figure: "0 / 0 / 103",
-      unit: "live-model / cassette / template-substitution claims",
-      tone: "warn",
-      note: "How much of what the system says is written by a model, and how much is filled into a template. Right now, none of it is written by a model."
+      id: "proposes",
+      name: "Proposes",
+      says: "What the system put in front of the officer, and what it built that from.",
+      state: "open",
+      breaks:
+        "Nothing records which wording produced a drafted paragraph, so no proposal here can be attributed to what made it, or compared with any other.",
+      tiles: [
+        {
+          id: "grounding",
+          title: "Grounding honesty",
+          figure: "0 / 0 / 103",
+          unit: "live-model / cassette / template-substitution claims",
+          tone: "warn",
+          note:
+            "How much of what the system says is written by a model, and how much is filled into a template. None of it is written by a model: no model has been reachable from this build.",
+          state: "measured",
+          measuredOn: MEASURED,
+          waitingOn: null
+        },
+        {
+          id: "disposition",
+          title: "Disposition mix against its pin",
+          figure: "⟨retrieved / drafted / specialist⟩",
+          unit: "against the expected split",
+          tone: "plain",
+          note:
+            "Whether work is arriving from the expected mix of sources: found in the record, drafted, or supplied by a specialist. A mix that drifts from its pin is the earliest sign that drafting is being leaned on where retrieval should have answered.",
+          state: "waiting",
+          measuredOn: null,
+          waitingOn: "nothing records where a filled answer came from once it is filled"
+        },
+        {
+          id: "prompt-version",
+          title: "Which wording drafted this",
+          figure: "—",
+          unit: "prompt versions on the record",
+          tone: "error",
+          note:
+            "Every drafted row was produced by some wording, and none of them says which. Without it a correction cannot be attributed, two wordings cannot be compared, and a change to how a federal document gets drafted leaves no trace of who made it or why.",
+          state: "waiting",
+          measuredOn: null,
+          waitingOn: "nothing records a wording, a version of one, or who changed one and why"
+        }
+      ]
     },
     {
-      id: "mechanism",
-      title: "Mechanism status",
-      figure: "0",
-      unit: "records the system can learn from",
-      tone: "error",
-      note: "Whether the parts that would let the system learn from what officers accept are actually connected. They are not."
-    }
-  ],
-  tiles: [
-    {
-      id: "adoption",
-      title: "Adoption diff",
-      figure: "⟨n⟩",
-      unit: "adoptions, by state",
-      tone: "warn",
-      note: "How often officers accept, edit or reject what the system proposes — and what they changed when they edited it."
+      id: "corrects",
+      name: "Corrects",
+      says:
+        "What the officer did with it — kept it, rewrote it, or threw it away. This is the expertise the loop is supposed to capture.",
+      state: "open",
+      breaks:
+        "What an officer was shown is not kept — only what they ended up with — so a rewrite is known to have happened and can never be read.",
+      tiles: [
+        {
+          id: "adoption",
+          title: "Kept, rewrote, rejected",
+          figure: "⟨n⟩",
+          unit: "adoptions, by state",
+          tone: "warn",
+          note:
+            "How often officers keep, rewrite or reject what the system proposes. The count is the easy half; the correction itself is the half that teaches anything.",
+          state: "waiting",
+          measuredOn: null,
+          waitingOn: "nothing records what an officer did with a proposal"
+        },
+        {
+          id: "diff",
+          title: "What the rewriting changed",
+          figure: "—",
+          unit: "corrections readable",
+          tone: "error",
+          note:
+            "The single most valuable record this application could keep, and it keeps none of it. An officer rewriting a drafted finding is a subject-matter expert correcting the system in the one place their expertise is dispositive — and adoption stores only what they ended up with, never what they were given, so no rewrite can be diffed and nothing can be learned from one.",
+          state: "waiting",
+          measuredOn: null,
+          waitingOn: "the proposal an officer was shown is not kept alongside what they replaced it with"
+        },
+        {
+          id: "specialist",
+          title: "Gaps a specialist found",
+          figure: "⟨n⟩",
+          unit: "returned artifacts carrying gaps",
+          tone: "plain",
+          note:
+            "What an interdisciplinary reviewer caught that the system did not. A returned artifact already carries the gaps it found, so this is the one correction with somewhere to land.",
+          state: "waiting",
+          measuredOn: null,
+          waitingOn: "an expert request cannot yet be attached to the work it is for"
+        }
+      ]
     },
     {
-      id: "disposition",
-      title: "Disposition mix against its pin",
-      figure: "⟨retrieved / drafted / specialist⟩",
-      unit: "against the expected split",
-      tone: "plain",
-      note: "Whether work is arriving from the expected mix of sources: found in the record, drafted, or supplied by a specialist."
-    },
-    {
-      id: "verdicts",
-      title: "Verifier verdicts",
-      figure: "⟨pass⟩ / ⟨fail⟩",
-      unit: "checks before issue",
-      tone: "warn",
-      note: "How often the checks that run before a document is issued pass, and how often they fail."
-    },
-    {
-      id: "unresolved",
-      title: "Unresolved, app-wide",
-      figure: "3",
-      unit: "lanes reporting unresolved",
-      tone: "warn",
-      note: "How often a question came back with no answer because the system could not look, rather than because there was nothing to find."
-    },
-    {
-      id: "drift",
-      title: "Regulation drift",
-      figure: "0",
-      unit: "drift detected",
-      tone: "plain",
-      note: "Whether the copy of the regulation the system reasons against still matches the published one."
-    },
-    {
-      id: "corpus",
-      title: "Corpus shortfalls",
-      figure: "6",
-      unit: "collections with shortfalls",
-      tone: "plain",
-      note: "Whether the reference library is complete: what each collection expected to hold, and what is missing."
+      id: "improves",
+      name: "Improves",
+      says: "Whether any of it changed what the system does next.",
+      state: "open",
+      breaks:
+        "Nothing here has a second reading. Improvement is a comparison between two moments and this build holds one.",
+      tiles: [
+        {
+          id: "verdicts",
+          title: "Verifier verdicts",
+          figure: "⟨pass⟩ / ⟨fail⟩",
+          unit: "checks before issue",
+          tone: "warn",
+          note:
+            "How often the checks that run before a document is issued pass, and how often they fail. Read it as a tally and never as an assurance: since the act widened to accept fail, nothing holds the pass-only requirement, so a failed claim can reach a signed document and be counted here.",
+          state: "waiting",
+          measuredOn: null,
+          waitingOn: "nothing stops a failed check reaching a signed document, so a pass count cannot be read as an assurance"
+        },
+        {
+          id: "unresolved",
+          title: "Unresolved, app-wide",
+          figure: "3",
+          unit: "lanes reporting unresolved",
+          tone: "warn",
+          note:
+            "How often a question came back with no answer because the system could not look, rather than because there was nothing to find. Counted off this build, and the distinction is the whole point: a lane that could not run is not a lane that found nothing.",
+          state: "measured",
+          measuredOn: MEASURED,
+          waitingOn: null
+        },
+        {
+          id: "drift",
+          title: "Regulation drift",
+          figure: "0",
+          unit: "drift detected",
+          tone: "plain",
+          note:
+            "Whether the copy of the regulation the system reasons against still matches the published one. Zero is a real reading, not an empty one — and it is the one measurement here that would move on its own.",
+          state: "measured",
+          measuredOn: MEASURED,
+          waitingOn: null
+        },
+        {
+          id: "corpus",
+          title: "Corpus shortfalls",
+          figure: "6",
+          unit: "collections with shortfalls",
+          tone: "plain",
+          note:
+            "Whether the reference library is complete: what each collection expected to hold, and what is missing. Counted off the corpus itself.",
+          state: "measured",
+          measuredOn: MEASURED,
+          waitingOn: null
+        }
+      ]
     }
   ]
 });

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { slots } from "@/ui/data/template";
+
 import {
   COMPETENCE_CONDITIONS,
   CROSS_CUTTING,
@@ -487,6 +489,42 @@ describe("every transition names a surface that exists", () => {
   it("cannot express a move to a lower level of review", () => {
     for (const move of all) {
       expect(["higher", "same-level-again"]).toContain(move.direction);
+    }
+  });
+});
+
+/** The template scanner, checked directly because its failure is silent: a
+ *  regular expression matching to the first closing brace cuts a repeated
+ *  block at its first inner field and leaves the rest set as prose with stray
+ *  braces in it, which looks like the document's own words. */
+describe("a template splits into prose and slots", () => {
+  it("takes a whole repeated block as one slot", () => {
+    const parts = slots("A {each item: {a} — {b}} Z");
+    expect(parts.map((p) => [p.slot, p.text])).toEqual([
+      [false, "A "],
+      [true, "each item: {a} — {b}"],
+      [false, " Z"]
+    ]);
+  });
+
+  it("leaves no brace in the prose of any template in the build", () => {
+    for (const id of PATHWAY_IDS) {
+      for (const step of stepsFor(id)) {
+        for (const tab of step.tabs) {
+          for (const element of tab.elements) {
+            const template = element.produces.template;
+            if (!template) {
+              continue;
+            }
+            for (const part of slots(template)) {
+              if (part.slot) {
+                continue;
+              }
+              expect(part.text, `${element.ref} — ${element.label}`).not.toMatch(/[{}]/);
+            }
+          }
+        }
+      }
     }
   });
 });

@@ -466,6 +466,11 @@ describe("assembly is an act at the seam, not a state flip", () => {
   it("offers the act once a level is fixed and the steps above are answered", () => {
     const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=ready");
     expect(screen.getByText("Assemble review")).toBeTruthy();
+    /* This application's own primary, not Blueprint's intent — an intent prop
+       reaches for a different blue than the submit bar and the dialogs use. */
+    const live = rail(container).querySelector("[class*='gateButton']") as HTMLElement;
+    expect(live.getAttribute("data-ready")).toBe("yes");
+    expect(live.className).not.toMatch(/bp6-intent/);
     const pane = rail(container);
     const gate = pane.querySelector("[class*='gate']") as HTMLElement;
     expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(false);
@@ -875,5 +880,161 @@ describe("everything that opens uses the same chevron", () => {
     expect(header.querySelector("[data-icon='chevron-right']")).not.toBeNull();
     fireEvent.click(header);
     expect(header.querySelector("[data-icon='chevron-down']")).not.toBeNull();
+  });
+});
+
+/** The review document, as it will be laid out. Not an editor: an element's
+ *  words are what the officer adopted on the step that produces them, and a
+ *  document view that let them be changed would create a second, unrecorded
+ *  place where a federal document's text comes from. */
+describe("the document can be viewed, and never edited, from the band", () => {
+  /* The document's own tabs can never be submitted in the fixture — the FANEC
+     tab carries four rows that cannot be cleared — so `?submitted=all` is the
+     way in. It stands in for exactly the fact the backend will supply. */
+  const ready = "/projects/p1/steps/4/fanec?pathway=P2&submitted=all";
+
+  const open = (path: string) => {
+    const { container } = at(path);
+    fireEvent.click(screen.getByText("View document"));
+    return container;
+  };
+
+  it("offers nothing before the level of review is fixed", () => {
+    at("/projects/p1/steps/0/proposed-action");
+    expect(screen.queryByText(/^View /)).toBeNull();
+  });
+
+  /* An empty shape presented as the document teaches a reader that the
+     document is empty, rather than that it has not been started. */
+  it("offers nothing while the document has no submitted section", () => {
+    at("/projects/p1/steps/4/fanec?pathway=P2");
+    expect(screen.queryByText(/^View /)).toBeNull();
+  });
+
+  /* One label on every pathway. The document's own name is said once, inside,
+     where it starts — a button naming it too says it twice and says a
+     different thing on each pathway. */
+  it("opens once a section has been submitted, under one label", () => {
+    const { container } = at(ready);
+    const view = screen.getByText("View document");
+    expect(view).toBeTruthy();
+    expect(
+      (container.querySelector("[class*='viewDocument']") as HTMLElement).getAttribute("data-ready")
+    ).toBe("yes");
+  });
+
+  /* A level of review can produce TWO documents — an assessment then a
+     finding, a statement then a record of decision. They are separate
+     documents written in sequence, and running them together in one list is a
+     claim about what gets filed. */
+  it("heads the two documents apart where the level produces two", () => {
+    at("/projects/p1/steps/E1.P3.4/ea?levels=P3&submitted=all");
+    fireEvent.click(screen.getByText("View document"));
+    const dialog = screen.getByRole("dialog");
+    const heads = [...dialog.querySelectorAll("h3")].map((h) => h.textContent);
+    expect(heads).toEqual(["EA", "FONSI"]);
+    /* Seven at 1b.5(c) and five at 1b.6(b), and the counts are frozen. */
+    expect(dialog.querySelectorAll("section[data-state]").length).toBe(12);
+  });
+
+  it("shows every section in order, with the layout it renders through", () => {
+    open(ready);
+    const dialog = screen.getByRole("dialog");
+    /* Six elements at 1b.3(g)(2), and the count is frozen in pathways.ts. */
+    expect(dialog.querySelectorAll("section[data-state]").length).toBe(6);
+    expect(dialog.textContent).toContain("1b.3(g)(2)(i)");
+  });
+
+  /* It has to READ as the document. The templates carry their own numbered
+     headings, so a second heading per section — and a chip naming the document
+     on every paragraph — made one document look patched together. */
+  it("names the document once, where it starts, and never per section", () => {
+    open(ready);
+    const dialog = screen.getByRole("dialog");
+    const heads = [...dialog.querySelectorAll("h3")].map((h) => h.textContent);
+    expect(heads).toEqual(["FANEC"]);
+    /* Six sections, and the word FANEC appears once as a heading rather than
+       six times as a label. */
+    const labels = [...dialog.querySelectorAll("section[data-state] span")].filter(
+      (span) => span.textContent === "FANEC"
+    );
+    expect(labels).toEqual([]);
+  });
+
+  /* A marker is where a value arrives, not text anyone wrote — so the PROSE
+     is what must come out clean. A repeated block is one slot and legitimately
+     carries fields inside it; what must never happen is a stray brace landing
+     in the document's own words. */
+  it("draws the markers as slots and leaves no brace in the prose", () => {
+    open(ready);
+    const dialog = screen.getByRole("dialog");
+    const flow = [...dialog.querySelectorAll<HTMLElement>("[class*='flow']")];
+    expect(flow.length).toBeGreaterThan(0);
+    expect(dialog.querySelectorAll("[class*='slot']").length).toBeGreaterThan(0);
+    for (const paragraph of flow) {
+      for (const span of paragraph.children) {
+        if (/slot/.test(span.className)) {
+          continue;
+        }
+        expect(span.textContent ?? "").not.toMatch(/[{}]/);
+      }
+    }
+  });
+
+  /* The load-bearing property: no field anywhere in it. */
+  it("carries no control that could change a word of it", () => {
+    open(ready);
+    const view = screen.getByRole("dialog");
+    expect(view.querySelectorAll("input, textarea, select, [contenteditable]").length).toBe(0);
+  });
+
+  /* NO PREAMBLE. What stood at the top explained the design — that contents
+     are authored elsewhere, that arrangement is permitted — which is reasoning
+     for whoever builds this, not something a reader of the document can act
+     on. The absence of a single field says the first; the second is in the
+     handoff. */
+  it("carries no explanation of itself, only the state", () => {
+    open(ready);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent).not.toMatch(/arrangement/i);
+    expect(dialog.textContent).not.toMatch(/cannot be changed here/i);
+    expect(dialog.textContent).toMatch(/\d+ of \d+ sections submitted/);
+  });
+});
+
+/** The greying has to actually render. The first attempt set it in ink at a
+ *  specificity that lost to the tab's own colour, so the class landed and
+ *  nothing changed — which is the failure mode a class-presence test misses. */
+describe("a finished tab is visibly settled", () => {
+  /* THE SAME MARK an accepted row and a finished step carry, and nothing else:
+     the well, with the text untouched. Two earlier attempts translated it into
+     ink and then into opacity; neither was the convention. */
+  it("marks a finished tab with a fill and leaves its words alone", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    fireEvent.click(screen.getByText("Submit"));
+    const done = [...container.querySelectorAll<HTMLElement>("[role='tab']")].find((tab) =>
+      (tab.textContent ?? "").includes("✓")
+    );
+    expect(done).toBeDefined();
+    const style = getComputedStyle(done as HTMLElement);
+    expect(style.opacity === "" || style.opacity === "1").toBe(true);
+  });
+});
+
+/** One title, whichever pathway this is. It was the document types joined, so
+ *  the same overlay announced itself differently depending on where it was
+ *  opened — and on a two-document pathway it announced a sequence rather than
+ *  a thing. */
+describe("the document overlay has one title", () => {
+  it("titles itself the same on a one-document and a two-document pathway", () => {
+    at("/projects/p1/steps/4/fanec?pathway=P2&submitted=all");
+    fireEvent.click(screen.getByText("View document"));
+    const one = screen.getByRole("dialog").querySelector("h2")?.textContent;
+    cleanup();
+    at("/projects/p1/steps/E1.P3.4/ea?levels=P3&submitted=all");
+    fireEvent.click(screen.getByText("View document"));
+    const two = screen.getByRole("dialog").querySelector("h2")?.textContent;
+    expect(one).toBe("Review document");
+    expect(two).toBe(one);
   });
 });

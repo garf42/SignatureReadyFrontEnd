@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 import type { DocumentType, ElementPanel, SourceKind } from "@/ui/data/port";
-import { usePort } from "@/ui/data/port";
+import { tabAddress, usePort } from "@/ui/data/port";
 import { ActionBar } from "@/ui/components/ActionBar";
 import { QuestionRow } from "@/ui/components/QuestionRow";
 import { Region } from "@/ui/components/Region";
@@ -24,12 +24,17 @@ export function ElementScreen() {
   /* Asked about the document this tab assembles, so a FANEC tab cites
      1b.3(g)(2)(vi) and says nothing about a record of decision. */
   const gate = port.useGate(documentOf(params.tabId ?? ""));
+  const levels = port.useLevels(params.projectRef ?? "");
   const [open, setOpen] = useState<Record<string, boolean>>({});
   /* Submission is not component state. It has to outlive this mount, because
      the rail and the tab strip draw a tick from it and both are rendered by a
      different component — and a tick that vanished when you moved to the next
      tab would say the work came undone. */
-  const address = `${params.stepId ?? ""}/${params.tabId ?? ""}`;
+  const address = tabAddress(
+    levels.state === "filled" ? levels.value.episodes.map((e) => e.pathway) : [],
+    params.stepId ?? "",
+    params.tabId ?? ""
+  );
   const submitted = useSubmitted().includes(address);
   const [source, setSource] = useState<SourceKind | null>(null);
 

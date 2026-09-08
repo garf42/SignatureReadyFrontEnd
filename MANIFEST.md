@@ -43,6 +43,10 @@ stale.
    edit `src/ui/data/bindings.ts` instead.
 4. The built screens. They are the design reference; there is no separate design
    document in this packet.
+5. `REVIEW-LOOP.md` — how UI review was conducted against this build, and how to
+   rebuild that loop in a host that has no comment surface. Process rather than
+   packet: nothing in `src/ui/` depends on it, and it is the one document to read
+   before the first round of "change this, on the screen, here.
 
 ## This is a build in progress
 

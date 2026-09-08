@@ -74,6 +74,10 @@ export interface Overrides {
    *  which is the only way to see the control live — the fixture's rows are
    *  markers and no step in it is ever genuinely finished. */
   assembled: "yes" | "no" | "ready";
+  /** `?submitted=all` treats every tab as submitted. The fixture's document
+   *  tabs carry rows that can never be cleared, so it is the only way to reach
+   *  a review document with anything in it. */
+  allSubmitted: boolean;
   session: "in" | "out" | "pending";
   held: boolean;
   retrievalUp: boolean;
@@ -117,6 +121,7 @@ export function readOverrides(params: URLSearchParams): Overrides {
     rail: STATES.find((s) => s === rail) ?? null,
     levels,
     assembled: assembledKnob(params.get("assembled")),
+    allSubmitted: params.get("submitted") === "all",
     session: sessionKnob(params.get("session")),
     held: params.get("gate") === "held",
     retrievalUp: params.get("retrieval") !== "down"
@@ -233,7 +238,8 @@ function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
         o.held,
         o.retrievalUp,
         o.assembled === "ready" ? true : null,
-        submitted
+        submitted,
+        o.allSubmitted
       );
   }
 }

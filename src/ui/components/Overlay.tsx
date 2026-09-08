@@ -16,11 +16,17 @@ import css from "@/ui/components/Overlay.module.css";
 export function Overlay({
   title,
   onClose,
+  wide = false,
   footer,
   children
 }: {
   title: string;
   onClose: () => void;
+  /** A sheet of paper, not a dialog. The shared width is set for a dialog and
+   *  is the right answer for four of the five overlays; a document viewer has
+   *  to hold a page at its own width or it is not showing the document, it is
+   *  showing a narrower thing with the same words in it. */
+  wide?: boolean;
   /** The left of the bar; the buttons passed as `actions` sit on the right. */
   footer?: ReactNode;
   children: ReactNode;
@@ -33,13 +39,25 @@ export function Overlay({
     }
     seen.current = true;
     const frame = window.requestAnimationFrame(() => {
-      document.querySelector(".bp6-dialog")?.scrollIntoView({ block: "center", inline: "nearest" });
+      /* Guarded because the callback runs a frame later, outside any caller's
+         reach: a throw here is an unhandled exception rather than a failed
+         render, and jsdom does not implement scrollIntoView at all. Centring
+         the sheet is a courtesy — never a reason to take the page down. */
+      const dialog = document.querySelector(".bp6-dialog");
+      if (dialog instanceof HTMLElement && typeof dialog.scrollIntoView === "function") {
+        dialog.scrollIntoView({ block: "center", inline: "nearest" });
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
 
   return (
-    <Dialog isOpen title={title} onClose={onClose}>
+    <Dialog
+      isOpen
+      title={title}
+      onClose={onClose}
+      className={wide ? css.wide : undefined}
+    >
       <div className={css.body}>{children}</div>
       {footer ? <div className={css.footer}>{footer}</div> : null}
     </Dialog>

@@ -21,3 +21,13 @@
   gap: var(--s-2);
   margin-left: auto;
 }
+
+/* A sheet of paper, not a dialog. A US Letter page is 8.5in wide — 816px at
+   96dpi — and a viewer narrower than that is not showing the document, it is
+   showing a narrower thing with the same words in it. Capped against the
+   viewport because the app is embedded and a frame can be narrower than a
+   page; taller too, because a page is tall. */
+.wide {
+  width: min(912px, calc(100vw - 32px));
+  max-height: min(760px, calc(100vh - 48px));
+}

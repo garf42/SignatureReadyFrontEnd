@@ -520,6 +520,17 @@ export interface ExpertDraft {
 
 export type TileTone = "plain" | "warn" | "error";
 
+/** MEASURED or WAITING, and the page's whole job is to keep them apart.
+ *
+ *  Three of these figures are counted off this build and are true today. Three
+ *  are markers for a count that cannot run, because the five object-dataset
+ *  materializations hold zero rows and no transform can read an act-written
+ *  one. Rendered in one grid they read as six numbers, and a reader has no way
+ *  to tell a measured zero from a measurement that never happened — which is
+ *  the same distinction `absent` and `unresolved` draw on every other surface
+ *  in this application, and the one this page was not drawing. */
+export type TileState = "measured" | "waiting";
+
 export interface LearningTile {
   id: string;
   title: string;
@@ -527,12 +538,98 @@ export interface LearningTile {
   unit: string;
   tone: TileTone;
   note: string;
+  state: TileState;
+  /** When this figure was counted. Null where it has not been. */
+  measuredOn: string | null;
+  /** The one thing that would make this measurable, where it is not. A page
+   *  about feedback loops that names no gap is the only surface in this build
+   *  that reports a blockage without saying what it is. */
+  waitingOn: string | null;
+}
+
+/** A feedback loop has three legs, and a page that draws only the third cannot
+ *  say whether the loop turns.
+ *
+ *    proposes   what the system put in front of the officer, and on what
+ *    corrects   what the officer did with it — the capture leg, which this
+ *               build performs on every drafted row and then discards
+ *    improves   whether any of that changed the system's behaviour
+ *
+ *  The legs are DATA rather than three hard-coded sections, because which of
+ *  them is closed is exactly what changes as the backend lands, and a screen
+ *  that hard-codes "open" cannot report the day one of them closes. */
+export type LegState = "closed" | "open";
+
+export interface LoopLeg {
+  id: string;
+  /** The leg's own verb: proposes, corrects, improves. */
+  name: string;
+  /** What this leg is, in one sentence, to someone who does not know the
+   *  vocabulary. */
+  says: string;
+  state: LegState;
+  /** What holds this leg open, where it is open — the address that is missing,
+   *  never help prose an adapter has to parse. */
+  breaks: string | null;
+  tiles: LearningTile[];
 }
 
 export interface Learning {
-  /** Tiles 1 and 2 — grounding honesty and mechanism status. */
-  status: LearningTile[];
-  tiles: LearningTile[];
+  /** Said once, in words, above everything else. It was two cards inside the
+   *  same grid as the measurements, which made "nothing is connected" look
+   *  like one more number beside the six that depend on it. */
+  headline: string;
+  says: string;
+  /** Whether any figure here has a second reading. A single scalar cannot
+   *  answer "is it getting better", and this page was built entirely out of
+   *  single scalars while being the instrument that claims to answer it. */
+  trend: string | null;
+  legs: LoopLeg[];
+}
+
+/** One section of the review document, in the order it will be laid out.
+ *
+ *  CONTENTS ARE NOT EDITABLE HERE and the shape says so: a section carries the
+ *  template it renders through and the address the words came from, and no
+ *  field on it can be written. An element's text is what the officer adopted on
+ *  the project page, and a document view that let it be changed would create a
+ *  second, unrecorded place where a federal document's words come from.
+ *
+ *  LAYOUT IS a different question, and the rule is unusually explicit about it:
+ *  all five element lists at 1b.3(g)(2), 1b.5(c), 1b.6(b), 1b.7(h) and 1b.8(b)
+ *  are prefaced by "may apply any format they choose". The rule fixes contents
+ *  and fixes nothing about arrangement, so ordering and page breaks are
+ *  authorised — and must never be presented as required. */
+export interface DocumentSection {
+  id: string;
+  /** Which document this section belongs to. A level of review can produce
+   *  TWO — an assessment then a finding, a statement then a record of decision
+   *  — and they are separate documents that happen to be written in sequence.
+   *  Flattening them into one list presents two documents as one, which is a
+   *  claim about what gets filed. */
+  documentType: DocumentType;
+  /** The heading this section carries in the document. */
+  name: string;
+  /** The citation the section's contents are required by. */
+  ref: string;
+  /** The layout this section renders through — markers where values arrive. */
+  template: string | null;
+  /** `filled` once the tab that produces it has been submitted. A section
+   *  whose tab is still open is in the document and has nothing in it yet, and
+   *  that is a different thing from a section that will be empty. */
+  state: "filled" | "pending";
+  /** Where the words come from, so a reader can go and change them at the one
+   *  place they are authored. */
+  stepKey: string;
+  tabId: string;
+}
+
+export interface DocumentPreview {
+  /** In the order they are written. One on the categorical-exclusion pathway,
+   *  two on the assessment and statement pathways. */
+  documentTypes: DocumentType[];
+  title: string;
+  sections: DocumentSection[];
 }
 
 export type Citable = "yes" | "no" | "not-declared";

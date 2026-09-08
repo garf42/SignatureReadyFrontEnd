@@ -318,6 +318,23 @@ function Harness({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="hrow">
+              <Group even label="Tabs submitted">
+                <Seg
+                  on={params.get("submitted") !== "all"}
+                  title="Only what the officer has pressed Submit on in this session."
+                  onClick={() => set("submitted", null)}
+                >
+                  as worked
+                </Seg>
+                <Seg
+                  on={params.get("submitted") === "all"}
+                  title="Treat every tab as submitted. The fixture's document tabs carry rows that can never be cleared, so this is the only way to reach a review document with anything in it — and the only way to see the View button on the project band."
+                  onClick={() => set("submitted", "all")}
+                >
+                  all
+                </Seg>
+              </Group>
+
               <Group even label="Review assembled">
                 <Seg
                   on={!["no", "ready"].includes(params.get("assembled") ?? "")}

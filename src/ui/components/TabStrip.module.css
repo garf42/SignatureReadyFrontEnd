@@ -66,7 +66,13 @@
   border: 1px solid var(--rule);
   border-bottom: none;
   border-radius: var(--radius-box) var(--radius-box) 0 0;
-  background: var(--well);
+  /* PAPER, so the well can mean what it means everywhere else. An accepted row
+     and a finished step are marked by grounding on the WELL while unfinished
+     ones sit on paper; the strip had that the wrong way round — every
+     unselected tab was already on the well — so a finished tab had no fill
+     left to take. The tab shape is carried by the border and the join to the
+     panel below, not by the fill, so flipping it costs nothing. */
+  background: var(--paper);
   color: var(--ink-soft);
   white-space: nowrap;
 }
@@ -89,17 +95,15 @@
 }
 
 /* --- finished -------------------------------------------------------------
-   The convention an accepted row uses: greyed, and still perfectly readable.
-   A row is greyed by grounding on the well while unfinished rows are on paper.
-   In a strip the paper state is the SELECTED tab, so the transfer is exact
-   only there — a finished tab you are standing on grounds on the well instead
-   of rising to the panel. Unselected tabs are already on the well, so what is
-   left to say there is said in the ink. */
-.doneTab {
-  color: var(--ink-faint);
-}
+   THE SAME MARK AN ACCEPTED ROW AND A FINISHED STEP CARRY, and nothing else:
+   the well, with the text untouched. Two earlier attempts translated it — one
+   into ink, which lost a specificity tie and rendered nothing, one into
+   opacity, which made the words too light. Neither was the convention. The
+   convention is a fill.
 
+   Scoped to `.scroller` so it ties with the rules it has to beat and wins on
+   order, which is why those rules are written that way. */
+.scroller .doneTab,
 .scroller .doneTab[aria-selected="true"] {
   background: var(--well);
-  color: var(--ink-soft);
 }
