@@ -1,0 +1,103 @@
+.says {
+  margin: 0 0 var(--s-2);
+  font-size: var(--t-meta);
+  line-height: 1.55;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.count {
+  margin: 0 0 var(--s-3);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+}
+
+/* The document surface. Paper against the overlay's own ground, capped and
+   scrolled on its own, so the overlay's height never depends on how many
+   sections the document type happens to have. */
+.page {
+  max-height: 26rem;
+  overflow: auto;
+  padding: var(--s-3);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-box);
+  background: var(--paper);
+}
+
+.section + .section {
+  margin-top: var(--s-4);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--rule);
+}
+
+/* A section whose tab is still open is IN the document with nothing in it —
+   which is not the same as a section that will be empty, so it is drawn and
+   dimmed rather than hidden. */
+.section[data-state="pending"] {
+  opacity: 0.55;
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.order {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  font-size: var(--t-body);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.ref {
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-soft);
+}
+
+/* The layout the section renders through, shown as written. Markers are where
+   values arrive; they are not placeholder prose and must not be set as prose. */
+.template {
+  margin: var(--s-2) 0 0;
+  padding: var(--s-2);
+  border-left: 2px solid var(--rule);
+  background: var(--well);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  line-height: 1.65;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.notemplate {
+  margin: var(--s-2) 0 0;
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  color: var(--blocked);
+}
+
+.authored {
+  margin: var(--s-2) 0 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+}
+
+/* Said on the surface rather than left for a reader to discover by dragging. */
+.layoutNote {
+  margin: var(--s-3) 0 0;
+  font-size: var(--t-micro);
+  line-height: 1.6;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}

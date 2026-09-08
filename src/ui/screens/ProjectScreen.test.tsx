@@ -466,6 +466,11 @@ describe("assembly is an act at the seam, not a state flip", () => {
   it("offers the act once a level is fixed and the steps above are answered", () => {
     const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=ready");
     expect(screen.getByText("Assemble review")).toBeTruthy();
+    /* This application's own primary, not Blueprint's intent — an intent prop
+       reaches for a different blue than the submit bar and the dialogs use. */
+    const live = rail(container).querySelector("[class*='gateButton']") as HTMLElement;
+    expect(live.getAttribute("data-ready")).toBe("yes");
+    expect(live.className).not.toMatch(/bp6-intent/);
     const pane = rail(container);
     const gate = pane.querySelector("[class*='gate']") as HTMLElement;
     expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(false);
@@ -875,5 +880,62 @@ describe("everything that opens uses the same chevron", () => {
     expect(header.querySelector("[data-icon='chevron-right']")).not.toBeNull();
     fireEvent.click(header);
     expect(header.querySelector("[data-icon='chevron-down']")).not.toBeNull();
+  });
+});
+
+/** The review document, as it will be laid out. Not an editor: an element's
+ *  words are what the officer adopted on the step that produces them, and a
+ *  document view that let them be changed would create a second, unrecorded
+ *  place where a federal document's text comes from. */
+describe("the document can be viewed, and never edited, from the band", () => {
+  /* The document's own tabs can never be submitted in the fixture — the FANEC
+     tab carries four rows that cannot be cleared — so `?submitted=all` is the
+     way in. It stands in for exactly the fact the backend will supply. */
+  const ready = "/projects/p1/steps/4/fanec?pathway=P2&submitted=all";
+
+  const open = (path: string) => {
+    const { container } = at(path);
+    fireEvent.click(screen.getByText(/^View /));
+    return container;
+  };
+
+  it("offers nothing before the level of review is fixed", () => {
+    at("/projects/p1/steps/0/proposed-action");
+    expect(screen.queryByText(/^View /)).toBeNull();
+  });
+
+  /* An empty shape presented as the document teaches a reader that the
+     document is empty, rather than that it has not been started. */
+  it("offers nothing while the document has no submitted section", () => {
+    at("/projects/p1/steps/4/fanec?pathway=P2");
+    expect(screen.queryByText(/^View /)).toBeNull();
+  });
+
+  it("opens once a section has been submitted, and names the document", () => {
+    at(ready);
+    expect(screen.getByText("View FANEC")).toBeTruthy();
+  });
+
+  it("shows every section in order, with the layout it renders through", () => {
+    open(ready);
+    const dialog = screen.getByRole("dialog");
+    /* Six elements at 1b.3(g)(2), and the count is frozen in pathways.ts. */
+    expect(dialog.querySelectorAll("section[data-state]").length).toBe(6);
+    expect(dialog.querySelectorAll("pre").length).toBeGreaterThan(0);
+    expect(dialog.textContent).toContain("1b.3(g)(2)(i)");
+  });
+
+  /* The load-bearing property: no field anywhere in it. */
+  it("carries no control that could change a word of it", () => {
+    open(ready);
+    const view = screen.getByRole("dialog");
+    expect(view.querySelectorAll("input, textarea, select, [contenteditable]").length).toBe(0);
+  });
+
+  /* Arrangement is authorised and unbuilt, and the surface says so rather than
+     leaving a reader to discover it by dragging. */
+  it("says that arrangement is permitted and not yet wired", () => {
+    open(ready);
+    expect(screen.getByRole("dialog").textContent).toMatch(/arrangement is not wired yet/i);
   });
 });

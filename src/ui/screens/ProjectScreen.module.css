@@ -549,3 +549,25 @@
 .foldBody {
   padding-left: 1.15rem;
 }
+
+/* The band head is a name and an act now, so it lays out as two rather than
+   stacking the button under the metadata. */
+.bandNames {
+  min-width: 0;
+}
+
+.viewDocument {
+  flex: 0 0 auto;
+  font-size: var(--t-meta);
+}
+
+/* The page's own primary, matching the submit bar and every dialog: --link on
+   paper with the shared button shadow. Only ever set while the control is
+   live, so it never competes with the theme's disabled rule. */
+.gateButton[data-ready="yes"],
+.gateButton[data-ready="yes"]:hover {
+  background: var(--link);
+  color: var(--paper);
+  border: 1px solid var(--link);
+  box-shadow: var(--shadow-button);
+}

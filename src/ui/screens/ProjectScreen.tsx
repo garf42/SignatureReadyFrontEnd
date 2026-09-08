@@ -4,8 +4,9 @@ import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Button, Icon, Menu, MenuItem } from "@blueprintjs/core";
 
 import type { Assembly, BandEntry, BandRef, StepEntry, StepRail } from "@/ui/data/port";
-import { usePort } from "@/ui/data/port";
+import { documentPreview, usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
+import { DocumentOverlay } from "@/ui/components/DocumentOverlay";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
 import { tabPath, withSearch } from "@/ui/routes";
@@ -48,6 +49,19 @@ export function ProjectScreen() {
      they are doing, and a reader who has to find them is a reader who was not
      told. Closing is theirs to choose; it is not the state they arrive in. */
   const [levelOpen, setLevelOpen] = useState(true);
+  const [viewing, setViewing] = useState(false);
+  /* Read off THE RAIL, not off the store. The rail already resolves a tab to
+     its canonical address and already answers whether it was submitted, so
+     taking the preview from anywhere else would be a second answer to "what is
+     in the document" — and this page has spent a session removing those. */
+  const levelIds = levels.state === "filled" ? levels.value.episodes.map((e) => e.pathway) : [];
+  const submitted =
+    rail.state === "filled"
+      ? rail.value.steps.flatMap((step) =>
+          step.tabs.filter((tab) => tab.submitted).map((tab) => `${step.key}/${tab.id}`)
+        )
+      : [];
+  const preview = documentPreview(levelIds, submitted);
   const [hereOpen, setHereOpen] = useState(true);
   const [openBands, setOpenBands] = useState<Record<string, boolean>>({});
 
@@ -62,10 +76,22 @@ export function ProjectScreen() {
           {(header) => (
             <>
               <div className={css.bandHead}>
-                <h1 className={css.projectName}>{header.name}</h1>
-                <p className={css.projectMeta}>
-                  {header.ref} · {header.office} · {header.status}
-                </p>
+                <div className={css.bandNames}>
+                  <h1 className={css.projectName}>{header.name}</h1>
+                  <p className={css.projectMeta}>
+                    {header.ref} · {header.office} · {header.status}
+                  </p>
+                </div>
+                {/* The document, as it will be laid out. Not reachable until
+                    the review has been assembled AND something has been
+                    submitted into it: before then it is an empty shape, and an
+                    empty shape presented as the document teaches a reader that
+                    the document is empty rather than that it has not started. */}
+                {preview && preview.sections.some((section) => section.state === "filled") ? (
+                  <Button className={css.viewDocument} onClick={() => setViewing(true)}>
+                    View {preview.documentType}
+                  </Button>
+                ) : null}
               </div>
               <p className={css.projectSummary}>{header.summary}</p>
             </>
@@ -162,6 +188,14 @@ export function ProjectScreen() {
           }}
         </Region>
       </div>
+
+      {viewing && preview ? (
+        <DocumentOverlay
+          preview={preview}
+          projectRef={projectRef}
+          onClose={() => setViewing(false)}
+        />
+      ) : null}
 
       <div
         className={css.split}
@@ -454,7 +488,12 @@ function AssembleGate({
         <>
           <Button
             className={css.gateButton}
-            intent={state === "ready" ? "primary" : "none"}
+            /* This application's own primary, not Blueprint's intent — the
+               submit bar and every dialog use `--link` on paper with the
+               shared button shadow, and an intent prop reaches for a different
+               blue. Grey while it waits, and the theme's disabled rule
+               outranks this one so it cannot light up under the cursor. */
+            data-ready={state === "ready" ? "yes" : "no"}
             disabled={state !== "ready"}
             onClick={() => {
               setRunning(true);

@@ -9,11 +9,13 @@ import {
   SHARED_STEPS,
   TRANSITIONS,
   TRIGGERS,
+  documentElements,
   elementRows,
   findTab,
   isPermission,
   railFor,
-  ridFor
+  ridFor,
+  stepsFor
 } from "@/ui/data/pathways";
 import type {
   DocumentType,
@@ -40,6 +42,8 @@ import type {
   Action,
   Answer,
   Assembly,
+  DocumentPreview,
+  DocumentSection,
   BandEntry,
   DocumentLedgerEntry,
   ElementPanel,
@@ -288,7 +292,8 @@ function tabEntries(
   tabs: TabSpec[],
   held: boolean,
   retrievalUp: boolean,
-  submitted: readonly string[]
+  submitted: readonly string[],
+  allSubmitted: boolean
 ): TabEntry[] {
   return tabs.map((tab) => {
     const left = outstanding(rowsFor(stepKey, tab, held, retrievalUp));
@@ -296,7 +301,7 @@ function tabEntries(
       id: tab.id,
       name: tab.name,
       answered: left === 0 && tab.elements.every((row) => row.text !== "placeholder"),
-      submitted: submitted.includes(`${stepKey}/${tab.id}`),
+      submitted: allSubmitted || submitted.includes(`${stepKey}/${tab.id}`),
       outstanding: left,
       placeholders: tab.elements.filter((row) => row.text === "placeholder").length,
       level: tab.level
@@ -407,7 +412,14 @@ export function stepRail(
      today — see `submitted.ts` — and the fixture port hands it in rather than
      this file reading it, so the shape is exactly what a backend answers once
      one exists. */
-  submitted: readonly string[] = []
+  submitted: readonly string[] = [],
+  /* The second demo override, and it stands in for the same fact the first
+     one does at a different moment: `?submitted=all` treats every tab as
+     submitted, which is the only way to reach a document that has anything in
+     it. The fixture's document tabs carry rows that can never be cleared — the
+     FANEC's four, for one — so without it the viewer is a control nobody can
+     open. A backend answers this per tab and never needs either. */
+  allSubmitted = false
 ): Region<StepRail> {
   /* A level that has been DETERMINED but not yet ASSEMBLED has no steps. The
      determination says which review this is; the steps exist once the review
@@ -428,7 +440,14 @@ export function stepRail(
      that nobody could find in any procedure. */
   const seen = new Map<string, number>();
   const steps: StepEntry[] = rail.map((entry) => {
-    const tabs = tabEntries(entry.key, entry.step.tabs, held, retrievalUp, submitted);
+    const tabs = tabEntries(
+      entry.key,
+      entry.step.tabs,
+      held,
+      retrievalUp,
+      submitted,
+      allSubmitted || sharedComplete === true
+    );
     const superseded = entry.band.kind === "episode" && entry.band.seq !== liveSeq;
     const waitKey =
       entry.band.kind === "episode" ? `${entry.band.pathway}.${entry.step.id}` : "";
@@ -541,6 +560,88 @@ export function stepRail(
     steps,
     assembly: assemblyFor(levels, assembled, unfinished)
   });
+}
+
+/** ONE ADDRESS FOR A TAB, whatever the URL said.
+ *
+ *  A step is reachable by two names: its canonical key — `S.0`, `E1.P2.4`,
+ *  unique across a whole level history — and the local id `pathways.ts` gives
+ *  it, which collides across pathways and is what an older link carries. The
+ *  rail always speaks the canonical one. The element screen was recording a
+ *  submission under whatever the URL happened to say, so `4/fanec` and
+ *  `E1.P2.4/fanec` were the same tab submitted twice and ticked never: two
+ *  addresses for one thing, which is the defect this page has spent a session
+ *  removing everywhere else.
+ *
+ *  Resolved here rather than in the store, because the store holds strings and
+ *  only the rail knows which step a local id belongs to. */
+export function tabAddress(levels: PathwayId[], stepId: string, tabId: string): string {
+  const rail = railFor(levels.map((pathway, i) => ({ seq: i + 1, pathway })));
+  const entry =
+    rail.find((candidate) => candidate.key === stepId) ??
+    rail.find((candidate) => candidate.step.id === stepId);
+  return `${entry?.key ?? stepId}/${tabId}`;
+}
+
+/** The review document as it will be laid out, assembled from the tabs that
+ *  produce it.
+ *
+ *  DERIVED, not fetched, and deliberately: the sections and their order come
+ *  from `pathways.ts`, which is where the element lists are frozen, and their
+ *  filled state comes from the same submission record the rail ticks. A second
+ *  source for "what is in the document" is a second answer, and this page has
+ *  spent a session removing those. What is NOT here is the words — those
+ *  arrive from adopted element values, which have no address yet, so a section
+ *  shows the layout it renders through and says where its words come from.
+ *
+ *  Null where the live level produces no document. P0 and P1 write nothing at
+ *  all — the rule requires no document for either — so the viewer is not
+ *  something those pathways are missing. */
+export function documentPreview(
+  levels: PathwayId[],
+  submitted: readonly string[]
+): DocumentPreview | null {
+  const live = levels.length > 0 ? levels[levels.length - 1] : null;
+  if (!live) {
+    return null;
+  }
+  const seq = levels.length;
+  const sections: DocumentSection[] = [];
+  let documentType: DocumentType | null = null;
+
+  for (const step of stepsFor(live)) {
+    for (const tab of step.tabs) {
+      if (!tab.documentType) {
+        continue;
+      }
+      documentType = tab.documentType;
+      const stepKey = `E${String(seq)}.${live}.${step.id}`;
+      const filled = submitted.includes(`${stepKey}/${tab.id}`);
+      for (const [i, element] of documentElements(tab).entries()) {
+        sections.push({
+          id: `${tab.id}-${String(i)}`,
+          name: element.produces.section,
+          ref: element.ref,
+          template: element.produces.template,
+          state: filled ? "filled" : "pending",
+          stepKey,
+          tabId: tab.id
+        });
+      }
+    }
+  }
+
+  if (!documentType) {
+    return null;
+  }
+
+  return {
+    documentType,
+    title: documentType,
+    says:
+      "This is the document as it will be laid out. Its words are the answers adopted on the steps behind it and cannot be changed here — a second place to write them would be a second place a federal document comes from. Arrangement is yours: 1b.3(g)(2), 1b.5(c), 1b.6(b), 1b.7(h) and 1b.8(b) each preface their contents with “may apply any format they choose”.",
+    sections
+  };
 }
 
 export const stepsAbsentSpec: Region<StepRail> = absent(

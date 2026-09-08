@@ -71,8 +71,11 @@
    Said once, in words, above everything else. It was two cards inside the same
    grid as the measurements, which made "nothing is connected" read as one more
    number beside the six that depend on it. */
+/* No leading gap. The page head already sets the space above this; a top
+   padding here added a second one and read as a blank line before the
+   sentence that is meant to be the first thing on the page. */
 .standing {
-  padding: var(--s-4) 0 var(--s-3);
+  padding: 0 0 var(--s-3);
   border-bottom: 1px solid var(--rule);
 }
 

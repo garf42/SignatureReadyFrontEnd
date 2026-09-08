@@ -580,3 +580,64 @@ describe("the frame marks a drafted request nobody has opened", () => {
     expect(screen.queryByRole("status")).toBeNull();
   });
 });
+
+/** The three acts that change what the library holds, kept out of the list that
+ *  reports what it holds. Nothing writes, and each act says so where it is
+ *  offered rather than once at the top. */
+describe("the reference library can be managed from its head", () => {
+  const open = () => {
+    at("/reference");
+    fireEvent.click(screen.getByText("Manage the library"));
+    return screen.getByRole("dialog");
+  };
+
+  it("offers the three acts, and nothing else", () => {
+    const dialog = open();
+    const tabs = within(dialog)
+      .getAllByRole("tab")
+      .map((tab) => (tab.textContent ?? "").replace("✓", "").trim());
+    expect(tabs).toEqual([
+      "File new documents",
+      "Re-pin the regulation",
+      "Retire what is stale"
+    ]);
+  });
+
+  /* Naming and classifying a document is a drafting act, and the drafting lane
+     cannot run in this build. A filing preview that looked live would be the
+     one place this application claimed a model had read something. */
+  it("says the reading cannot run, where the filing is offered", () => {
+    const dialog = open();
+    expect(within(dialog).getByText("The reading cannot run")).toBeTruthy();
+    expect(dialog.querySelector("input[type='file']")?.hasAttribute("disabled")).toBe(true);
+  });
+
+  /* No naming convention is recorded anywhere in this repository, so the one
+     shown is built from fields the corpus already carries and is marked as a
+     proposal. Presenting it as measured is the near-miss that ships. */
+  it("marks the naming convention as proposed rather than measured", () => {
+    const dialog = open();
+    expect(dialog.textContent).toContain("Proposed, not measured");
+    expect(dialog.textContent).toMatch(/no naming convention is recorded/i);
+  });
+
+  it("lists only artifacts that actually carry a warning, and offers to retire them", () => {
+    const dialog = open();
+    fireEvent.click(within(dialog).getByText("Retire what is stale"));
+    const rows = [...dialog.querySelectorAll("tbody tr")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect((row.textContent ?? "").length).toBeGreaterThan(10);
+      expect(row.querySelector("button")?.hasAttribute("disabled")).toBe(true);
+    }
+  });
+
+  /* Re-pinning replaces the copy every determination is reasoned against, so
+     the overlay has to say what that reaches rather than offering a button. */
+  it("names what re-pinning must carry, and that none of it has an address", () => {
+    const dialog = open();
+    fireEvent.click(within(dialog).getByText("Re-pin the regulation"));
+    expect(dialog.textContent).toContain("2026-04-03");
+    expect(dialog.textContent).toMatch(/none of the three has an address/i);
+  });
+});

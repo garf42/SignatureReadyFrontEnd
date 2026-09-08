@@ -587,6 +587,45 @@ export interface Learning {
   legs: LoopLeg[];
 }
 
+/** One section of the review document, in the order it will be laid out.
+ *
+ *  CONTENTS ARE NOT EDITABLE HERE and the shape says so: a section carries the
+ *  template it renders through and the address the words came from, and no
+ *  field on it can be written. An element's text is what the officer adopted on
+ *  the project page, and a document view that let it be changed would create a
+ *  second, unrecorded place where a federal document's words come from.
+ *
+ *  LAYOUT IS a different question, and the rule is unusually explicit about it:
+ *  all five element lists at 1b.3(g)(2), 1b.5(c), 1b.6(b), 1b.7(h) and 1b.8(b)
+ *  are prefaced by "may apply any format they choose". The rule fixes contents
+ *  and fixes nothing about arrangement, so ordering and page breaks are
+ *  authorised — and must never be presented as required. */
+export interface DocumentSection {
+  id: string;
+  /** The heading this section carries in the document. */
+  name: string;
+  /** The citation the section's contents are required by. */
+  ref: string;
+  /** The layout this section renders through — markers where values arrive. */
+  template: string | null;
+  /** `filled` once the tab that produces it has been submitted. A section
+   *  whose tab is still open is in the document and has nothing in it yet, and
+   *  that is a different thing from a section that will be empty. */
+  state: "filled" | "pending";
+  /** Where the words come from, so a reader can go and change them at the one
+   *  place they are authored. */
+  stepKey: string;
+  tabId: string;
+}
+
+export interface DocumentPreview {
+  documentType: DocumentType;
+  title: string;
+  /** The one line saying what this view is and is not. */
+  says: string;
+  sections: DocumentSection[];
+}
+
 export type Citable = "yes" | "no" | "not-declared";
 
 export interface FacetOption {

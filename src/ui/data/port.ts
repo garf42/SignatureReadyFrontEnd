@@ -19,6 +19,8 @@ export type {
   BandEntry,
   BandRef,
   DocumentLedgerEntry,
+  DocumentPreview,
+  DocumentSection,
   ElementPanel,
   ExpertDraft,
   ExpertQueue,
@@ -89,6 +91,7 @@ import type {
 } from "@/ui/data/types";
 
 export { sourceTitle, sectionsFor } from "@/ui/data/fixtures";
+export { documentPreview, tabAddress } from "@/ui/data/project";
 export { PAGES } from "@/ui/data/support";
 export {
   COMPETENCE_CONDITIONS,
