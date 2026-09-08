@@ -62,6 +62,11 @@ export function ProjectScreen() {
         )
       : [];
   const preview = documentPreview(levelIds, submitted);
+
+  /* NO SECTION IS CURRENT ON THIS PAGE. The project page is not one of the five
+     — it is reached FROM the inbox and is not in it — and marking the inbox
+     current told a reader they were somewhere they had left. `sectionsFor`
+     matches on id, so a name no section carries marks none of them. */
   const [hereOpen, setHereOpen] = useState(true);
   const [openBands, setOpenBands] = useState<Record<string, boolean>>({});
 
@@ -70,7 +75,7 @@ export function ProjectScreen() {
     band.kind === "episode" ? `E${String(band.seq)}` : band.kind;
 
   return (
-    <AppFrame current="inbox" padded={false}>
+    <AppFrame current="project" padded={false}>
       <div className={css.band}>
         <Region region={project}>
           {(header) => (

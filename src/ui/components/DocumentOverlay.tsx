@@ -40,10 +40,30 @@ export function DocumentOverlay({
   const { search } = useLocation();
   const filled = preview.sections.filter((s) => s.state === "filled").length;
 
+  const download = () => {
+    const text = preview.sections
+      .map((section, i) => {
+        const heading =
+          i === 0 || preview.sections[i - 1].documentType !== section.documentType
+            ? `\n\n${section.documentType}\n${"=".repeat(section.documentType.length)}\n\n`
+            : "";
+        return heading + (section.template ?? `[${section.ref} — no layout yet]`);
+      })
+      .join("\n\n")
+      .trim();
+    const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${preview.documentTypes.join("-")}__${projectRef}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <Overlay
       title={preview.title}
       onClose={onClose}
+      wide
       footer={
         <OverlayActions>
           <Button onClick={onClose}>Close</Button>
@@ -56,9 +76,20 @@ export function DocumentOverlay({
           can act on. The absence of a single field says the first, and the
           second belongs in the handoff. What is left is the one line that is
           actually state. */}
-      <p className={css.count}>
-        {filled} of {preview.sections.length} sections submitted
-      </p>
+      <div className={css.bar}>
+        <p className={css.count}>
+          {filled} of {preview.sections.length} sections submitted
+        </p>
+        {/* A real download of what is on the page. The sections are joined in
+            the order they are laid out, markers and all, because markers are
+            what the document holds until values arrive — a download that
+            silently dropped them would hand someone a document with gaps they
+            could not see. Plain text: a PDF needs a typesetter this build does
+            not have, and a .pdf extension over text is a lie about a file. */}
+        <Button className={css.download} icon="download" onClick={download}>
+          Download
+        </Button>
+      </div>
 
       {/* THE DOCUMENT, not an inspector over it. The templates already carry
           their own numbered headings — "1. PURPOSE AND NEED" — so a second

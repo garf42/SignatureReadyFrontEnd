@@ -66,7 +66,13 @@
   border: 1px solid var(--rule);
   border-bottom: none;
   border-radius: var(--radius-box) var(--radius-box) 0 0;
-  background: var(--well);
+  /* PAPER, so the well can mean what it means everywhere else. An accepted row
+     and a finished step are marked by grounding on the WELL while unfinished
+     ones sit on paper; the strip had that the wrong way round — every
+     unselected tab was already on the well — so a finished tab had no fill
+     left to take. The tab shape is carried by the border and the join to the
+     panel below, not by the fill, so flipping it costs nothing. */
+  background: var(--paper);
   color: var(--ink-soft);
   white-space: nowrap;
 }
@@ -89,26 +95,15 @@
 }
 
 /* --- finished -------------------------------------------------------------
-   Greyed, and still perfectly readable — the settled look this build already
-   uses for a submitted element panel and a superseded step, both of which fade
-   rather than recolour. Fading is the transfer that works here: an UNSELECTED
-   tab already grounds on the well, so the row convention of "well instead of
-   paper" has nothing left to say about it, and the first attempt at this said
-   it in ink at a specificity that lost to the tab's own colour and rendered
-   nothing at all.
+   THE SAME MARK AN ACCEPTED ROW AND A FINISHED STEP CARRY, and nothing else:
+   the well, with the text untouched. Two earlier attempts translated it — one
+   into ink, which lost a specificity tie and rendered nothing, one into
+   opacity, which made the words too light. Neither was the convention. The
+   convention is a fill.
 
    Scoped to `.scroller` so it ties with the rules it has to beat and wins on
-   order, which is the same reason those rules are written that way. */
-.scroller .doneTab {
-  opacity: 0.55;
-}
-
-/* The one you are standing on stays at full strength — it is the tab whose
-   panel is open, and fading it would fade the thing being read. It carries the
-   claim in the row's own vocabulary instead: the well, where an unfinished
-   selected tab rises to paper. */
+   order, which is why those rules are written that way. */
+.scroller .doneTab,
 .scroller .doneTab[aria-selected="true"] {
-  opacity: 1;
   background: var(--well);
-  color: var(--ink-soft);
 }

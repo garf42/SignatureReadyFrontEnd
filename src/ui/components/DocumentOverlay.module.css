@@ -13,25 +13,29 @@
   color: var(--ink-faint);
 }
 
-/* The document surface. Paper against the overlay's own ground, capped and
-   scrolled on its own, so the overlay's height never depends on how many
-   sections the document type happens to have. */
+/* A SHEET, at the width it will be printed. US Letter is 8.5in — 816px at
+   96dpi — with a one-inch margin, and a viewer narrower than that is not
+   showing the document, it is showing a narrower thing with the same words in
+   it. Square corners and a cast shadow rather than the app's rounded box,
+   because paper is not a card.
+
+   It scrolls inside itself so the sheet's own proportions survive however many
+   sections the document type has. */
 .page {
-  max-height: 26rem;
-  overflow: auto;
-  padding: var(--s-3);
+  width: 816px;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 96px;
   border: 1px solid var(--rule);
-  border-radius: var(--radius-box);
   background: var(--paper);
+  box-shadow: 0 2px 8px oklch(0.24 0.012 250 / 0.1);
 }
 
 /* Sections run on as a document runs on. They were separated by a rule each,
    which turned one document into a stack of cards. */
 .section {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--s-3);
-  margin-top: var(--s-3);
+  position: relative;
+  margin-top: var(--s-4);
 }
 
 /* A section whose tab is still open is IN the document with nothing in it —
@@ -108,7 +112,7 @@
 /* Each document in the review gets its own heading. Two documents run together
    in one list read as one document, which is a claim about what gets filed. */
 .document {
-  margin: 0 0 var(--s-2);
+  margin: 0 0 var(--s-3);
   padding-bottom: var(--s-1);
   border-bottom: 2px solid var(--ink);
   font-size: var(--t-read);
@@ -150,11 +154,49 @@
   color: var(--ink-soft);
 }
 
+/* In the sheet's own margin, the way a marginal annotation sits — so the text
+   block stays exactly as wide as it will print, and the provenance a reader
+   needs does not take a column out of the document. */
 .cite {
-  flex: 0 0 auto;
-  align-self: flex-start;
+  position: absolute;
+  top: 0.2rem;
+  left: -84px;
+  width: 72px;
   font-family: var(--mono);
   font-size: var(--t-micro);
+  line-height: 1.4;
   color: var(--ink-faint);
-  white-space: nowrap;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+
+/* The bar above the sheet: what is in it, and the one act on it. */
+.bar {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-3);
+}
+
+.download {
+  flex: 0 0 auto;
+  font-size: var(--t-meta);
+}
+
+/* Below the page's own width the margin has nowhere to put a citation, so it
+   returns to the flow rather than sitting off the sheet. */
+@media (max-width: 900px) {
+  .page {
+    padding: var(--s-4);
+  }
+
+  .cite {
+    position: static;
+    display: block;
+    width: auto;
+    margin-bottom: 0.2rem;
+    text-align: left;
+  }
 }

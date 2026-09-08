@@ -641,3 +641,26 @@ describe("the reference library can be managed from its head", () => {
     expect(dialog.textContent).toMatch(/none of the three has an address/i);
   });
 });
+
+/** The project page is not one of the five sections. It is reached FROM the
+ *  inbox and is not in it, and marking the inbox current told a reader they
+ *  were somewhere they had left. */
+describe("the section pane marks where you actually are", () => {
+  const marked = (container: HTMLElement) =>
+    [...container.querySelectorAll("aside[aria-label='Sections'] a")]
+      .filter((item) => /current/.test(item.className))
+      .map((item) => (item.textContent ?? "").trim());
+
+  it("marks none of them on the project page", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    expect(marked(container)).toEqual([]);
+  });
+
+  it("still marks the one you are on everywhere else", () => {
+    for (const path of ["/", "/archive", "/experts", "/learning", "/reference"]) {
+      const { container } = at(path);
+      expect(marked(container).length, path).toBe(1);
+      cleanup();
+    }
+  });
+});

@@ -179,6 +179,12 @@ export const SECTIONS: NavSection[] = [
   { id: "reference", name: "Reference", icon: "documents", href: "/reference", current: false }
 ];
 
+/** The five sections, with at most one marked current.
+ *
+ *  A screen that is not one of the five passes a name none of them carries —
+ *  the project page passes "project" — and none is marked. It is reached from
+ *  the inbox and is not in it, and marking the inbox current told a reader they
+ *  were somewhere they had left. */
 export function sectionsFor(currentId: string): NavSection[] {
   return SECTIONS.map((section) => ({ ...section, current: section.id === currentId }));
 }
