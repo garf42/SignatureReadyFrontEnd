@@ -304,14 +304,23 @@ function StepItem({
       className={css.step + " " + css[active ? "active" : step.mark]}
       title={step.waitingOn ? `${step.name} — waits on ${step.waitingOn}` : step.name}
       text={
-        shut ? (
-          <span className={css.number}>{step.n}</span>
-        ) : (
-          <>
-            <span className={css.number}>{step.n}</span>
-            {step.name}
-          </>
-        )
+        /* Complete or not, in the smallest mark that can carry it: the number
+           itself becomes a tick. Nothing is added to the row — a step that is
+           finished swaps one glyph for another in a slot that was already
+           there, so the rail does not grow a status column and an unfinished
+           step is still just its number.
+
+           The claim is exact and comes from the same rows the panel renders:
+           every tab in this step has nothing outstanding and no text missing
+           from the build. An unticked step is therefore never a step this
+           screen merely could not read. */
+        <>
+          <span className={css.number} data-done={step.done ? "yes" : "no"}>
+            {step.done ? "✓" : step.n}
+          </span>
+          {shut ? null : step.name}
+          {step.done ? <span className={css.only}> — done</span> : null}
+        </>
       }
       label={shut ? undefined : (step.meta ?? undefined)}
       onClick={onOpen}

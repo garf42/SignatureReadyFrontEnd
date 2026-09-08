@@ -260,15 +260,28 @@ export const gateUnresolved: Region<Gate> = unresolved(
  *  The old rail computed completion from the step's INDEX relative to whatever
  *  step id was in the URL, which meant standing on Step 8 marked Steps 0–7
  *  complete with full tab counts from a cold start. */
-function tabEntries(tabs: TabSpec[]): TabEntry[] {
-  return tabs.map((tab) => ({
-    id: tab.id,
-    name: tab.name,
-    done: false,
-    outstanding: null,
-    placeholders: tab.elements.filter((row) => row.text === "placeholder").length,
-    level: tab.level
-  }));
+/** Counted from the same rows the panel shows, so the rail and the panel can
+ *  never disagree about whether a tab is finished. It used to answer `null` on
+ *  every tab — honest at the time, since the rail had no way to reach the rows
+ *  — with the consequence that the rail could not say which steps still had
+ *  work in them, which is the first thing anyone looks at a rail for. */
+function tabEntries(
+  stepKey: string,
+  tabs: TabSpec[],
+  held: boolean,
+  retrievalUp: boolean
+): TabEntry[] {
+  return tabs.map((tab) => {
+    const left = outstanding(rowsFor(stepKey, tab, held, retrievalUp));
+    return {
+      id: tab.id,
+      name: tab.name,
+      done: left === 0,
+      outstanding: left,
+      placeholders: tab.elements.filter((row) => row.text === "placeholder").length,
+      level: tab.level
+    };
+  });
 }
 
 /** A step whose document cannot begin until another exists. Machine-readable,
@@ -329,7 +342,14 @@ function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
 export function stepRail(
   levels: PathwayId[],
   activeKey: string,
-  assembled = true
+  assembled = true,
+  /* Passed through because completion is counted from the same rows the panel
+     renders, and those depend on both: a reserved row reads differently to a
+     caller who holds the credential, and a drafting lane that cannot run
+     produces rows nobody can answer. A rail computed from different inputs
+     would tick a step the panel still shows work in. */
+  held = false,
+  retrievalUp = true
 ): Region<StepRail> {
   /* A level that has been DETERMINED but not yet ASSEMBLED has no steps. The
      determination says which review this is; the steps exist once the review
@@ -350,6 +370,7 @@ export function stepRail(
      that nobody could find in any procedure. */
   const seen = new Map<string, number>();
   const steps: StepEntry[] = rail.map((entry) => {
+    const tabs = tabEntries(entry.key, entry.step.tabs, held, retrievalUp);
     const superseded = entry.band.kind === "episode" && entry.band.seq !== liveSeq;
     const waitKey =
       entry.band.kind === "episode" ? `${entry.band.pathway}.${entry.step.id}` : "";
@@ -385,7 +406,8 @@ export function stepRail(
          better; the unwritten count was on every row and those rows announce
          themselves in the panel. */
       meta: superseded ? "Read only" : waitingOn ? "Waiting" : null,
-      tabs: tabEntries(entry.step.tabs),
+      done: tabs.every((tab) => tab.outstanding === 0 && tab.placeholders === 0),
+      tabs,
       band:
         entry.band.kind === "shared"
           ? { kind: "shared" as const }

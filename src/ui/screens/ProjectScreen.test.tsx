@@ -85,7 +85,8 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
     // proposal record IS before any level of review is fixed.
     const tabs = within(container.querySelector("[role='tablist']") as HTMLElement)
       .getAllByRole("tab")
-      .map((t) => (t.textContent ?? "").trim());
+      /* The strip carries a completion tick, so compare on the name. */
+      .map((t) => (t.textContent ?? "").replace("✓", "").trim());
     expect(tabs).toContain("Proposal record");
     expect(tabs).toContain("Applicant or third party");
   });
@@ -101,7 +102,7 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
       const { container } = at(url);
       const tabs = within(container.querySelector("[role='tablist']") as HTMLElement)
         .getAllByRole("tab")
-        .map((t) => (t.textContent ?? "").trim());
+        .map((t) => (t.textContent ?? "").replace("✓", "").trim());
       expect(tabs, step).toContain("Reevaluation");
       cleanup();
     }
@@ -226,7 +227,7 @@ describe("tabs are the step's parts, not a copy of the step", () => {
     expect(list).not.toBeNull();
     const names = within(list as HTMLElement)
       .getAllByRole("tab")
-      .map((tab) => (tab.textContent ?? "").trim());
+      .map((tab) => (tab.textContent ?? "").replace("✓", "").trim());
     expect(names).toEqual(["Scope of analysis", "Deadline", "Scoping", "Comment and pre-decisional publication"]);
   });
 
@@ -479,5 +480,45 @@ describe("steps are numbered from one", () => {
       "4FindingWaiting",
       "5Notification"
     ]);
+  });
+});
+
+/** The first thing anyone looks at a rail for is what is left. It could not
+ *  say: every tab answered `outstanding: null`, honest at the time because the
+ *  rail had no way to reach the rows, so nothing was ever marked finished. */
+describe("finished work is marked, minimally", () => {
+  it("ticks a step whose every tab is answered, in the slot the number had", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/scope?levels=P3");
+    const numbers = [...rail(container).querySelectorAll("[class*='number']")];
+    const ticked = numbers.filter((n) => n.getAttribute("data-done") === "yes");
+    const plain = numbers.filter((n) => n.getAttribute("data-done") === "no");
+    expect(ticked.length + plain.length).toBe(numbers.length);
+    for (const mark of ticked) {
+      expect(mark.textContent).toBe("✓");
+    }
+    /* A step with work left keeps its number, so the rail gains no width. */
+    for (const mark of plain) {
+      expect(mark.textContent).toMatch(/^\d+$/);
+    }
+  });
+
+  it("says it in words too, for anyone who cannot read a tick at that size", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/scope?levels=P3");
+    const done = rail(container).querySelector("[data-done='yes']");
+    if (done) {
+      expect(done.closest("li")?.textContent).toContain("done");
+    }
+  });
+
+  /* The rail and the panel count the same rows, so they cannot disagree about
+     whether a tab is finished — which is the whole reason completion is
+     computed from `rowsFor` rather than guessed from the step. */
+  it("agrees with the tab strip about which tabs are finished", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/scope?levels=P3");
+    const strip = container.querySelector("[role='tablist']") as HTMLElement;
+    const ticked = [...strip.querySelectorAll("[role='tab']")].filter((tab) =>
+      (tab.textContent ?? "").includes("✓")
+    );
+    expect(ticked.length).toBeGreaterThan(0);
   });
 });

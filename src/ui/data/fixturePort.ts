@@ -207,7 +207,7 @@ function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
     case "unresolved":
       return pj.stepsUnresolvedSpec;
     default:
-      return pj.stepRail(o.levels, stepKey || "S.0", o.assembled);
+      return pj.stepRail(o.levels, stepKey || "S.0", o.assembled, o.held, o.retrievalUp);
   }
 }
 
