@@ -56,7 +56,7 @@ export function ArchiveScreen() {
                 <>
                   <Button className={table.secondary}>Restore</Button>
                   <Button className={table.destructive} onClick={() => setPurging(row.id)}>
-                    Purge
+                    Delete permanently
                   </Button>
                 </>
               )}
@@ -75,11 +75,13 @@ export function ArchiveScreen() {
               <Button className={css.secondary} onClick={() => setPurging(null)}>
                 Cancel
               </Button>
-              {/* One verb, and it is the one that carries the finality: purge
-                  says unrecoverable where a bare "delete" says undoable. The
-                  overlay title and its note state the consequence in full. */}
+              {/* The three exceptions to one-verb-per-button are the three
+                  where the second word IS the meaning: "Sign in" and "Initiate
+                  project" are the names of the acts, and here "permanently" is
+                  the whole warning — a bare "delete" reads undoable, and this
+                  is not. */}
               <Button className={css.destructive} onClick={() => setPurging(null)}>
-                Purge
+                Delete permanently
               </Button>
             </OverlayActions>
           }

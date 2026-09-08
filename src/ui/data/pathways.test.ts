@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  COMPETENCE_CONDITIONS,
   CROSS_CUTTING,
   DISCRETIONS,
   DOCUMENT_AUTHORITY,
@@ -8,6 +9,7 @@ import {
   PATHWAY_IDS,
   RETRIEVAL_PUSHES,
   SHARED_STEPS,
+  TRANSITIONS,
   TRIGGERS,
   elementRows,
   findTab,
@@ -423,6 +425,68 @@ describe("the steps are commitments, not containers", () => {
       expect(plain.ends.length, id).toBeGreaterThan(20);
       /* Internal vocabulary is exactly what these sentences exist to avoid. */
       expect(plain.says, id).not.toMatch(/\bP[0-4]\b|\bLevel \d/);
+    }
+  });
+});
+
+/** The transitions are addresses waiting for a surface. Nothing renders them
+ *  yet, which is exactly why they need a test: two of them went on naming
+ *  `x/reevaluation` for a whole rebuild after the cross-cutting band that held
+ *  that tab was dissolved, and nothing anywhere noticed. */
+describe("every transition names a surface that exists", () => {
+  const all = [...TRANSITIONS, ...COMPETENCE_CONDITIONS];
+
+  it("resolves each offeredOn to a real step and tab on a pathway it moves from", () => {
+    for (const move of all) {
+      const [head, tail] = move.offeredOn.split("/");
+      const stepId = tail === undefined ? null : head;
+      const tabId = tail ?? head;
+      const found = move.from.some((pathway) =>
+        stepsFor(pathway).some(
+          (step) =>
+            (stepId === null || step.id === stepId) &&
+            step.tabs.some((tab) => tab.id === tabId)
+        )
+      );
+      expect(found, `${move.id} — ${move.offeredOn}`).toBe(true);
+    }
+  });
+
+  /* A bare tab id is the escape hatch for a tab whose step differs by pathway,
+     and it earns that only by actually differing SOMEWHERE — reevaluation sits
+     on step 3 of P0, step 4 of P1, step 5 of P2, step 7 of P3 and step 10 of
+     P4, so no single step id is true of it. */
+  it("uses a bare tab id only where the step really does vary", () => {
+    for (const move of all) {
+      if (move.offeredOn.includes("/")) {
+        continue;
+      }
+      const steps = new Set(
+        PATHWAY_IDS.flatMap((pathway) =>
+          stepsFor(pathway)
+            .filter((step) => step.tabs.some((tab) => tab.id === move.offeredOn))
+            .map((step) => step.id)
+        )
+      );
+      expect(steps.size, `${move.id} — ${move.offeredOn}`).toBeGreaterThan(1);
+    }
+  });
+
+  /* Escalation is not a menu. Exactly one of the five is a permission the
+     responsible official exercises; the rest are a duty to consider, a derived
+     consequence, a duty, and a request to someone else. A surface that offered
+     any of them as a free choice would misstate the rule. */
+  it("carries exactly one transition a person may simply choose", () => {
+    expect(all.filter((move) => move.modality === "permission").map((move) => move.id)).toEqual([
+      "T4"
+    ]);
+  });
+
+  /* De-escalation is unauthorable: `direction` has no member for it, so a
+     backend cannot report one and a screen cannot draw one. */
+  it("cannot express a move to a lower level of review", () => {
+    for (const move of all) {
+      expect(["higher", "same-level-again"]).toContain(move.direction);
     }
   });
 });

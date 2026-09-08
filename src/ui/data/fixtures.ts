@@ -106,7 +106,7 @@ export const sessionIn: Region<Session> = filled({ officer: OFFICER });
 export const sessionOut: Region<Session> = absent(
   "You are not signed in",
   "⟨session.lookup⟩",
-  [{ id: "sign-in", label: "Enter", look: "primary", enabled: true }]
+  [{ id: "sign-in", label: "Sign in", look: "primary", enabled: true }]
 );
 
 /* --- source overlay --- */
@@ -218,7 +218,7 @@ export const inboxFilled: Region<Inbox> = filled({
 export const inboxAbsent: Region<Inbox> = absent(
   "No current projects",
   "⟨register.inbox.query⟩",
-  [{ id: "initiate", label: "Initiate", look: "primary", enabled: true }]
+  [{ id: "initiate", label: "Initiate project", look: "primary", enabled: true }]
 );
 export const inboxBlocked: Region<Inbox> = blocked(
   "Not ready yet",

@@ -197,7 +197,7 @@ describe("Archive carries the inbox row, not a lookalike — §6.3", () => {
     fireEvent.click(within(group).getByLabelText("Show the details"));
     expect(group.getAttribute("data-open")).toBe("yes");
     expect(within(group).getByText("Restore")).toBeTruthy();
-    expect(within(group).getByText("Purge")).toBeTruthy();
+    expect(within(group).getByText("Delete permanently")).toBeTruthy();
   });
 
   it("says the archiver is not recorded, without explaining the backend", () => {

@@ -74,7 +74,10 @@ export {
 };
 
 const CHANGE: Action = { id: "change", label: "Amend", look: "secondary", enabled: true };
-/* ONE VERB EACH, and the verb is chosen rather than defaulted.
+/* ONE VERB EACH on the element rows, and the verb is chosen rather than
+   defaulted. Three buttons elsewhere keep a second word because the second word
+   IS the meaning: "Sign in" and "Initiate project" are the names of those acts,
+   and "Delete permanently" carries a warning a bare verb loses.
    "Accept" failed not because it was short but because it was generic — accept
    is what you do to a cookie banner. The fix is a better verb, not a longer
    label: a drafted paragraph the responsible official takes as their own is

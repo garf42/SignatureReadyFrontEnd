@@ -2549,7 +2549,18 @@ export interface Transition {
   from: PathwayId[];
   to: PathwayId[];
   /** Where the affordance lives — the surface on which the RULE discovers the
-   *  fact, never a button in the inbox. */
+   *  fact, never a button in the inbox. Written as `<stepId>/<tabId>` using the
+   *  LOCAL step id, because a transition belongs to the same tab whichever
+   *  episode the proposal is in. A BARE tab id means the step varies by
+   *  pathway: the reevaluation tab sits on each pathway's own terminal step, so
+   *  naming one step for it would be true of one pathway and wrong for the
+   *  other four.
+   *
+   *  Nothing renders these yet — they are addresses waiting for a surface. The
+   *  test beside them keeps every one resolvable so they cannot rot while they
+   *  wait, which is exactly what happened when the cross-cutting band was
+   *  dissolved and two of them went on pointing at a band that no longer
+   *  existed. */
   offeredOn: string;
   statement: string;
   /** What moves to the new level, and on what citation. Rendered before the
@@ -2570,7 +2581,7 @@ export const TRANSITIONS: Transition[] = [
     direction: "higher",
     from: ["P1", "P2", "P3", "P4"],
     to: ["P3", "P4"],
-    offeredOn: "x/reevaluation",
+    offeredOn: "reevaluation",
     statement:
       "Where a major Federal action or a portion of it is incomplete and ongoing AND there are substantial changes or new circumstances, the subcomponent shall CONSIDER whether a higher level of NEPA review is warranted. This is the only express escalation instruction in part 1b, and its verb is consider: the conclusion is the responsible official's under 1b.11(a)(46) and nothing here escalates by itself.",
     carries: [
@@ -2596,7 +2607,7 @@ export const TRANSITIONS: Transition[] = [
     direction: "higher",
     from: ["P1", "P2"],
     to: ["P3", "P4"],
-    offeredOn: "E1.P1.3/extraordinary-circumstances",
+    offeredOn: "3/extraordinary-circumstances",
     statement:
       "No single paragraph states this move; a chain of four compels it. 1b.2(f)(2)(i) directs application of an exclusion per 1b.3(f) and (g); 1b.3(g)(1)(ii) requires that no extraordinary circumstance exist; a cure under 1b.3(f)(3) is permitted but not required; so where none is made the exclusion cannot be applied consistent with limb (i), and 1b.2(f)(2)(iv) engages by its own condition. Which of (iv)(A) or (iv)(B) then applies comes from 1b.3(f)(2)'s two-member test — reasonable uncertainty routes to an environmental assessment, certainty of significance to an environmental impact statement. It is a consequence, not a choice.",
     carries: [
@@ -2616,7 +2627,7 @@ export const TRANSITIONS: Transition[] = [
     direction: "same-level-again",
     from: ["P4"],
     to: ["P4"],
-    offeredOn: "x/reevaluation",
+    offeredOn: "reevaluation",
     statement:
       "A supplemental environmental impact statement under 1b.7. It runs that section again on the same proposal — its own notice of intent, its own clock from its own soonest-of-three, its own filing with EPA and its own notice of availability. This is why a level history is an ordered list rather than a set: one proposal can occupy P4 twice, and a shape with one slot per pathway cannot hold it.",
     carries: [
@@ -2638,7 +2649,7 @@ export const TRANSITIONS: Transition[] = [
     direction: "higher",
     from: ["P1", "P2", "P3"],
     to: ["P3", "P4"],
-    offeredOn: "E1.P3.6/fonsi",
+    offeredOn: "6/fonsi",
     statement:
       "The responsible official's authority over what level of NEPA review is appropriate stays live, so a redetermination after an environmental assessment is within authority. The rule PERMITS this; it does not require it. An environmental assessment that finds significance does not, on anything readable here, oblige an environmental impact statement — 1b.2(f)(2)(iv) fires BEFORE the assessment is written, and expressly sends unknown significance to an assessment rather than to a statement.",
     carries: [
@@ -2666,7 +2677,7 @@ export const COMPETENCE_CONDITIONS: Transition[] = [
     direction: "higher",
     from: ["P1", "P2"],
     to: ["P3", "P4"],
-    offeredOn: "S.2/subcomponent-exclusion",
+    offeredOn: "2/subcomponent-exclusion",
     statement:
       "Nine named subcomponents conduct programmes that do not normally result in reasonably foreseeable significant impacts, and their actions are excluded from preparing an environmental assessment or statement outright — unless the subcomponent determines that an extraordinary circumstance exists for the individual action AND obtains the concurrence of the USDA Senior Agency Official or their designee. This application cannot verify a concurrence, so it records the request and sends it; it never blocks on one, and it never forecloses a level on the client's own authority.",
     carries: [],
