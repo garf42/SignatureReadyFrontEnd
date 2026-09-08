@@ -629,8 +629,6 @@ export interface DocumentPreview {
    *  two on the assessment and statement pathways. */
   documentTypes: DocumentType[];
   title: string;
-  /** The one line saying what this view is and is not. */
-  says: string;
   sections: DocumentSection[];
 }
 

@@ -50,7 +50,12 @@ export function DocumentOverlay({
         </OverlayActions>
       }
     >
-      <p className={css.says}>{preview.says}</p>
+      {/* No preamble. What stood here explained the design — that contents are
+          authored elsewhere, that arrangement is permitted — which is reasoning
+          for whoever builds this, not information anyone reading the document
+          can act on. The absence of a single field says the first, and the
+          second belongs in the handoff. What is left is the one line that is
+          actually state. */}
       <p className={css.count}>
         {filled} of {preview.sections.length} sections submitted
       </p>
@@ -109,12 +114,6 @@ export function DocumentOverlay({
         ))}
       </div>
 
-      <p className={css.layoutNote}>
-        Arrangement is not wired yet. Reordering sections, page breaks, and dropping in a figure or
-        a table are all permitted by the rule and none of them is built — so what you see is the
-        order the element list is frozen in, which is one of the arrangements allowed and not the
-        required one.
-      </p>
     </Overlay>
   );
 }

@@ -49,11 +49,14 @@ export function LibraryOverlay({
 
       {group === "file" ? (
         <div className={css.pane}>
+          {/* What the act does, and the one thing about it a reader has to
+              know. The clause that followed — why a wrong filing is worse than
+              none — is the reasoning behind that rule, which belongs where the
+              rule is written and not in front of someone using it. */}
           <p className={css.says}>
             Hand it a document and it reads it, names it to the convention, files it to a
-            collection and records what it found. Everything it writes is a proposal until
-            someone accepts it — an artifact filed under the wrong rule vintage is worse than one
-            not filed at all, because it will be cited.
+            collection, and records what it found. Everything it writes is a proposal until you
+            accept it.
           </p>
           <FileInput className={css.file} disabled text="Choose documents…" />
           <Callout className={css.callout} intent="warning" title="The reading cannot run">

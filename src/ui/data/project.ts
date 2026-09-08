@@ -643,9 +643,13 @@ export function documentPreview(
 
   return {
     documentTypes,
-    title: documentTypes.join(", then "),
-    says:
-      "This is the document as it will be laid out. Its words are the answers adopted on the steps behind it and cannot be changed here — a second place to write them would be a second place a federal document comes from. Arrangement is yours: 1b.3(g)(2), 1b.5(c), 1b.6(b), 1b.7(h) and 1b.8(b) each preface their contents with “may apply any format they choose”.",
+    /* ONE TITLE, whichever pathway this is. It was the document types joined —
+       "FANEC" on one pathway and "EA, then FONSI" on another — so the same
+       overlay announced itself differently depending on where it was opened,
+       and on the two-document pathways it announced a sequence rather than a
+       thing. Each document is headed by name inside, where it starts, which is
+       where that belongs. */
+    title: "Review document",
     sections
   };
 }

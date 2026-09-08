@@ -988,11 +988,17 @@ describe("the document can be viewed, and never edited, from the band", () => {
     expect(view.querySelectorAll("input, textarea, select, [contenteditable]").length).toBe(0);
   });
 
-  /* Arrangement is authorised and unbuilt, and the surface says so rather than
-     leaving a reader to discover it by dragging. */
-  it("says that arrangement is permitted and not yet wired", () => {
+  /* NO PREAMBLE. What stood at the top explained the design — that contents
+     are authored elsewhere, that arrangement is permitted — which is reasoning
+     for whoever builds this, not something a reader of the document can act
+     on. The absence of a single field says the first; the second is in the
+     handoff. */
+  it("carries no explanation of itself, only the state", () => {
     open(ready);
-    expect(screen.getByRole("dialog").textContent).toMatch(/arrangement is not wired yet/i);
+    const dialog = screen.getByRole("dialog");
+    expect(dialog.textContent).not.toMatch(/arrangement/i);
+    expect(dialog.textContent).not.toMatch(/cannot be changed here/i);
+    expect(dialog.textContent).toMatch(/\d+ of \d+ sections submitted/);
   });
 });
 
@@ -1012,5 +1018,23 @@ describe("a finished tab is visibly settled", () => {
        row's own vocabulary instead. */
     expect(done?.getAttribute("aria-selected")).toBe("true");
     expect(style.opacity === "" || style.opacity === "1").toBe(true);
+  });
+});
+
+/** One title, whichever pathway this is. It was the document types joined, so
+ *  the same overlay announced itself differently depending on where it was
+ *  opened — and on a two-document pathway it announced a sequence rather than
+ *  a thing. */
+describe("the document overlay has one title", () => {
+  it("titles itself the same on a one-document and a two-document pathway", () => {
+    at("/projects/p1/steps/4/fanec?pathway=P2&submitted=all");
+    fireEvent.click(screen.getByText("View document"));
+    const one = screen.getByRole("dialog").querySelector("h2")?.textContent;
+    cleanup();
+    at("/projects/p1/steps/E1.P3.4/ea?levels=P3&submitted=all");
+    fireEvent.click(screen.getByText("View document"));
+    const two = screen.getByRole("dialog").querySelector("h2")?.textContent;
+    expect(one).toBe("Review document");
+    expect(two).toBe(one);
   });
 });
