@@ -34,7 +34,23 @@ export function tabPath(projectRef: string, stepId: string, tabId: string): stri
   return projectPath(projectRef) + "/steps/" + stepId + "/" + tabId;
 }
 
-/** Query keeps the state the officer is looking at when a link moves them. */
+/** Query keeps the state the officer is looking at when a link moves them.
+ *
+ *  Merges rather than concatenates, because a destination may carry its own
+ *  query — `/reference?view=<id>` opens that document in the viewer — and
+ *  gluing a second `?` on the end produces an address that parses as one key
+ *  called `view` whose value swallows everything after it. The destination's
+ *  own keys win: they are what the link is FOR, and the carried search is only
+ *  the state the reader happened to be in. */
 export function withSearch(path: string, search: string): string {
-  return search && search !== "?" ? path + search : path;
+  if (!search || search === "?") {
+    return path;
+  }
+  const [base, own] = path.split("?");
+  const merged = new URLSearchParams(search);
+  for (const [key, value] of new URLSearchParams(own ?? "")) {
+    merged.set(key, value);
+  }
+  const q = merged.toString();
+  return q ? base + "?" + q : base;
 }

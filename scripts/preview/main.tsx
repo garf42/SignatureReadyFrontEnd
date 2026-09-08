@@ -67,15 +67,26 @@ function useKnobs() {
   const navigate = useNavigate();
   const params = useMemo(() => new URLSearchParams(search), [search]);
 
-  const set = (key: string, value: string | null) => {
+  /* Several knobs at once, in ONE navigate. Two `set` calls in a row could not
+     work: each builds its query from the `search` of the render it was created
+     in, so the second navigate discards whatever the first wrote. That is why
+     the pathway picker did nothing — it set `levels` and then cleared the legacy
+     `pathway` key, and the second call navigated back over the first. */
+  const setMany = (changes: Record<string, string | null>, path?: string) => {
     const next = new URLSearchParams(search);
-    if (value === null || value === "") {
-      next.delete(key);
-    } else {
-      next.set(key, value);
+    for (const [key, value] of Object.entries(changes)) {
+      if (value === null || value === "") {
+        next.delete(key);
+      } else {
+        next.set(key, value);
+      }
     }
     const q = next.toString();
-    navigate(pathname + (q ? `?${q}` : ""));
+    navigate((path ?? pathname) + (q ? `?${q}` : ""));
+  };
+
+  const set = (key: string, value: string | null) => {
+    setMany({ [key]: value });
   };
 
   const go = (path: string) => {
@@ -83,7 +94,7 @@ function useKnobs() {
     navigate(path + (q ? `?${q}` : ""));
   };
 
-  return { pathname, params, set, go };
+  return { pathname, params, set, setMany, go };
 }
 
 function Group({ label, children }: { label: string; children: React.ReactNode }) {
@@ -129,7 +140,7 @@ function useShareableHash() {
 }
 
 function Harness({ children }: { children: React.ReactNode }) {
-  const { pathname, params, set, go } = useKnobs();
+  const { pathname, params, set, setMany, go } = useKnobs();
   const [open, setOpen] = useState(true);
   useShareableHash();
 
@@ -189,15 +200,32 @@ function Harness({ children }: { children: React.ReactNode }) {
               </Seg>
             </Group>
 
-            <Group label="Levels of review this proposal has occupied">
+            <Group label="Pathway — the levels of review this proposal has occupied">
               {LEVEL_SETS.map((s) => (
                 <Seg
                   key={s.label}
                   on={levelValue === s.value}
                   title={s.note}
                   onClick={() => {
-                    set("levels", s.value);
-                    set("pathway", null);
+                    /* Changing the level set changes which steps exist, so the
+                       step in the address usually stops existing — E1.P3.5 is
+                       not a step of a P4 proposal. Landing back on the first
+                       step of the new rail is what makes the picker appear to
+                       work at all; without it the panel goes empty and the
+                       control reads as broken. */
+                    const nextRail = railFor(
+                      s.value
+                        .split(",")
+                        .filter(Boolean)
+                        .map((p, i) => ({ seq: i + 1, pathway: p as PathwayId }))
+                    );
+                    const first = nextRail[0];
+                    setMany(
+                      { levels: s.value, pathway: null },
+                      onProject && first
+                        ? `/projects/p1/steps/${first.key}/${first.step.tabs[0].id}`
+                        : undefined
+                    );
                   }}
                 >
                   {s.label}

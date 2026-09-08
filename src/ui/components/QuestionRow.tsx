@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Card, HTMLSelect, Icon, Radio, RadioGroup } from "@blueprintjs/core";
+import { Button, Card, HTMLSelect, Icon, Radio, RadioGroup } from "@blueprintjs/core";
 
 import type { Answer, Modality, QuestionRow as Row, SourceKind } from "@/ui/data/port";
 import { FILL_SAYS } from "@/ui/data/port";
 import { Region } from "@/ui/components/Region";
+import { ReferenceBrowser } from "@/ui/components/ReferenceBrowser";
 import { StatusMark } from "@/ui/components/StatusMark";
 
 import css from "@/ui/components/QuestionRow.module.css";
@@ -155,6 +156,7 @@ export function QuestionRow({
 
 function AnswerBody({ answer }: { answer: Answer }) {
   const [picked, setPicked] = useState(answer.form === "select" ? answer.options[0] : "");
+  const [browsing, setBrowsing] = useState(false);
 
   switch (answer.form) {
     case "quote":
@@ -199,8 +201,19 @@ function AnswerBody({ answer }: { answer: Answer }) {
         </div>
       );
 
+    /* Answered by NAMING documents, not by writing anything — so the row has
+       no field, and until now it had no way to name one either. The browse
+       control is the affordance: the corpus comes to the element instead of the
+       element's reader going to the reference page and losing their place. */
     case "sourcesOnly":
-      return null;
+      return (
+        <div className={css.browseRow}>
+          <Button className={css.browse} icon="search-template" onClick={() => setBrowsing(true)}>
+            Find a document to incorporate…
+          </Button>
+          {browsing ? <ReferenceBrowser onClose={() => setBrowsing(false)} /> : null}
+        </div>
+      );
 
     default:
       return assertNever(answer);

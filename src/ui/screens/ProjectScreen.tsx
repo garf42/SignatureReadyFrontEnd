@@ -66,14 +66,35 @@ export function ProjectScreen() {
           )}
         </Region>
 
-        {/* The level line. A person who is never told which review they are
-            doing cannot be driven to the correct one, and this is the sentence
-            that tells them: which level, on what authority, and what it ends
-            in. Restores what was removed when the pathway line was deleted. */}
+        {/* The level line — three sentences and then where you are standing.
+            A person who is never told which review they are doing cannot be
+            driven to the correct one, and this is what tells them.
+
+            It used to read "Level 1 of 1 · P3 · EA, then FONSI". Every token in
+            that is internal vocabulary: the primary user is not a NEPA
+            subject-matter expert and has no idea what P3 is. So the three facts
+            the determination fixes — what review this is, why it is this one,
+            and what it ends in — are said in sentences, with the citation kept
+            on the "why" so an expert reading over the shoulder can check it.
+
+            The elimination is stated once, quietly, and never as a set of lanes
+            — the reader must not be able to read the decision tree as a menu
+            they pick from. */}
         <Region region={levels}>
           {(history) => (
             <div className={css.levelLine} data-level={history.liveSeq === null ? "none" : "set"}>
-              <p className={css.levelNote}>{history.note}</p>
+              {history.plain ? (
+                <>
+                  <p className={css.levelSays}>{history.plain.says}</p>
+                  <p className={css.levelWhy}>{history.plain.because}</p>
+                  <p className={css.levelEnds}>{history.plain.ends}</p>
+                </>
+              ) : (
+                <p className={css.levelNote}>{history.note}</p>
+              )}
+              {history.plain && history.note ? (
+                <p className={css.levelNote}>{history.note}</p>
+              ) : null}
               {history.documents.length > 0 ? (
                 <p className={css.levelDocs}>
                   {history.documents
@@ -87,12 +108,34 @@ export function ProjectScreen() {
               ) : null}
               {history.foreclosed.length > 0 ? (
                 <p className={css.foreclosed}>
-                  Levels this determination ruled out: {history.foreclosed.map((f) => f.pathway).join(", ")} —{" "}
-                  {history.foreclosed[0].limb}
+                  The other levels of review are not open to this project.{" "}
+                  {history.foreclosed[0].limb} decided it.
                 </p>
               ) : null}
             </div>
           )}
+        </Region>
+
+        {/* Where you are standing, and what this step is for. Authored per step
+            on `StepSpec.purpose`, so it is unique to the step and no screen has
+            to synthesise a description out of the step's name. */}
+        <Region region={rail}>
+          {(value: StepRail) => {
+            const here = stepIn(value, stepId);
+            /* Counted over the rail as drawn, not over the step's own `n`.
+               `n` restarts inside each band, so on an escalated proposal two
+               different steps both call themselves 3 — true of the pathway,
+               useless as a position. */
+            const at = here ? value.steps.indexOf(here) + 1 : 0;
+            return here ? (
+              <div className={css.here}>
+                <p className={css.hereWhere}>
+                  Step {String(at)} of {String(value.steps.length)} · {here.name}
+                </p>
+                <p className={css.herePurpose}>{here.purpose}</p>
+              </div>
+            ) : null;
+          }}
         </Region>
       </div>
 
@@ -110,12 +153,26 @@ export function ProjectScreen() {
           </button>
 
           <Region region={rail}>
-            {(value: StepRail) => (
+            {(value: StepRail) => {
+              const episodes = value.bands.filter(
+                (entry) => entry.band.kind === "episode"
+              ).length;
+              return (
               <>
                 {value.bands
                   .filter((band) => band.band.kind !== "cross")
                   .map((band) => {
                     const key = bandId(band.band);
+                    /* The band header earns its place only when a level has
+                       actually been SUPERSEDED and the reader has read-only
+                       steps to keep apart from live ones. On the ordinary
+                       project it restated the level line directly above it and
+                       the step count directly below it, so it was two
+                       redundancies in one control — and splitting "Every
+                       review" from the level's own steps told the reader
+                       nothing they could act on. Banding still exists in the
+                       data and is drawn the moment it means something. */
+                    const banded = episodes > 1;
                     const steps = value.steps.filter((s) => bandId(s.band) === key);
                     /* A superseded band collapses — but never the one holding
                        the step being read, or the rail would show no entry for
@@ -123,20 +180,24 @@ export function ProjectScreen() {
                     const holdsActive = steps.some(
                       (s) => s.key === stepId || s.id === stepId
                     );
-                    const open = openBands[key] ?? (!band.collapsed || holdsActive);
+                    const open = banded
+                      ? (openBands[key] ?? (!band.collapsed || holdsActive))
+                      : true;
                     return (
                       <section key={key} className={css.bandGroup} data-status={band.status}>
-                        <button
-                          type="button"
-                          className={css.bandHeader}
-                          aria-expanded={open}
-                          onClick={() => setOpenBands((state) => ({ ...state, [key]: !open }))}
-                        >
-                          <span className={css.bandTitle}>{railShut ? key : band.title}</span>
-                          {railShut ? null : (
-                            <span className={css.bandSummary}>{band.summary}</span>
-                          )}
-                        </button>
+                        {banded ? (
+                          <button
+                            type="button"
+                            className={css.bandHeader}
+                            aria-expanded={open}
+                            onClick={() => setOpenBands((state) => ({ ...state, [key]: !open }))}
+                          >
+                            <span className={css.bandTitle}>{railShut ? key : band.title}</span>
+                            {railShut ? null : (
+                              <span className={css.bandSummary}>{band.summary}</span>
+                            )}
+                          </button>
+                        ) : null}
                         {open ? (
                           <Menu>
                             {steps.map((step) => (
@@ -156,7 +217,8 @@ export function ProjectScreen() {
                     );
                   })}
               </>
-            )}
+              );
+            }}
           </Region>
 
           {/* Nothing here but steps. The rail used to carry an eleventh entry
@@ -222,11 +284,15 @@ function StepItem({
   );
 }
 
-function tabsFor(rail: StepRail, stepId: string) {
-  const step =
+function stepIn(rail: StepRail, stepId: string) {
+  return (
     rail.steps.find((entry) => entry.key === stepId) ??
-    rail.steps.find((entry) => entry.id === stepId);
-  return step ? step.tabs : [];
+    rail.steps.find((entry) => entry.id === stepId)
+  );
+}
+
+function tabsFor(rail: StepRail, stepId: string) {
+  return stepIn(rail, stepId)?.tabs ?? [];
 }
 
 export type { BandEntry };

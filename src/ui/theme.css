@@ -90,6 +90,20 @@ a:hover {
   outline-offset: 1px;
 }
 
+/* A halo on every mouse click, and the fix belongs here rather than on the one
+   component where it was first noticed. Blueprint styles `:focus` — not
+   `:focus-visible` — with a 2px blue outline at a 2px offset, so a pointer
+   click paints a ring OUTSIDE the control's own border: on a tab, whose top
+   corners are rounded and whose bottom edge is joined to the panel, what
+   escapes is a blue line down each side. Unlayered rules outrank
+   `@layer vendor`, so suppressing pointer focus once, globally, removes it
+   from tabs, rail steps, band headers and every Blueprint control at the same
+   time. Keyboard focus is untouched: `:focus-visible` above still draws, and
+   it draws this vocabulary's ring at this vocabulary's offset. */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* --- Blueprint, reset to this vocabulary. Prefix tracks the major version. --- */
 
 .bp6-button {

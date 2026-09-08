@@ -272,3 +272,13 @@
   color: var(--ink-faint);
   font-style: italic;
 }
+
+/* The browse control on a sources-only element. Sits where a field would be,
+   because naming documents IS how this element is answered. */
+.browseRow {
+  margin-top: var(--s-2);
+}
+
+.browse {
+  font-size: var(--t-meta);
+}

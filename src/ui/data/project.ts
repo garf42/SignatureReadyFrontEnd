@@ -134,7 +134,10 @@ export function levelHistory(levels: PathwayId[]): Region<LevelHistory> {
     note:
       liveSeq === null
         ? "The level of review is fixed at Step 2. Until then no level step exists and none is named."
-        : `Level ${String(liveSeq)} of ${String(episodes.length)} · ${live?.pathway ?? ""} · ${live?.terminalOutput ?? ""}`,
+        : episodes.length > 1
+          ? `Level ${String(liveSeq)} of ${String(episodes.length)} — this project has moved up. Everything from the earlier levels is still here and still readable.`
+          : "",
+    plain: live ? PATHWAYS[live.pathway].plain : null,
     documents: live ? DOCUMENTS_FOR[live.pathway](live.seq) : [],
     foreclosed
   });
@@ -286,6 +289,7 @@ export function stepRail(levels: PathwayId[], activeKey: string): Region<StepRai
       key: entry.key,
       n: entry.step.n,
       name: entry.step.name,
+      purpose: entry.step.purpose,
       mark: superseded
         ? ("superseded" as const)
         : active

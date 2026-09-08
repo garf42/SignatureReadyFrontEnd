@@ -330,6 +330,16 @@ export interface PathwaySpec {
   terminalOutput: string;
   /** Steps 3 and beyond. Steps 0–2 are shared and live in SHARED_STEPS. */
   steps: StepSpec[];
+  /** The same three facts as `name`, `reachedWhen` and `terminalOutput`, said
+   *  to the person doing the work rather than to the FDE reading the spec.
+   *
+   *  The primary user is not a NEPA subject-matter expert, and the page's own
+   *  job in the levels framework is decision guidance — driving that person to
+   *  the correct level of review. A line reading "Level 1 of 1 · P3 · EA, then
+   *  FONSI" guides nobody: every token in it is internal vocabulary. These
+   *  three are the same determination in sentences, and the citation stays
+   *  attached so an expert reading over the shoulder can check it. */
+  plain: { says: string; because: string; ends: string };
 }
 
 const SIGN_FANEC: GateSpec = {
@@ -1119,8 +1129,8 @@ export const SHARED_STEPS: StepSpec[] = [
 const CE_SCREEN_STEP: StepSpec = {
   id: "3",
   n: 3,
-  name: "Category and extraordinary circumstances",
-    purpose: "Identify the categorical exclusion that covers the action, and evaluate the action for extraordinary circumstances. Both must hold before an exclusion may be applied.",
+  name: "Exclusion basis",
+    purpose: "Establish the basis on which a categorical exclusion may be applied to this action: which established or adopted category covers it, and that no extraordinary circumstance is present. 1b.3(j) makes both halves necessary, so neither one alone finishes this step.",
   tabs: [
     {
       id: "category",
@@ -1265,6 +1275,11 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
     name: "NEPA does not apply",
     reachedWhen: "1b.2(e) — NEPA does not apply",
     terminalOutput: "None; record keeping advisable only",
+    plain: {
+      says: "NEPA does not apply to this project.",
+      because: "One of the six grounds at 1b.2(e) was met, so no environmental review is required.",
+      ends: "Nothing is produced and nothing is signed. Recording why is advisable, not required."
+    },
     steps: [
       {
         id: "3",
@@ -1334,18 +1349,23 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
     name: "Categorical exclusion, no documentation",
     reachedWhen: "A categorical exclusion applies and the category sits at 1b.4(c)",
     terminalOutput: "None; implementation clearance under 1b.3(j)",
+    plain: {
+      says: "This project is covered by a categorical exclusion.",
+      because: "An established or adopted category covers the action and no extraordinary circumstance was found — 1b.2(f)(2)(i).",
+      ends: "No document. The action is cleared for implementation once the four conditions at 1b.3(j) hold."
+    },
     steps: [
       CE_SCREEN_STEP,
       {
         id: "4",
         n: 4,
-        name: "Disposition",
-    purpose: "Confirm the four conditions at 1b.3(j) and clear the action for implementation. This pathway produces no document.",
+        name: "Clearance",
+    purpose: "Clear the action for implementation. This pathway writes no document, so the four conditions at 1b.3(j) are the whole of what has to be true, and this step is where each is confirmed on the record.",
         terminal: true,
         tabs: [
           {
             id: "implementation-clearance",
-            name: "Implementation clearance",
+            name: "Conditions for implementation",
     purpose: "Confirm all four conditions at 1b.3(j) hold, and clear the action.",
     level: 2,
     scope: "review",
@@ -1378,13 +1398,18 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
     name: "Categorical exclusion requiring documentation",
     reachedWhen: "A categorical exclusion applies and the category sits at 1b.4(d)",
     terminalOutput: "FANEC",
+    plain: {
+      says: "This project is covered by a categorical exclusion that has to be documented.",
+      because: "An established or adopted category covers the action and no extraordinary circumstance was found, and that category sits at 1b.4(d) — 1b.2(f)(2)(i).",
+      ends: "One signed document: a finding of applicability and no extraordinary circumstances."
+    },
     steps: [
       CE_SCREEN_STEP,
       {
         id: "4",
         n: 4,
-        name: "Disposition",
-    purpose: "Assemble the finding of applicability and no extraordinary circumstances — the six elements at 1b.3(g)(2).",
+        name: "Assembly",
+    purpose: "Write the finding of applicability and no extraordinary circumstances. Its six elements at 1b.3(g)(2) are the whole document this pathway produces, and every one of them is drawn from work already recorded in the steps above.",
         tabs: [
           {
             id: "fanec",
@@ -1433,7 +1458,7 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
         id: "5",
         n: 5,
         name: "Issue",
-    purpose: "Issue the signed finding and record what became of it. No publication and no notification duty attaches to a FANEC.",
+    purpose: "Sign the finding, date it, and record what became of it. Part 1b attaches no publication and no notification duty to a finding of applicability, so signature and disposition are where this pathway ends.",
         terminal: true,
         tabs: [
           {
@@ -1500,12 +1525,17 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
     name: "Environmental assessment",
     reachedWhen: "1b.2(f)(2)(iv)(A) — impacts not likely significant, or of unknown significance",
     terminalOutput: "EA, then FONSI",
+    plain: {
+      says: "This project needs an environmental assessment.",
+      because: "Its impacts are not likely to be significant, or their significance is not yet known — 1b.2(f)(2)(iv)(A). Not knowing is an assessment trigger, not a reason to go higher.",
+      ends: "Two documents: an environmental assessment, then a finding of no significant impact. One year to finish."
+    },
     steps: [
       {
         id: "3",
         n: 3,
-        name: "Scope, clock and public involvement",
-    purpose: "Fix the scope of the analysis, start the statutory clock, and decide what public involvement this assessment will have.",
+        name: "Plan of analysis",
+    purpose: "Settle everything the assessment has to be written against before any of it is written: what the analysis covers, the date it is due, and whether the public is invited in. Each of the three constrains the assessment, and none of them can be revisited cheaply once drafting has begun.",
         tabs: [
           {
             id: "scope",
@@ -1844,6 +1874,11 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
     name: "Environmental impact statement",
     reachedWhen: "1b.2(f)(2)(iv)(B) — impacts likely significant",
     terminalOutput: "EIS, then ROD",
+    plain: {
+      says: "This project needs an environmental impact statement.",
+      because: "Its impacts are likely to be significant — 1b.2(f)(2)(iv)(B).",
+      ends: "Two documents: an environmental impact statement, then a record of decision. Two years to finish, and the statement is filed with EPA."
+    },
     steps: [
       {
         id: "3",
@@ -1853,7 +1888,7 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
         tabs: [
           {
             id: "noi",
-            name: "Notice of intent",
+            name: "Contents of the notice",
     purpose: "Assemble the ten contents of the notice of intent, including the website every later publication will use.",
     level: 2,
     scope: "review",
@@ -1881,8 +1916,8 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
       {
         id: "4",
         n: 4,
-        name: "Scope, clock and scoping",
-    purpose: "Fix the scope, start the clock, and decide whether to run a scoping process and when to request comment.",
+        name: "Plan of analysis",
+    purpose: "Settle everything the statement has to be written against before any of it is written: what the analysis covers, the date it is due, whether a scoping process is run, and whether comment is taken against a published draft. Each shapes the statement, and the draft decision at 1b.7(n)(1) decides whether this pathway has one drafting cycle or two.",
         tabs: [
           {
             id: "scope",
@@ -1941,8 +1976,8 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
           },
           {
             id: "comments",
-            name: "Comment timing",
-    purpose: "Decide when comment is requested. Any time the responsible official deems reasonable.",
+            name: "Comment and pre-decisional publication",
+    purpose: "Decide whether a draft statement is published, and when comment is requested. Both are permissions, and together they decide whether comment arrives against a draft or against nothing.",
     level: 2,
     scope: "review",
             elements: [
@@ -1951,6 +1986,21 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
                 label: "When comment is requested",
                 help: "At any time deemed reasonable.",
                 form: "select", fill: "choice", produces: { section: "Proposal record — 1b.9(a)", shape: "one-of", template: null }, modality: "permission", text: "restated", options: { kind: "unstated", why: "The members are not stated in this repository." },
+              },
+              {
+                /* The phase-shaping decision that had no surface anywhere in
+                   the build. A draft statement is a PERMISSION — "may choose
+                   to publish a draft environmental impact statement and any
+                   other pre-decisional materials" — never a duty, so nothing
+                   here may present it as a required stage. It belongs at plan
+                   time and not at publication, because it decides whether
+                   there is a draft to write at all. */
+                ref: "1b.7(n)(1)",
+                label: "Whether a draft statement and other pre-decisional materials are published",
+                help:
+                  "Sole discretion, and it decides the shape of the rest of this pathway. Publish a draft and comment arrives against something; publish none and the comment process at 1b.7(d)(3) runs against the proposal alone.",
+                form: "choice", fill: "choice", produces: { section: "Proposal record — 1b.9(a)", shape: "one-of", template: null }, modality: "permission", text: "verbatim",
+                options: { kind: "closed", members: ["A draft is published", "No draft is published"] }
               }
             ]
           }
@@ -2091,15 +2141,6 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
               },
               { ref: "1b.7(o)", label: "Filing with EPA", form: "value", fill: "authored", produces: { section: "Proposal record — 1b.9(a)", shape: "prose", template: null }, modality: "duty", text: "restated" },
               {
-                ref: "1b.8(e)",
-                label: "EPA's Federal Register notice of availability",
-                help:
-                  "EPA publishes a weekly notice of availability once the statement is filed. The notice is a precondition of lawful implementation.",
-                form: "value", fill: "authored", produces: { section: "Proposal record — 1b.9(a)", shape: "prose", template: null },
-                modality: "duty",
-                text: "restated"
-              },
-              {
                 ref: "1b.7(l)",
                 label: "Publication compelled by the deadline elapsing",
                 help:
@@ -2145,7 +2186,7 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
         tabs: [
           {
             id: "rod",
-            name: "Record of decision",
+            name: "Contents of the decision",
     purpose: "Assemble the eight elements of the record of decision.",
     level: 2,
     scope: "review",
@@ -2198,14 +2239,13 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
       {
         id: "9",
         n: 9,
-        name: "Notification and implementation clearance",
-    purpose: "Notify the consulted and the commenters, and record EPA's notice of availability — which is a precondition of lawful implementation.",
-        terminal: true,
+        name: "Notification",
+    purpose: "Make the decision known. The record of decision goes to the website the notice of intent named, and everyone who was consulted or who commented is told directly, in the manner the consultation used. Both are duties of this subcomponent and both are discharged here.",
         tabs: [
           {
-            id: "notify-and-clear",
-            name: "Notify and clear",
-    purpose: "Notify the consulted and the commenters, and record the notice of availability that clears implementation.",
+            id: "notify",
+            name: "Notify",
+    purpose: "Publish the decision to the website named in the notice of intent, and notify the consulted and the commenters.",
     level: 4,
     scope: "review",
             elements: [
@@ -2220,10 +2260,35 @@ export const PATHWAYS: Record<PathwayId, PathwaySpec> = {
                   "Notification of agencies and persons consulted as listed in the EIS, and of any party that commented, in the manner used to consult",
                 form: "value", fill: "authored", produces: { section: "Proposal record — 1b.9(a)", shape: "prose", template: null }, modality: "duty", text: "restated"
               },
+            ]
+          }
+        ]
+      },
+      {
+        /* The only pathway with a step after notification, and the reason is
+           in the rule rather than in symmetry: 1b.8(e) makes an act by ANOTHER
+           agency a precondition of lawful implementation. Nothing this
+           subcomponent does discharges it, so it cannot be folded into the
+           notification step without asserting that notifying finished the
+           review. It did not. */
+        id: "10",
+        n: 10,
+        name: "Clearance",
+    purpose: "Wait on the one thing this subcomponent cannot do for itself. EPA publishes a weekly notice of availability once the statement is filed, and until that notice appears the action may not lawfully be implemented — however complete everything above it is.",
+        terminal: true,
+        tabs: [
+          {
+            id: "implementation-clearance",
+            name: "Conditions for implementation",
+    purpose: "Record EPA\u2019s notice of availability, which is what clears the action for implementation.",
+    level: 4,
+    scope: "review",
+            elements: [
               {
                 ref: "1b.8(e)",
                 label: "EPA notice of availability",
-                help: "A precondition of lawful implementation.",
+                help:
+                  "EPA publishes a weekly notice of availability once the statement is filed. The notice is a precondition of lawful implementation, and it is published by EPA and not by this subcomponent.",
                 form: "value", fill: "authored", produces: { section: "Proposal record — 1b.9(a)", shape: "prose", template: null }, modality: "duty", text: "restated"
               }
             ]
@@ -2667,7 +2732,7 @@ const WHY_REOPENED: TabSpec = {
       form: "choice", fill: "choice", produces: { section: "Proposal record — 1b.9(a)", shape: "one-of", template: null },
       modality: "duty",
       text: "restated",
-      restates: "E1.P4.9/reevaluation/1b.9(r)(2)#2",
+      restates: "E1.P4.10/reevaluation/1b.9(r)(2)#2",
       options: {
         kind: "closed",
         members: ["Stopped", "Emergency authority invoked", "Not applicable"]

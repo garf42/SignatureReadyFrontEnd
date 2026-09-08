@@ -176,6 +176,10 @@ export interface StepEntry {
   key: string;
   n: number;
   name: string;
+  /** What this step is for, in one or two plain sentences. Authored per step
+   *  on `StepSpec`, so it is unique to the step wherever the step appears and
+   *  no screen has to synthesise a description from the step's name. */
+  purpose: string;
   mark: StepMark;
   meta: string;
   tabs: TabEntry[];
@@ -328,6 +332,10 @@ export interface LevelHistory {
   liveSeq: number | null;
   /** The words shown where no level is fixed yet. */
   note: string;
+  /** The determination in plain sentences, for the person doing the work.
+   *  Null before Step 2 fixes a level, because before then there is no
+   *  determination to state and the surface must not imply one. */
+  plain: { says: string; because: string; ends: string } | null;
   documents: DocumentLedgerEntry[];
   /** Levels the live determination's limb sequence eliminated, with the limb. */
   foreclosed: { pathway: PathwayId; limb: string; because: string }[];

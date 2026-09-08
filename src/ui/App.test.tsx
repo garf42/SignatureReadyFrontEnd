@@ -3,6 +3,7 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "@/ui/App";
+import { withSearch } from "@/ui/routes";
 
 import generated from "@/ui/data/PORT-ADDITIONS.generated.md?raw";
 
@@ -400,4 +401,46 @@ describe("no backend vocabulary reaches the screen", () => {
       }
     }
   );
+});
+
+/** A destination may carry its own query — `/reference?view=<id>` opens that
+ *  document in the viewer — and the carried state has to merge with it rather
+ *  than be glued on after a second `?`. */
+describe("withSearch", () => {
+  it("carries the reader's state onto a plain path", () => {
+    expect(withSearch("/reference", "?levels=P3")).toBe("/reference?levels=P3");
+  });
+
+  it("merges rather than concatenating when the destination has its own query", () => {
+    const merged = withSearch("/reference?view=doc-1", "?levels=P3");
+    expect(merged.startsWith("/reference?")).toBe(true);
+    expect(merged.split("?")).toHaveLength(2);
+    const query = new URLSearchParams(merged.split("?")[1]);
+    expect(query.get("view")).toBe("doc-1");
+    expect(query.get("levels")).toBe("P3");
+  });
+
+  it("lets the destination's own keys win over the carried ones", () => {
+    const merged = withSearch("/reference?view=wanted", "?view=stale&levels=P3");
+    expect(new URLSearchParams(merged.split("?")[1]).get("view")).toBe("wanted");
+  });
+
+  it("leaves the path alone when there is nothing to carry", () => {
+    expect(withSearch("/reference?view=doc-1", "")).toBe("/reference?view=doc-1");
+    expect(withSearch("/reference", "?")).toBe("/reference");
+  });
+});
+
+/** The reference page's open document lives in the address, which is the whole
+ *  of what lets a source overlay hand a reader a specific document. */
+describe("the reference viewer is addressable", () => {
+  it("opens the document named by ?view=", () => {
+    at("/reference?view=a1");
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+
+  it("opens nothing without it", () => {
+    at("/reference");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
 });

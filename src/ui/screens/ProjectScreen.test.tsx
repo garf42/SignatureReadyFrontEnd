@@ -57,7 +57,7 @@ describe("pathway-dependent display — §7.1, §7.8", () => {
     cleanup();
     const ce = at("/projects/p1/steps/4/fanec?pathway=P2").container;
     expect(within(rail(ce)).queryByText("Record of decision")).toBeNull();
-    expect(within(rail(ce)).getByText("Disposition")).toBeTruthy();
+    expect(within(rail(ce)).getByText("Assembly")).toBeTruthy();
   });
 
   it("gives P0 no pathway step at all", () => {
@@ -169,7 +169,7 @@ describe("discretion is never a requirement — §7.9", () => {
 describe("the element panel", () => {
   it("names the document's element count where a tab assembles one", () => {
     at("/projects/p1/steps/8/rod?pathway=P4");
-    expect(screen.getByText("Record of decision — 8 elements")).toBeTruthy();
+    expect(screen.getByText("Contents of the decision — 8 elements")).toBeTruthy();
   });
 
   it("carries the drafting authority into the tab's own words", () => {
@@ -222,7 +222,7 @@ describe("tabs are the step's parts, not a copy of the step", () => {
     const names = within(list as HTMLElement)
       .getAllByRole("tab")
       .map((tab) => (tab.textContent ?? "").trim());
-    expect(names).toEqual(["Scope of analysis", "Deadline", "Scoping", "Comment timing"]);
+    expect(names).toEqual(["Scope of analysis", "Deadline", "Scoping", "Comment and pre-decisional publication"]);
   });
 
   it("scrolls the strip rather than wrapping or clipping it", () => {
@@ -264,5 +264,57 @@ describe("tabs are the step's parts, not a copy of the step", () => {
       }
       cleanup();
     }
+  });
+});
+
+/** The band tells a non-expert which review they are doing and what this step
+ *  is for. It used to read "Level 1 of 1 · P3 · EA, then FONSI", which guides
+ *  nobody: every token in it is internal vocabulary. */
+describe("the band says which review this is, in plain words", () => {
+  it("states the level, why it is that one, and what it ends in", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    expect(band.textContent).toContain("This project needs an environmental assessment.");
+    expect(band.textContent).toContain("1b.2(f)(2)(iv)(A)");
+    expect(band.textContent).toContain("finding of no significant impact");
+  });
+
+  it("never puts the internal pathway id in front of the reader", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    expect(band.textContent).not.toMatch(/\bP3\b/);
+  });
+
+  it("shows the selected step's own purpose, and it changes with the step", () => {
+    const assembly = at("/projects/p1/steps/4/ea?pathway=P3").container;
+    const first = (assembly.querySelector("[class*='herePurpose']") as HTMLElement).textContent;
+    expect(first).toBeTruthy();
+    cleanup();
+    const plan = at("/projects/p1/steps/3/scope?pathway=P3").container;
+    const second = (plan.querySelector("[class*='herePurpose']") as HTMLElement).textContent;
+    expect(second).toBeTruthy();
+    expect(second).not.toBe(first);
+  });
+
+  it("says nothing about a level of review before Step 2 fixes one", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    expect(band.textContent).not.toContain("This project needs");
+    expect(band.textContent).toContain("fixed at Step 2");
+  });
+});
+
+/** The band header inside the rail said the same thing as the level line above
+ *  it and the step count below it. It earns its place only where there is more
+ *  than one band to tell apart. */
+describe("the rail's band header", () => {
+  it("is not drawn on a project that has occupied one level of review", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    expect(rail(container).querySelector("[class*='bandHeader']")).toBeNull();
+  });
+
+  it("is drawn once a level has been superseded and there are bands to tell apart", () => {
+    const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
+    expect(rail(container).querySelector("[class*='bandHeader']")).not.toBeNull();
   });
 });

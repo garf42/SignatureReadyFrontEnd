@@ -181,6 +181,60 @@
   color: var(--ink);
 }
 
+/* The determination, in three sentences. Weight carries the order a reader
+   takes them in — what the review IS, then why it is that one, then what it
+   ends in — so a person who reads only the first line has still been told the
+   thing the page exists to tell them. */
+.levelSays {
+  margin: 0;
+  font-size: var(--t-body);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+  text-wrap: pretty;
+  max-width: 80ch;
+}
+
+.levelWhy,
+.levelEnds {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+  max-width: 80ch;
+}
+
+.levelLine .levelNote {
+  margin-top: 0.35rem;
+}
+
+/* Where the reader is standing, and what this step is for. Sits below the
+   determination because the determination does not change and this does. */
+.here {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dotted var(--rule);
+}
+
+.hereWhere {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.herePurpose {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--ink);
+  text-wrap: pretty;
+  max-width: 80ch;
+}
+
 .levelLine[data-level="none"] .levelNote {
   color: var(--ink-soft);
   font-style: italic;

@@ -310,3 +310,105 @@ describe("the trigger map — §7.8", () => {
     expect(TRIGGERS.filter((t) => t.level === "2 → 4")).toHaveLength(4);
   });
 });
+
+/** The step decomposition itself — which commitments a pathway is divided
+ *  into, and where the boundaries fall. These were inherited from an earlier
+ *  plan document rather than derived, and these are the properties the
+ *  derivation has to keep true. */
+describe("the steps are commitments, not containers", () => {
+  const everyStep = PATHWAY_IDS.flatMap((id) => stepsFor(id));
+
+  it("gives every step a purpose of its own", () => {
+    for (const step of everyStep) {
+      expect(step.purpose.length, step.name).toBeGreaterThan(40);
+    }
+  });
+
+  /* A step name that lists its tabs is a container with a label, not a
+     commitment: "Scope, clock and public involvement" was three unrelated
+     things sharing a step because three tabs needed a home. The check is
+     mechanical — no step name may be a comma list. */
+  it("never names a step by enumerating its parts", () => {
+    for (const step of everyStep) {
+      expect(step.name, step.name).not.toContain(",");
+    }
+  });
+
+  /* A step whose name is one of its own tab names says the tab is the step,
+     which makes the containment law unreadable at exactly the place it has to
+     be read. */
+  it("never gives a step the name of a tab inside it", () => {
+    for (const step of everyStep) {
+      const clash = step.tabs.find((tab) => tab.name === step.name);
+      expect(clash?.name, `${step.name} holds a tab of the same name`).toBeUndefined();
+    }
+  });
+
+  it("ends every pathway on exactly one terminal step, and it is the last", () => {
+    for (const id of PATHWAY_IDS) {
+      const steps = stepsFor(id);
+      const terminal = steps.filter((step) => step.terminal);
+      expect(terminal, id).toHaveLength(1);
+      expect(terminal[0], id).toBe(steps[steps.length - 1]);
+    }
+  });
+
+  /* Only P4 has a step after notification, and the reason is in the rule and
+     not in symmetry: 1b.8(e) makes an act by ANOTHER agency a precondition of
+     lawful implementation, so notifying does not finish the review. */
+  it("gives the statement pathway a clearance step for 1b.8(e), and no other pathway one", () => {
+    const clearing = PATHWAY_IDS.filter((id) =>
+      stepsFor(id).some((step) =>
+        step.tabs.some((tab) => tab.elements.some((row) => row.ref === "1b.8(e)"))
+      )
+    );
+    expect(clearing).toEqual(["P4"]);
+    const last = stepsFor("P4").at(-1);
+    expect(last?.name).toBe("Clearance");
+    expect(last?.terminal).toBe(true);
+  });
+
+  it("asks the 1b.8(e) notice once, on the step it gates", () => {
+    const asked = stepsFor("P4").flatMap((step) =>
+      step.tabs.flatMap((tab) => tab.elements.filter((row) => row.ref === "1b.8(e)"))
+    );
+    expect(asked).toHaveLength(1);
+  });
+
+  /* 1b.7(n)(1) — "may choose to publish a draft environmental impact
+     statement" — decides whether the statement pathway has one drafting cycle
+     or two, and it had no surface anywhere in the build. It is a PERMISSION and
+     nothing may present it as a required stage. */
+  it("surfaces the draft-statement decision, as a permission, before assembly", () => {
+    const steps = stepsFor("P4");
+    const at = steps.findIndex((step) =>
+      step.tabs.some((tab) => tab.elements.some((row) => row.ref === "1b.7(n)(1)"))
+    );
+    expect(at).toBeGreaterThanOrEqual(0);
+    expect(at).toBeLessThan(steps.findIndex((step) => step.name === "Assembly"));
+    const row = steps[at].tabs
+      .flatMap((tab) => tab.elements)
+      .find((element) => element.ref === "1b.7(n)(1)");
+    expect(row?.modality).toBe("permission");
+  });
+
+  /* The document-building step is the same act on every pathway that builds
+     one, so it carries the same name. It was "Disposition" on P2 and
+     "Assembly" on P3 and P4 — one act under two names. */
+  it("calls the document-building step Assembly wherever there is one", () => {
+    for (const id of ["P2", "P3", "P4"] as const) {
+      expect(stepsFor(id).map((step) => step.name), id).toContain("Assembly");
+    }
+  });
+
+  it("says in plain words what each level of review is, why, and what it ends in", () => {
+    for (const id of PATHWAY_IDS) {
+      const { plain } = PATHWAYS[id];
+      expect(plain.says, id).toMatch(/\.$/);
+      expect(plain.because, id).toContain("1b.");
+      expect(plain.ends.length, id).toBeGreaterThan(20);
+      /* Internal vocabulary is exactly what these sentences exist to avoid. */
+      expect(plain.says, id).not.toMatch(/\bP[0-4]\b|\bLevel \d/);
+    }
+  });
+});

@@ -9,13 +9,18 @@ import { INBOX, withSearch } from "@/ui/routes";
 
 import css from "@/ui/components/AppFrame.module.css";
 
-/** Blueprint's brain glyph is filed under `predictive-analysis`; there is no
- *  `brain` in the 16px set. */
-const ICONS: Record<SectionIcon, "inbox" | "document" | "box" | "predictive-analysis" | "people"> = {
+/** Blueprint's brain glyph is filed under `predictive-analysis`, and it is the
+ *  one icon in this row drawn as a filled organic shape rather than as a
+ *  stroked outline — beside `inbox`, `document`, `box` and `people` it reads as
+ *  borrowed from another set. There is no second brain in the 16px set to swap
+ *  it for, so the section takes the glyph that carries the same meaning at the
+ *  same weight: `learning`, the mortarboard, which is stroked like its four
+ *  neighbours and is what the section is actually called. */
+const ICONS: Record<SectionIcon, "inbox" | "document" | "box" | "learning" | "people"> = {
   inbox: "inbox",
   documents: "document",
   archive: "box",
-  learning: "predictive-analysis",
+  learning: "learning",
   people: "people"
 };
 
