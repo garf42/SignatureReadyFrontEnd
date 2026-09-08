@@ -141,7 +141,7 @@ export const sourceAbsent: Region<SourceDocument> = absent(
   "⟨register.item.retrieval_query⟩"
 );
 export const sourceBlocked: Region<SourceDocument> = blocked(
-  "Not ready yet",
+  "Waiting on an earlier answer",
   "⟨earlier.answer⟩",
   STEP_LINK
 );

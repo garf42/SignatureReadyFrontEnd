@@ -162,7 +162,7 @@ describe("discretion is never a requirement — §7.9", () => {
     const { container } = at("/projects/p1/steps/3/public-involvement?pathway=P3");
     const rows = container.querySelectorAll("[data-discretionary='yes']");
     expect(rows.length).toBe(2);
-    expect(screen.getAllByText("2 of 2 completed").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("2 of 2 answered").length).toBeGreaterThan(0);
   });
 });
 

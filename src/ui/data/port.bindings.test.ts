@@ -9,6 +9,8 @@ import generated from "@/ui/data/PORT-ADDITIONS.generated.md?raw";
 import { ACTS } from "@/ui/data/acts";
 import { BINDINGS } from "@/ui/data/bindings";
 import { fixturePort } from "@/ui/data/fixturePort";
+import { PATHWAY_IDS, stepsFor } from "@/ui/data/pathways";
+import { rowsFor } from "@/ui/data/project";
 
 /** The gate the README asks for: no screen may read data without naming the
  *  backend it needs. The member list is read off the CONTRACT rather than
@@ -230,6 +232,43 @@ describe("no name is asserted that the register did not give", () => {
     for (const [hook, binding] of Object.entries(BINDINGS)) {
       for (const l of binding.links) {
         expect(l.why.length, `${hook}.${l.name} does not say why it is traversed`).toBeGreaterThan(0);
+      }
+    }
+  });
+});
+
+/** Copy that names an act. Two failures were repeated across the surface: a
+ *  one-word verb naming no object ("Accept" — accept what, into what?), and a
+ *  status naming no cause ("Not ready yet"). Both leave a professional user to
+ *  guess, and the first does it while asking them to rubber-stamp text they
+ *  will sign. */
+describe("the actions and the states say what they mean", () => {
+  const everyRegion = () =>
+    PATHWAY_IDS.flatMap((id) =>
+      stepsFor(id).flatMap((step) =>
+        step.tabs.flatMap((tab) =>
+          rowsFor(step.id, tab, false, true).map((row) => row.answer)
+        )
+      )
+    );
+
+  it("never labels an act with a bare verb that names no object", () => {
+    const bare = new Set<string>();
+    for (const region of everyRegion()) {
+      for (const action of region.actions) {
+        if (/^(Accept|Search|Submit|Send|Open|Go|Attach)$/.test(action.label)) {
+          bare.add(action.label);
+        }
+      }
+    }
+    expect([...bare]).toEqual([]);
+  });
+
+  it("never tells a reader only that something is not ready", () => {
+    for (const region of everyRegion()) {
+      if (region.state === "blocked") {
+        expect(region.message).not.toBe("Not ready yet");
+        expect(region.message.length).toBeGreaterThan(16);
       }
     }
   });

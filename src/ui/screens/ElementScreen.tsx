@@ -40,15 +40,20 @@ export function ElementScreen() {
                 <p className={css.progress}>{element.progress}</p>
               </div>
               <p className={css.help}>{element.help}</p>
+              {/* Said in the words of the work. It used to read "This part
+                  carries a surface reserved to…", where "carries a surface" is
+                  this build's own vocabulary and nobody else's, and then "the
+                  row stays in place; the act it offers is to…", which describes
+                  the widget instead of what happens to the reader's work. */}
               {gatedRow(element)?.gate ? (
                 <Region region={gate}>
                   {(caller) => (
                     <p className={css.gate} data-held={caller.held ? "yes" : "no"}>
-                      This part carries a surface reserved to the{" "}
+                      One answer on this tab can only be given by the{" "}
                       {gatedRow(element)?.gate?.reservedTo} — {gatedRow(element)?.gate?.citation}.{" "}
                       {caller.held
-                        ? "You hold it."
-                        : `The row stays in place; the act it offers is to ${(gatedRow(element)?.gate?.routeLabel ?? "").toLowerCase()}.`}
+                        ? "You are one, so you can give it here."
+                        : `Everything else is yours to fill; that one you send on — ${(gatedRow(element)?.gate?.routeLabel ?? "").toLowerCase()}.`}
                     </p>
                   )}
                 </Region>

@@ -120,10 +120,15 @@ export function QuestionRow({
             </dd>
             <dt>In the document</dt>
             <dd>
+              {/* Two different facts, and the line used to state them as an
+                  "or" and leave the reader to guess which. They are told
+                  apart by the element's own text state, so the surface tells
+                  them apart too. */}
               {row.produces.template === null ? (
                 <span className={css.notemplate}>
-                  Nothing yet. This element informs a determination rather than appearing in a
-                  document, or its text has not been written.
+                  {row.textState === "placeholder"
+                    ? "No layout yet — the rule's own words for this item are not in the build, so there is nothing to lay out."
+                    : "This answer is kept in the proposal record and informs the determination. It does not appear in a document."}
                 </span>
               ) : (
                 <>
@@ -135,8 +140,7 @@ export function QuestionRow({
           </dl>
           {row.restates ? (
             <p className={css.echo}>
-              Asked once, elsewhere. Shown here as the record of the answer, so the same question is
-              never put twice.
+              Asked once, elsewhere. This is the answer given there — change it where it was asked.
             </p>
           ) : null}
           {row.gate ? (

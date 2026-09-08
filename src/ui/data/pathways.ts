@@ -274,8 +274,9 @@ export const FILL_SAYS: Record<Fill, { short: string; long: string }> = {
     long: "Derived from answers already given, by a rule stated on the element."
   },
   drafted: {
-    short: "Drafted for you",
-    long: "Proposed from the record and the corpus. A proposal, until you accept, edit or reject it."
+    short: "Drafted",
+    long:
+      "Proposed from the record and the corpus. It stays a proposal until you use it, edit it, or write your own."
   },
   choice: {
     short: "You choose",

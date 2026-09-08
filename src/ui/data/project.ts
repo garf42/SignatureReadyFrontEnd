@@ -73,11 +73,18 @@ export {
 };
 
 const CHANGE: Action = { id: "change", label: "Change answer", look: "secondary", enabled: true };
-const ACCEPT: Action = { id: "accept", label: "Accept", look: "primary", enabled: true };
-const EDIT: Action = { id: "edit", label: "Edit", look: "secondary", enabled: true };
-const SEARCH: Action = { id: "search", label: "Search", look: "primary", enabled: true };
+/* Every label here says what the act DOES, in the words of the work rather
+   than the words of the widget. "Accept" was the worst of them: one word,
+   addressed to someone being asked to rubber-stamp text they will sign, and it
+   named no object — accept what, into what? A drafted paragraph becomes part of
+   the document the responsible official signs, so the button says so. "Search"
+   named no haystack. "Write your own answer" said "your own" to a professional
+   whose own answer is the only kind there is. */
+const ACCEPT: Action = { id: "accept", label: "Use this draft", look: "primary", enabled: true };
+const EDIT: Action = { id: "edit", label: "Edit the draft", look: "secondary", enabled: true };
+const SEARCH: Action = { id: "search", label: "Search the project record", look: "primary", enabled: true };
 const SAVE: Action = { id: "save", label: "Save", look: "primary", enabled: true };
-const WRITE_OWN: Action = { id: "write", label: "Write your own answer", look: "link", enabled: true };
+const WRITE_OWN: Action = { id: "write", label: "Write this yourself", look: "link", enabled: true };
 const REPORT: Action = { id: "report", label: "Report a problem", look: "link", enabled: true };
 
 /* --- the level history, and the state before a level is fixed -------------
@@ -504,7 +511,7 @@ function ordinaryRow(base: ReturnType<typeof stem>, spec: RowSpec, i: number): Q
       return {
         ...base,
         mark: "waiting",
-        answer: blocked("Not ready yet", "an earlier answer", STEP_LINK, [], [REQUESTED])
+        answer: blocked("Waiting on an earlier answer", "an earlier answer", STEP_LINK, [], [REQUESTED])
       };
     default: {
       const sources =
@@ -579,11 +586,13 @@ export function panelFor(
   return {
     title: document ? `${tab.name} — ${String(elementRows(tab).length)} elements` : tab.name,
     help: helpFor(tab),
-    progress: `${String(done)} of ${String(rows.length)} completed`,
+    progress: `${String(done)} of ${String(rows.length)} answered`,
     rows,
     submit: {
-      label: document ? `Submit ${document}` : "Submit element",
-      undoLabel: "Undo submit",
+      /* "Submit element" named an internal noun the reader never sees, and
+         "Undo submit" named the button rather than the state it returns to. */
+      label: document ? `Submit ${document}` : "Submit these answers",
+      undoLabel: "Reopen for edits",
       enabled: left === 0,
       note: gated
         ? `The signature at ${rows.find((row) => row.gate)?.gate?.citation ?? ""} is reserved; the row above routes it`
