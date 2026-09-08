@@ -210,7 +210,7 @@
   margin: 0;
   font-size: 0.8125rem;
   letter-spacing: 0.01em;
-  color: var(--ink);
+  color: var(--ink-soft);
 }
 
 /* The determination, in three sentences. Weight carries the order a reader
@@ -262,11 +262,15 @@
   color: var(--ink-soft);
 }
 
+/* One convention across the whole band: the head of a block is ink, the prose
+   under it is ink-soft. This was the outlier — darker than the level line's
+   two sentences directly above it, and darker than its own head, which is a
+   supporting line drawn heavier than the thing it supports. */
 .herePurpose {
   margin: 0.2rem 0 0;
   font-size: 0.8125rem;
   line-height: 1.55;
-  color: var(--ink);
+  color: var(--ink-soft);
   text-wrap: pretty;
 }
 

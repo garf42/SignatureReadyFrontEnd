@@ -727,3 +727,19 @@ describe("the band folds, and keeps its top line either way", () => {
     }
   });
 });
+
+/** One convention across the band: the head of a block is ink, the prose under
+ *  it is ink-soft. Two blocks sitting on top of each other in two different
+ *  greys reads as two different kinds of text, which they are not. */
+describe("the band's prose is one colour", () => {
+  it("sets the body of both blocks the same way", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const band = container.querySelector("[class*='band']") as HTMLElement;
+    const colours = new Set(
+      [...band.querySelectorAll<HTMLElement>(
+        "[class*='levelWhy'], [class*='levelEnds'], [class*='herePurpose'], [class*='levelNote']"
+      )].map((el) => getComputedStyle(el).color)
+    );
+    expect(colours.size).toBeLessThanOrEqual(1);
+  });
+});
