@@ -39,7 +39,14 @@ export function Overlay({
     }
     seen.current = true;
     const frame = window.requestAnimationFrame(() => {
-      document.querySelector(".bp6-dialog")?.scrollIntoView({ block: "center", inline: "nearest" });
+      /* Guarded because the callback runs a frame later, outside any caller's
+         reach: a throw here is an unhandled exception rather than a failed
+         render, and jsdom does not implement scrollIntoView at all. Centring
+         the sheet is a courtesy — never a reason to take the page down. */
+      const dialog = document.querySelector(".bp6-dialog");
+      if (dialog instanceof HTMLElement && typeof dialog.scrollIntoView === "function") {
+        dialog.scrollIntoView({ block: "center", inline: "nearest" });
+      }
     });
     return () => window.cancelAnimationFrame(frame);
   }, []);
