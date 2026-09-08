@@ -39,6 +39,7 @@ import {
 import type {
   Action,
   Answer,
+  Assembly,
   BandEntry,
   DocumentLedgerEntry,
   ElementPanel,
@@ -280,8 +281,61 @@ const WAITS_ON: Record<string, string> = {
   "P4.8": "1b.8(a) — the environmental impact statement is complete"
 };
 
-export function stepRail(levels: PathwayId[], activeKey: string): Region<StepRail> {
-  const withSeq = levels.map((pathway, i) => ({ seq: i + 1, pathway }));
+/** The act at the seam. `assembled` is what the backend answers once the
+ *  documents for a level have actually been opened; the demo reaches the
+ *  in-between state — a level fixed, nothing built from it yet — through
+ *  `?assembled=no`, because it is the state nothing else in the build could
+ *  produce and the one the control exists for. */
+function assemblyFor(levels: PathwayId[], assembled: boolean): Assembly {
+  const live = levels.length > 0 ? levels[levels.length - 1] : null;
+  if (!live) {
+    return {
+      state: "waiting",
+      label: "Assemble the review",
+      says:
+        "Nothing can be built until the level of review is fixed. The three steps above decide it, and this is where the review it calls for gets built.",
+      waitingOn: SHARED_STEPS[2].name,
+      produces: []
+    };
+  }
+  const produces = DOCUMENTS_FOR[live](levels.length).map((entry) => entry.documentType);
+  if (!assembled) {
+    return {
+      state: "ready",
+      label: "Assemble the review",
+      says:
+        produces.length > 0
+          ? `Opens ${produces.join(" and ")}, pulls the references they incorporate, and drafts from the answers already given. This takes a while.`
+          : "This level of review produces no document. Assembling opens the steps that close it out.",
+      waitingOn: null,
+      produces
+    };
+  }
+  return {
+    state: "done",
+    label: "Assembled",
+    says:
+      produces.length > 0
+        ? `Built from the answers above. ${produces.join(" and ")} ${produces.length === 1 ? "is" : "are"} open below.`
+        : "Built from the answers above. The steps that close this review are below.",
+    waitingOn: null,
+    produces
+  };
+}
+
+export function stepRail(
+  levels: PathwayId[],
+  activeKey: string,
+  assembled = true
+): Region<StepRail> {
+  /* A level that has been DETERMINED but not yet ASSEMBLED has no steps. The
+     determination says which review this is; the steps exist once the review
+     has been built, because each of them opens onto a document or a decision
+     that assembly is what creates. Drawing them before then would show a
+     reader work they cannot start. */
+  const withSeq = assembled
+    ? levels.map((pathway, i) => ({ seq: i + 1, pathway }))
+    : [];
   const liveSeq = withSeq.length > 0 ? withSeq[withSeq.length - 1].seq : null;
   const rail = railFor(withSeq);
 
@@ -354,7 +408,7 @@ export function stepRail(levels: PathwayId[], activeKey: string): Region<StepRai
     })
   ];
 
-  return filled<StepRail>({ bands, steps });
+  return filled<StepRail>({ bands, steps, assembly: assemblyFor(levels, assembled) });
 }
 
 export const stepsAbsentSpec: Region<StepRail> = absent(

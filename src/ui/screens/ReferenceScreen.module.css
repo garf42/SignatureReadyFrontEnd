@@ -66,9 +66,26 @@
   min-width: 0;
 }
 
+/* A CONTROL, and it has to look like one. Boxed in the same 1px rule as the
+   artifact rows below it, at the same radius on the same paper, it read as one
+   more card that happened to have a cursor in it. So it takes the opposite
+   treatment from a card: recessed rather than raised — a well ground with an
+   inset shadow, and a pill rather than a box corner, which nothing else on the
+   page uses. Depth and shape carry it, not colour, so it survives a theme and
+   it does not depend on seeing a hue. */
 .search input {
   padding: 6px var(--s-3);
   font-size: var(--t-meta);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--well);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 8%);
+}
+
+.search input:focus {
+  background: var(--paper);
+  border-color: var(--link);
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 4%);
 }
 
 .hazard {

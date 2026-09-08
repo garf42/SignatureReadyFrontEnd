@@ -336,3 +336,51 @@ describe("the rail says only what the step itself cannot", () => {
     expect(rail(container).textContent).toContain("Read only");
   });
 });
+
+/** Steps 3 and beyond used to APPEAR. That reads as a toggle, and the work at
+ *  that boundary is the opposite of one: the documents get opened, the
+ *  references they incorporate get pulled, and drafting runs against everything
+ *  answered above. It takes real time, and a transition nobody can see start —
+ *  or see running — is one they cannot tell apart from a hang. */
+describe("assembly is an act at the seam, not a state flip", () => {
+  it("names the step it waits on before a level is fixed, and offers nothing", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action");
+    const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.textContent).toContain("Waiting on Level of review");
+    expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(true);
+  });
+
+  it("offers the act once a level is fixed and nothing is built from it", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    const pane = rail(container);
+    const gate = pane.querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(false);
+    /* Determined is not assembled: the steps do not exist yet. */
+    expect(within(pane).queryByText("Assembly")).toBeNull();
+    expect(within(pane).queryByText("Plan of analysis")).toBeNull();
+  });
+
+  it("names what it will produce before it runs", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.textContent).toContain("EA");
+    expect(gate.textContent).toContain("FONSI");
+  });
+
+  it("announces the wait rather than only animating it", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
+    fireEvent.click(gate.querySelector("button") as HTMLElement);
+    const live = rail(container).querySelector("[role='status']") as HTMLElement;
+    expect(live.textContent).toContain("Assembling the review");
+    expect(live.getAttribute("aria-live")).toBe("polite");
+  });
+
+  it("says it is built, and offers no button, once the steps exist", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const pane = rail(container);
+    const gate = pane.querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.querySelector("button")).toBeNull();
+    expect(within(pane).getByText("Assembly")).toBeTruthy();
+  });
+});

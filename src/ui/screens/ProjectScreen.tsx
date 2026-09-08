@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
-import { Menu, MenuItem } from "@blueprintjs/core";
+import { Button, Menu, MenuItem } from "@blueprintjs/core";
 
-import type { BandEntry, BandRef, StepEntry, StepRail } from "@/ui/data/port";
+import type { Assembly, BandEntry, BandRef, StepEntry, StepRail } from "@/ui/data/port";
 import { usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
@@ -37,7 +37,7 @@ export function ProjectScreen() {
   const stepId = params.stepId ?? "";
   const tabId = params.tabId ?? "";
   const navigate = useNavigate();
-  const { search } = useLocation();
+  const { pathname, search } = useLocation();
   const port = usePort();
   const project = port.useProject(projectRef);
   const levels = port.useLevels(projectRef);
@@ -161,7 +161,7 @@ export function ProjectScreen() {
               <>
                 {value.bands
                   .filter((band) => band.band.kind !== "cross")
-                  .map((band) => {
+                  .map((band, index) => {
                     const key = bandId(band.band);
                     /* The band header earns its place only when a level has
                        actually been SUPERSEDED and the reader has read-only
@@ -184,7 +184,15 @@ export function ProjectScreen() {
                       ? (openBands[key] ?? (!band.collapsed || holdsActive))
                       : true;
                     return (
-                      <section key={key} className={css.bandGroup} data-status={band.status}>
+                      <Fragment key={key}>
+                      {index === 1 ? (
+                        <AssembleGate
+                          assembly={value.assembly}
+                          shut={railShut}
+                          onAssembled={() => go(pathname)}
+                        />
+                      ) : null}
+                      <section className={css.bandGroup} data-status={band.status}>
                         {banded ? (
                           <button
                             type="button"
@@ -214,8 +222,21 @@ export function ProjectScreen() {
                           </Menu>
                         ) : null}
                       </section>
+                      </Fragment>
                     );
                   })}
+                {/* The gate belongs IN the break, not after the rail, so it
+                    is rendered before the first episode band above. Where a
+                    level has not been fixed at all there is no second band, so
+                    it is drawn here instead — it is the only thing that says
+                    what the shared steps are leading to. */}
+                {value.bands.filter((entry) => entry.band.kind === "episode").length === 0 ? (
+                  <AssembleGate
+                    assembly={value.assembly}
+                    shut={railShut}
+                    onAssembled={() => go(pathname)}
+                  />
+                ) : null}
               </>
               );
             }}
@@ -295,3 +316,84 @@ function tabsFor(rail: StepRail, stepId: string) {
 }
 
 export type { BandEntry };
+
+
+/** The act at the seam between the shared steps and the pathway steps.
+ *
+ *  WHY A BUTTON AND NOT A STATE FLIP. Steps 3 and beyond used to appear: the
+ *  level history gained an entry and the rail grew. That reads as a toggle, and
+ *  the work at that boundary is the opposite of a toggle — the documents the
+ *  level requires get opened, the references they incorporate get pulled, and
+ *  drafting runs against everything answered above. It takes real time, and a
+ *  transition a person cannot see themselves start, and cannot see running, is
+ *  one they cannot tell apart from a hang.
+ *
+ *  `waiting` names the step it waits on rather than being a grey button with no
+ *  stated reason. `running` is local to this component and lasts until the port
+ *  answers with steps — the backend owns whether a review is assembled, and the
+ *  only thing the screen owns is saying that it asked. */
+function AssembleGate({
+  assembly,
+  shut,
+  onAssembled
+}: {
+  assembly: Assembly;
+  shut: boolean;
+  onAssembled: () => void;
+}) {
+  const [running, setRunning] = useState(false);
+
+  if (shut) {
+    return null;
+  }
+
+  const state = running ? "running" : assembly.state;
+
+  return (
+    <section className={css.gate} data-state={state}>
+      {state === "done" ? (
+        <p className={css.gateDone}>{assembly.says}</p>
+      ) : state === "running" ? (
+        <>
+          {/* Announced, not merely animated: a spinner is not information to a
+              reader who cannot see it, and the wait is the whole point. */}
+          <p className={css.gateRunning} role="status" aria-live="polite">
+            Assembling the review
+            <span className={css.dots} aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+          </p>
+          <p className={css.gateSays}>
+            Opening the documents, pulling the references they incorporate, and drafting from the
+            answers above.
+          </p>
+        </>
+      ) : (
+        <>
+          <Button
+            className={css.gateButton}
+            intent={state === "ready" ? "primary" : "none"}
+            disabled={state !== "ready"}
+            onClick={() => {
+              setRunning(true);
+              /* Long enough to be seen for what it is. The real wait is the
+                 backend's; this is the demo standing in for it. */
+              window.setTimeout(() => {
+                setRunning(false);
+                onAssembled();
+              }, 1400);
+            }}
+          >
+            {assembly.label}
+          </Button>
+          <p className={css.gateSays}>{assembly.says}</p>
+          {assembly.waitingOn ? (
+            <p className={css.gateWaiting}>Waiting on {assembly.waitingOn}</p>
+          ) : null}
+        </>
+      )}
+    </section>
+  );
+}

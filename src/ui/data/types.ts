@@ -195,12 +195,42 @@ export interface StepEntry {
   waitingOn: string | null;
 }
 
+/** The act at the seam between the shared steps and the pathway steps.
+ *
+ *  Steps 3 and beyond used to APPEAR — the level history gained an entry and
+ *  the rail grew. That reads as a state flip, and it is not one: the work at
+ *  that boundary is the expensive part of the whole review. The determination
+ *  fixes WHICH level; assembly is what builds it — opening the document shells
+ *  the level requires, pulling the references the assessment will incorporate,
+ *  and drafting from the answers already given. A transition a person cannot
+ *  see themselves starting, and cannot see running, is one they cannot tell
+ *  apart from a hang.
+ *
+ *  `waiting` is not a disabled `ready`: it names the step that is not finished,
+ *  because a control that is grey for an unstated reason is a dead end. */
+export type AssemblyState = "waiting" | "ready" | "done";
+
+export interface Assembly {
+  state: AssemblyState;
+  /** The act, on the control. */
+  label: string;
+  /** One line under it, in the words of the work. */
+  says: string;
+  /** What is not finished yet, where the state is `waiting`. Never help prose
+   *  an adapter has to parse — it is the step's own name. */
+  waitingOn: string | null;
+  /** The documents assembly will open. Named before it runs, so a person knows
+   *  what they are starting. */
+  produces: string[];
+}
+
 /** What `useSteps` returns. A bare array could not carry the banding, and a
  *  screen that infers grouping from step ids is inferring it from a value the
  *  rule does not guarantee is unique. */
 export interface StepRail {
   bands: BandEntry[];
   steps: StepEntry[];
+  assembly: Assembly;
 }
 
 export interface ProjectHeader {

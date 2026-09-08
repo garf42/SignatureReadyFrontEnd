@@ -11,6 +11,7 @@ export type {
   ArchiveRow,
   ArtifactView,
   Catalogue,
+  Assembly,
   CatalogueRow,
   Citable,
   Destination,

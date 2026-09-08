@@ -304,6 +304,23 @@ function Harness({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="hrow">
+              <Group label="Review assembled">
+                <Seg
+                  on={params.get("assembled") !== "no"}
+                  title="The documents are open and the pathway steps exist."
+                  onClick={() => set("assembled", null)}
+                >
+                  yes
+                </Seg>
+                <Seg
+                  on={params.get("assembled") === "no"}
+                  title="Step 2 has fixed a level and nothing has been built from it yet — the state the assemble control at the seam exists for. Pick a pathway above to see it offered."
+                  onClick={() => set("assembled", "no")}
+                >
+                  not yet
+                </Seg>
+              </Group>
+
               <Group label="Signature credential">
                 <Seg on={params.get("gate") !== "held"} onClick={() => set("gate", null)}>
                   not held

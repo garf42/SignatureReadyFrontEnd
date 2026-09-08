@@ -108,7 +108,12 @@ export function ExpertQScreen() {
                               open(row.id);
                             }}
                           >
-                            {row.status === "drafted" ? "Open the draft" : "Open request"}
+                            {/* One word, the same on every row. The object is
+                                the row it sits in, and the Status column beside
+                                it already says which kind of request this is —
+                                varying the label made two identical acts look
+                                like two different ones. */}
+                            Open
                           </Button>
                         </div>
                       </td>

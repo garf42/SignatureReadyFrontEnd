@@ -64,6 +64,11 @@ export interface Overrides {
    *  `?pathway=P3` is accepted as the one-level alias so every existing link,
    *  bookmark and test keeps working. */
   levels: PathwayId[];
+  /** Whether the level's review has been BUILT — documents opened, references
+   *  pulled, drafting done. `?assembled=no` is the only way to reach the state
+   *  the assemble control exists for: a level fixed by Step 2 with nothing yet
+   *  built from it. Default true, so every existing link keeps its steps. */
+  assembled: boolean;
   session: "in" | "out" | "pending";
   held: boolean;
   retrievalUp: boolean;
@@ -96,6 +101,7 @@ export function readOverrides(params: URLSearchParams): Overrides {
        half-wired backend produces most often was unreachable. */
     rail: STATES.find((s) => s === rail) ?? null,
     levels,
+    assembled: params.get("assembled") !== "no",
     session: sessionKnob(params.get("session")),
     held: params.get("gate") === "held",
     retrievalUp: params.get("retrieval") !== "down"
@@ -201,7 +207,7 @@ function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
     case "unresolved":
       return pj.stepsUnresolvedSpec;
     default:
-      return pj.stepRail(o.levels, stepKey || "S.0");
+      return pj.stepRail(o.levels, stepKey || "S.0", o.assembled);
   }
 }
 
