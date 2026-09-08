@@ -3,8 +3,12 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 
 import { App } from "@/ui/App";
+import { forgetSubmitted } from "@/ui/data/submitted";
 
 afterEach(cleanup);
+/* Submission is session state, so it survives cleanup and would leak a tick
+   from one test into the next. */
+afterEach(forgetSubmitted);
 
 const at = (path: string) =>
   render(
@@ -612,16 +616,38 @@ describe("finished work is marked, minimally", () => {
     }
   });
 
-  /* The rail and the panel count the same rows, so they cannot disagree about
-     whether a tab is finished — which is the whole reason completion is
-     computed from `rowsFor` rather than guessed from the step. */
-  it("agrees with the tab strip about which tabs are finished", () => {
-    const { container } = at("/projects/p1/steps/E1.P3.3/scope?levels=P3");
+  /* NOTHING is ticked until it is submitted. The tick used to mean "could be
+     submitted", which put it on exactly the tabs that still had a live Submit
+     button — the mark and the control contradicting each other on one row. */
+  it("ticks nothing before anything has been submitted", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
     const strip = container.querySelector("[role='tablist']") as HTMLElement;
-    const ticked = [...strip.querySelectorAll("[role='tab']")].filter((tab) =>
+    expect([...strip.querySelectorAll("[role='tab']")].some((tab) =>
       (tab.textContent ?? "").includes("✓")
-    );
-    expect(ticked.length).toBeGreaterThan(0);
+    )).toBe(false);
+    expect(rail(container).querySelector("[class*='tick']")).toBeNull();
+  });
+
+  it("ticks the tab the officer submitted, and takes it back on reopen", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    const strip = container.querySelector("[role='tablist']") as HTMLElement;
+    const tabOf = () =>
+      [...strip.querySelectorAll("[role='tab']")].find((tab) =>
+        (tab.textContent ?? "").includes("Public involvement")
+      );
+    fireEvent.click(screen.getByText("Submit"));
+    expect((tabOf()?.textContent ?? "").includes("✓")).toBe(true);
+    fireEvent.click(screen.getByText("Reopen"));
+    expect((tabOf()?.textContent ?? "").includes("✓")).toBe(false);
+  });
+
+  /* Readiness and completion are two facts. Submit is offered on what is
+     ready; the tick reports what was done. */
+  it("offers Submit on a ready tab and only ticks it afterwards", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    const bar = screen.getByText("Submit").closest("button") as HTMLButtonElement;
+    expect(bar.hasAttribute("disabled")).toBe(false);
+    expect(container.querySelector("[class*='progress']")?.getAttribute("data-done")).toBe("no");
   });
 });
 
@@ -630,12 +656,9 @@ describe("finished work is marked, minimally", () => {
  *  cannot disagree, and a step with a single tab (which renders no strip) is
  *  still marked. */
 describe("completion is marked everywhere it is claimed", () => {
-  it("marks the panel of a finished tab", () => {
-    /* Public involvement: nothing outstanding and no unwritten text. Scope, on
-       the same step, has neither outstanding rows NOR its own words — its three
-       elements are placeholders — which is exactly the case the predicate is
-       strict about. */
+  it("marks the panel of a submitted tab", () => {
     const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    fireEvent.click(screen.getByText("Submit"));
     const progress = container.querySelector("[class*='progress']") as HTMLElement;
     expect(progress.getAttribute("data-done")).toBe("yes");
     expect(progress.textContent).toContain("✓");
@@ -656,14 +679,18 @@ describe("completion is marked everywhere it is claimed", () => {
     }
   });
 
-  it("never ticks a step while any of its tabs is unticked", () => {
-    const { container } = at("/projects/p1/steps/E1.P3.3/scope?levels=P3");
+  /* A step is finished when every tab in it is, so submitting SOME of them
+     ticks those tabs and leaves the step alone. The step's tick is the claim
+     that there is nothing left in it, and one unsubmitted tab falsifies that. */
+  it("never ticks a step while one of its tabs is unsubmitted", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    fireEvent.click(screen.getByText("Submit"));
     const strip = container.querySelector("[role='tablist']") as HTMLElement;
     const tabs = [...strip.querySelectorAll("[role='tab']")];
-    const allTicked = tabs.every((tab) => (tab.textContent ?? "").includes("✓"));
+    expect(tabs.some((tab) => (tab.textContent ?? "").includes("✓"))).toBe(true);
+    expect(tabs.every((tab) => (tab.textContent ?? "").includes("✓"))).toBe(false);
     const active = rail(container).querySelector("[class*='active']");
-    const stepTicked = active?.querySelector("[class*='tick']") !== null;
-    expect(stepTicked).toBe(allTicked);
+    expect(active?.querySelector("[class*='tick']")).toBeNull();
   });
 });
 

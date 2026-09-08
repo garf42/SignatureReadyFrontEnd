@@ -142,12 +142,6 @@ export interface ElementPanel {
   title: string;
   help: string;
   progress: string;
-  /** Nothing outstanding and no text missing from the build — the SAME
-   *  predicate the rail ticks a step with, so the two can never disagree.
-   *  Carried on the panel as well as the strip because a step with one tab
-   *  renders no strip at all, and a tab whose completion shows only when it has
-   *  siblings is not consistently marked. */
-  done: boolean;
   rows: QuestionRow[];
   submit: SubmitBar;
 }
@@ -161,7 +155,12 @@ export type StepMark = "completed" | "active" | "waiting" | "error" | "supersede
 export interface TabEntry {
   id: string;
   name: string;
-  done: boolean;
+  /** Nothing outstanding and no text missing: the tab COULD be submitted.
+   *  Deliberately not called `done` — readiness and completion are two facts,
+   *  and conflating them put a tick on exactly the tabs that still had a live
+   *  Submit button, which reads backwards. Whether it WAS submitted is not
+   *  something the port can answer yet; see `submitted.ts`. */
+  answered: boolean;
   /** How many binding rows are still outstanding, or null where completion has
    *  no ontology address. Null is not zero, and must not render as done. */
   outstanding: number | null;
@@ -194,12 +193,11 @@ export interface StepEntry {
    *  no screen has to synthesise a description from the step's name. */
   purpose: string;
   mark: StepMark;
-  /** Every tab in this step has nothing outstanding, and none of its text is
-   *  missing from the build. Separate from `mark` because a step can be both
-   *  finished and the one you are standing on, and one field cannot say both.
-   *  Counted from the same rows the panel shows, so the rail and the panel can
-   *  never disagree. */
-  done: boolean;
+/** Every tab in this step could be submitted. Separate from `mark` because a
+   *  step can be both ready and the one you are standing on, and one field
+   *  cannot say both. Counted from the same rows the panel shows, so the rail
+   *  and the panel can never disagree about what is outstanding. */
+  answered: boolean;
   tabs: TabEntry[];
   band: BandRef;
   /** The citation a blocked step waits on — 1b.6(a) for a FONSI, 1b.8(a) for a

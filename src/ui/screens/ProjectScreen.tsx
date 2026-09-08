@@ -8,6 +8,7 @@ import { usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
+import { useSubmitted } from "@/ui/data/submitted";
 import { tabPath, withSearch } from "@/ui/routes";
 
 import css from "@/ui/screens/ProjectScreen.module.css";
@@ -49,6 +50,7 @@ export function ProjectScreen() {
      told. Closing is theirs to choose; it is not the state they arrive in. */
   const [levelOpen, setLevelOpen] = useState(true);
   const [hereOpen, setHereOpen] = useState(true);
+  const submitted = useSubmitted();
   const [openBands, setOpenBands] = useState<Record<string, boolean>>({});
 
   const go = (path: string) => navigate(withSearch(path, search));
@@ -253,6 +255,12 @@ export function ProjectScreen() {
                               <StepItem
                                 key={step.key}
                                 step={step}
+                                /* A step is finished when every tab in it has
+                                   been submitted. Nothing outstanding only
+                                   means it COULD be. */
+                                done={step.tabs.every((tab) =>
+                                  submitted.includes(`${step.key}/${tab.id}`)
+                                )}
                                 active={step.key === stepId || step.id === stepId}
                                 onOpen={() =>
                                   go(tabPath(projectRef, step.key, step.tabs[0]?.id ?? tabId))
@@ -291,7 +299,14 @@ export function ProjectScreen() {
             {(value) => (
               <TabStrip
                 id="element-tabs"
-                tabs={tabsFor(value, stepId)}
+                /* The tick means SUBMITTED, not submittable. Those were the
+                   same condition, which put a tick on exactly the tabs that
+                   still had a live Submit button — the mark and the control
+                   contradicting each other on the same row. */
+                tabs={tabsFor(value, stepId).map((tab) => ({
+                  ...tab,
+                  done: submitted.includes(`${stepId}/${tab.id}`)
+                }))}
                 selected={tabId}
                 onSelect={(next) => go(tabPath(projectRef, stepId, next))}
               />
@@ -313,10 +328,12 @@ export function ProjectScreen() {
  *  later steps look necessary in the first place. */
 function StepItem({
   step,
+  done,
   active,
   onOpen
 }: {
   step: StepEntry;
+  done: boolean;
   active: boolean;
   onOpen: () => void;
 }) {
@@ -332,7 +349,7 @@ function StepItem({
         <>
           <span className={css.number}>{step.n}</span>
           {step.name}
-          {step.done ? <span className={css.only}> — done</span> : null}
+          {done ? <span className={css.only}> — done</span> : null}
         </>
       }
       labelElement={
@@ -343,7 +360,7 @@ function StepItem({
                 renders: every tab in this step has nothing outstanding and no
                 text missing from the build. An unticked step is therefore
                 never one this screen merely could not read. */}
-            {step.done ? (
+            {done ? (
               <span className={css.tick} data-done="yes">
                 ✓
               </span>

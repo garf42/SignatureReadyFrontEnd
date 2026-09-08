@@ -6,6 +6,7 @@ import { usePort } from "@/ui/data/port";
 import { ActionBar } from "@/ui/components/ActionBar";
 import { QuestionRow } from "@/ui/components/QuestionRow";
 import { Region } from "@/ui/components/Region";
+import { markSubmitted, unsubmit, useSubmitted } from "@/ui/data/submitted";
 import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/ElementScreen.module.css";
@@ -24,7 +25,12 @@ export function ElementScreen() {
      1b.3(g)(2)(vi) and says nothing about a record of decision. */
   const gate = port.useGate(documentOf(params.tabId ?? ""));
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [submitted, setSubmitted] = useState(false);
+  /* Submission is not component state. It has to outlive this mount, because
+     the rail and the tab strip draw a tick from it and both are rendered by a
+     different component — and a tick that vanished when you moved to the next
+     tab would say the work came undone. */
+  const address = `${params.stepId ?? ""}/${params.tabId ?? ""}`;
+  const submitted = useSubmitted().includes(address);
   const [source, setSource] = useState<SourceKind | null>(null);
 
   const toggle = (id: string) => setOpen((state) => ({ ...state, [id]: !state[id] }));
@@ -37,12 +43,13 @@ export function ElementScreen() {
             <header className={css.head}>
               <div className={css.headLine}>
                 <h2 className={css.title}>{element.title}</h2>
-                {/* The same tick the rail and the strip use, on the same
-                    predicate. It is here as well because a step with one tab
-                    renders no strip, and a tab whose completion shows only when
-                    it has siblings is not consistently marked. */}
-                <p className={css.progress} data-done={element.done ? "yes" : "no"}>
-                  {element.done ? "✓ " : null}
+                {/* The same tick the rail and the strip use, from the same
+                    fact: this tab was submitted. It is here as well because a
+                    step with one tab renders no strip, and a tab whose
+                    completion shows only when it has siblings is not
+                    consistently marked. */}
+                <p className={css.progress} data-done={submitted ? "yes" : "no"}>
+                  {submitted ? "✓ " : null}
                   {element.progress}
                 </p>
               </div>
@@ -80,7 +87,13 @@ export function ElementScreen() {
             <ActionBar
               bar={element.submit}
               submitted={submitted}
-              onToggle={() => setSubmitted((v) => !v)}
+              onToggle={() => {
+                if (submitted) {
+                  unsubmit(address);
+                } else {
+                  markSubmitted(address);
+                }
+              }}
             />
           </>
         )}

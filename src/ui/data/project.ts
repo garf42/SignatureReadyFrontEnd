@@ -294,7 +294,7 @@ function tabEntries(
     return {
       id: tab.id,
       name: tab.name,
-      done: left === 0,
+      answered: left === 0 && tab.elements.every((row) => row.text !== "placeholder"),
       outstanding: left,
       placeholders: tab.elements.filter((row) => row.text === "placeholder").length,
       level: tab.level
@@ -456,7 +456,7 @@ export function stepRail(
          better; the unwritten count was on every row and those rows announce
          themselves in the panel. */
       meta: superseded ? "Read only" : waitingOn ? "Waiting" : null,
-      done: tabs.every((tab) => tab.outstanding === 0 && tab.placeholders === 0),
+      answered: tabs.every((tab) => tab.answered),
       tabs,
       band:
         entry.band.kind === "shared"
@@ -520,7 +520,9 @@ export function stepRail(
   const unfinished =
     sharedComplete === true
       ? []
-      : steps.filter((step) => step.band.kind === "shared" && !step.done).map((step) => step.name);
+      : steps
+          .filter((step) => step.band.kind === "shared" && !step.answered)
+          .map((step) => step.name);
 
   return filled<StepRail>({
     bands,
@@ -751,7 +753,6 @@ export function panelFor(
 ): ElementPanel {
   const rows = rowsFor(stepKey, tab, held, retrievalUp);
   const left = outstanding(rows);
-  const unwritten = tab.elements.filter((row) => row.text === "placeholder").length;
   const done = rows.length - left;
   const gated = rows.some((row) => row.gate && !row.gate.held);
   const document = tab.documentType;
@@ -760,7 +761,6 @@ export function panelFor(
     title: document ? `${tab.name} — ${String(elementRows(tab).length)} elements` : tab.name,
     help: helpFor(tab),
     progress: `${String(done)} of ${String(rows.length)} answered`,
-    done: left === 0 && unwritten === 0,
     rows,
     submit: {
       /* One verb. The panel heading already names what is being submitted —
