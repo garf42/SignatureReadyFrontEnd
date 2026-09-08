@@ -10,6 +10,7 @@ import type {
   SourceKind,
   SourceRef
 } from "@/ui/data/types";
+import { REFERENCE } from "@/ui/routes";
 
 /* Every supplied string is a register marker. No project data lives here. */
 
@@ -128,7 +129,10 @@ export function sourceFilled(kind: SourceKind): Region<SourceDocument> {
   return filled<SourceDocument>({
     reference: sourceRef[kind],
     primary: "⟨source.excerpt⟩",
-    full: { label: "Open the full document ›", href: "#full-document" }
+    /* An address inside the application, not a dead fragment. The reference
+       page reads `?view=` and opens that document in its viewer, so a backend
+       that fills this only has to name the corpus id. */
+    full: { label: "Open the full document ›", href: `${REFERENCE}?view=⟨corpus.documentId⟩` }
   });
 }
 
@@ -137,7 +141,7 @@ export const sourceAbsent: Region<SourceDocument> = absent(
   "⟨register.item.retrieval_query⟩"
 );
 export const sourceBlocked: Region<SourceDocument> = blocked(
-  "Not ready yet",
+  "Waiting on an earlier answer",
   "⟨earlier.answer⟩",
   STEP_LINK
 );

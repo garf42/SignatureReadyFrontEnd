@@ -237,3 +237,11 @@
   color: var(--ink);
   overflow-wrap: anywhere;
 }
+
+/* Locked, in the vocabulary the element panel already established for a
+   submitted part: greyed and inert, so "you cannot edit this yet" looks the
+   same wherever it is said. Reopening is outside this wrapper and stays live. */
+.lockable[data-locked="yes"] {
+  opacity: 0.5;
+  pointer-events: none;
+}

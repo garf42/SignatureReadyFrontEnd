@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 
-import type { ElementPanel, SourceKind } from "@/ui/data/port";
+import type { DocumentType, ElementPanel, SourceKind } from "@/ui/data/port";
 import { usePort } from "@/ui/data/port";
 import { ActionBar } from "@/ui/components/ActionBar";
 import { QuestionRow } from "@/ui/components/QuestionRow";
 import { Region } from "@/ui/components/Region";
+import { markSubmitted, unsubmit, useSubmitted } from "@/ui/data/submitted";
 import { SourceOverlay } from "@/ui/components/SourceOverlay";
 
 import css from "@/ui/screens/ElementScreen.module.css";
@@ -20,9 +21,16 @@ export function ElementScreen() {
     params.stepId ?? "",
     params.tabId ?? ""
   );
-  const gate = port.useGate();
+  /* Asked about the document this tab assembles, so a FANEC tab cites
+     1b.3(g)(2)(vi) and says nothing about a record of decision. */
+  const gate = port.useGate(documentOf(params.tabId ?? ""));
   const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [submitted, setSubmitted] = useState(false);
+  /* Submission is not component state. It has to outlive this mount, because
+     the rail and the tab strip draw a tick from it and both are rendered by a
+     different component — and a tick that vanished when you moved to the next
+     tab would say the work came undone. */
+  const address = `${params.stepId ?? ""}/${params.tabId ?? ""}`;
+  const submitted = useSubmitted().includes(address);
   const [source, setSource] = useState<SourceKind | null>(null);
 
   const toggle = (id: string) => setOpen((state) => ({ ...state, [id]: !state[id] }));
@@ -35,18 +43,31 @@ export function ElementScreen() {
             <header className={css.head}>
               <div className={css.headLine}>
                 <h2 className={css.title}>{element.title}</h2>
-                <p className={css.progress}>{element.progress}</p>
+                {/* The same tick the rail and the strip use, from the same
+                    fact: this tab was submitted. It is here as well because a
+                    step with one tab renders no strip, and a tab whose
+                    completion shows only when it has siblings is not
+                    consistently marked. */}
+                <p className={css.progress} data-done={submitted ? "yes" : "no"}>
+                  {submitted ? "✓ " : null}
+                  {element.progress}
+                </p>
               </div>
               <p className={css.help}>{element.help}</p>
+              {/* Said in the words of the work. It used to read "This part
+                  carries a surface reserved to…", where "carries a surface" is
+                  this build's own vocabulary and nobody else's, and then "the
+                  row stays in place; the act it offers is to…", which describes
+                  the widget instead of what happens to the reader's work. */}
               {gatedRow(element)?.gate ? (
                 <Region region={gate}>
                   {(caller) => (
                     <p className={css.gate} data-held={caller.held ? "yes" : "no"}>
-                      This part carries a surface reserved to the{" "}
+                      One answer on this tab can only be given by the{" "}
                       {gatedRow(element)?.gate?.reservedTo} — {gatedRow(element)?.gate?.citation}.{" "}
                       {caller.held
-                        ? "You hold it."
-                        : `The row stays in place; the act it offers is to ${(gatedRow(element)?.gate?.routeLabel ?? "").toLowerCase()}.`}
+                        ? "You are one, so you can give it here."
+                        : `Everything else is yours to fill; that one you send on — ${(gatedRow(element)?.gate?.routeLabel ?? "").toLowerCase()}.`}
                     </p>
                   )}
                 </Region>
@@ -55,9 +76,9 @@ export function ElementScreen() {
             <div className={css.rows} data-locked={submitted ? "yes" : "no"}>
               {element.rows.map((row) => (
                 <QuestionRow
-                  key={row.id}
+                  key={row.rid}
                   row={row}
-                  open={!!open[row.id]}
+                  open={!!open[row.rid]}
                   onToggle={toggle}
                   onSource={setSource}
                 />
@@ -66,7 +87,13 @@ export function ElementScreen() {
             <ActionBar
               bar={element.submit}
               submitted={submitted}
-              onToggle={() => setSubmitted((v) => !v)}
+              onToggle={() => {
+                if (submitted) {
+                  unsubmit(address);
+                } else {
+                  markSubmitted(address);
+                }
+              }}
             />
           </>
         )}
@@ -80,4 +107,25 @@ export function ElementScreen() {
  *  a FANEC tab cites 1b.3(g)(2)(vi) and says nothing about a ROD. */
 function gatedRow(element: ElementPanel) {
   return element.rows.find((row) => row.gate);
+}
+
+/** Which document this tab assembles, if any. Exactly three carry a signature
+ *  the rule reserves: 1b.5(c)(6) and 1b.7(h)(8) state that the certifying
+ *  statement needs no signature and that approval to publish indicates
+ *  concurrence, so the EA and the EIS carry no gate at any point. */
+function documentOf(tabId: string): DocumentType | null {
+  switch (tabId) {
+    case "fanec":
+      return "FANEC";
+    case "fonsi":
+      return "FONSI";
+    case "rod":
+      return "ROD";
+    case "ea":
+      return "EA";
+    case "eis":
+      return "EIS";
+    default:
+      return null;
+  }
 }

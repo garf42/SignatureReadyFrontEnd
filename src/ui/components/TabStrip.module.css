@@ -87,3 +87,19 @@
   color: var(--ok);
   margin-left: var(--s-2);
 }
+
+/* --- finished -------------------------------------------------------------
+   The convention an accepted row uses: greyed, and still perfectly readable.
+   A row is greyed by grounding on the well while unfinished rows are on paper.
+   In a strip the paper state is the SELECTED tab, so the transfer is exact
+   only there — a finished tab you are standing on grounds on the well instead
+   of rising to the panel. Unselected tabs are already on the well, so what is
+   left to say there is said in the ink. */
+.doneTab {
+  color: var(--ink-faint);
+}
+
+.scroller .doneTab[aria-selected="true"] {
+  background: var(--well);
+  color: var(--ink-soft);
+}

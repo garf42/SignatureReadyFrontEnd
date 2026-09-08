@@ -13,7 +13,7 @@ Where the front end needs something the ontology does not yet support, the
 ontology is what changes. A declared gap is a note for the FDE, never a
 reason to redesign the screen.
 
-15 surfaces declared · 14 with gaps · 1 answerable today · 17 acts · 56 names still to confirm.
+16 surfaces declared · 15 with gaps · 1 answerable today · 17 acts · 59 names still to confirm.
 
 ## Read this first: the names that are not measured
 
@@ -67,6 +67,9 @@ before wiring it. A wrong name here fails silently and forever.
 | `useLearning` | `dispositionMix` |
 | `useLearning` | `document` |
 | `useLearning` | `manifest` |
+| `useLevels` | `supersededAt` |
+| `useLevels` | `project.determinations` |
+| `useLevels` | `project.documents` |
 | `useReference` | `title` |
 | `useReference` | `corpus` |
 | `useReference` | `documentType` |
@@ -87,18 +90,19 @@ before wiring it. A wrong name here fails silently and forever.
 | --- | --- | --- |
 | `useArchive` — recently-deleted projects, ordered by archived date, with restore and purge | absent | an archived state on project; an archive act; a restore act; a purge act; an archivedAt property, and an archivedBy if that becomes recordable |
 | `useCatalogue` — the categorical-exclusion catalogue, and the 1b.4(c) / 1b.4(d) split | backlog | category populated from ce_categories.json — 87 rows already in the repository, no egress and no retrieval. §3 names it the single cheapest high-value population in the build, with five obligations blocked behind it |
-| `useElement` — one tab: its rows, their answers and the one act that closes it | backlog | the submission-time Function; eight named preconditions wait on one, including adopt's rule that adoptedValue must be present unless adoptionState is 'rejected'; element and slot rows, as above; an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered |
-| `useExpertQueue` — the open expert requests, overdue first, and what came back | backlog | anything that creates a slot row — eleven of seventeen acts wait on this, and the queue is empty until it exists; an actor on identify-expert-requirement, package-expert-request and state-factor-finding; none writes one, so the queue cannot show who sent a request; a holder-to-slot join (B.5.12); nothing joins a holder to the slot needing one, so a recipient is a suggestion the officer confirms; a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert |
-| `useExpertRequest` — the drafted request in the compose overlay, and sending it | backlog | the same slot row the queue waits on; an actor on package-expert-request; an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline |
+| `useElement` — one tab: its rows, their answers and the one act that closes it | backlog | the submission-time Function; eight named preconditions wait on one, including adopt's rule that adoptedValue must be present unless adoptionState is 'rejected'; element and slot rows, as above; an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered; A RECORD THAT THIS TAB WAS SUBMITTED, and one that a submission was reopened. The bar is a two-state control — Submit while anything binds, Reopen once it is submitted — and the state has to outlive the mount because the rail and the tab strip both draw a tick from it. It is sessionStorage today (src/ui/data/submitted.ts); see useSteps for the same gap stated where the rail reads it. |
+| `useExpertQueue` — the open expert requests, overdue first, and what came back | backlog | anything that creates a slot row — eleven of seventeen acts wait on this, and the queue is empty until it exists; an actor on identify-expert-requirement, package-expert-request and state-factor-finding; none writes one, so the queue cannot show who sent a request; a holder-to-slot join (B.5.12); nothing joins a holder to the slot needing one, so a recipient is a suggestion the officer confirms; a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert; A FIFTH STATUS: `drafted`. The four the queue had — overdue, awaiting, returned, accepted — all describe waiting on the SPECIALIST. A request the project workflow assembled and nobody has sent yet is waiting on the OFFICER, and there was no way to say so. It is also what the notification dot on the Expert Q section counts, so without it the dot has nothing to point at.; AN ADDRESS FOR WHETHER A DRAFTED REQUEST WAS SENT. Nothing here sends anything: the specialist is reached through the officer's own mail client, so the overlay assembles a whole message and copies it. What the record needs is that a message was copied, its exact text, and when — the surface holds that version and shows it as the record of what went out. |
+| `useExpertRequest` — the drafted request in the compose overlay, and sending it | backlog | the same slot row the queue waits on; an actor on package-expert-request; an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline; A SUBJECT LINE on the drafted request. The request leaves through the officer's mail client, so what this surface has to produce is a whole message; a body someone must title themselves is not one. `ExpertDraft.subject` carries it and nothing in the ontology writes one.; A RECORD OF THE COPY: the exact text that went to the clipboard, and when. The overlay holds that version afterwards as the record of what was sent — the fields go read-only and greyed in the same treatment a submitted element panel uses — and one click reopens it for another pass. Both the holding and the reopening are client state today. |
 | `useGate` — the three signature surfaces the regulation reserves, and the route-to-holder action offered instead | partial | a signature concept; document carries no date-issued and no signatory property, and §5 records a signature as the corpus's largest gap; a platform predicate for the caller's class; the interface presents the gate and cannot verify a credential; a record of a routing — that a document was referred to a holder for signature |
 | `useInbox` — every project this officer holds | partial | a holder-to-project relation; nothing records which officer holds a project; a modified-at property; the inbox sorts and groups on 'recently changed' and nothing carries it; a position property, or a projection of it; 'where it is' is step and tab state, which is C9's pathway state and is not built |
 | `useLearning` — what the system proposed, what a human did with it, and whether it is calibrated | backlog | the five object-dataset materializations — adoption, assignment, determination, engagement, receivedArtifact — all hold zero rows, so no transform can read an act-written row and ratification can never populate; the submission-time Function, which holds eight named preconditions including two intent-predicate clauses |
+| `useLevels` — which levels of NEPA review this proposal has occupied, in order | backlog | a convention mapping determination.outcome onto P0–P4; the property is free text and nothing decodes a level from it; determination.supersededAt, or a supersedes edge — an ordered level history has no address at all today; uniqueness over (project, whichDetermination) SCOPED TO THE UNSUPERSEDED ROW; written blanket it permanently forecloses reopening; branch rows for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row; document.uniqueIdentificationNumber and its issuer, moved off project — 1b.9(u) attaches the number to the EA (1b.5(c)(7)) and the EIS (1b.7(h)(1)(v)), and one field on the project cannot carry two on an escalated proposal |
 | `useProject` — the project band above every step | partial | an office or subcomponent property; §3 records that no object type carries a USDA subcomponent identity, which is also 1b.4(a)'s third limb; a status property; project state is pathway state and is not built |
 | `useReference` — the corpus, faceted and searchable — the only page in the application with real data in it | answerable | a decision on what add means — upload, or recording an intent to add. No act adds or removes a corpus artifact, nothing syncs, and the build account is Viewer-only and permanently so |
 | `useReferenceArtifact` — one artifact in the viewer, opened at a cited page range | partial | a media-set read route for the viewer. Whether an OSDK front end can read those bytes, and by what route, is not answerable from the interface side; until it is, the card carries metadata, digest and page-range citation and the viewer is a slot that lights up later |
 | `useSession` — the signed-in officer, and the signed-out case | partial | a caller identity from the shell's OSDK provider; the officer's name and title are not on any object type |
 | `useSource` — the overlay that opens the primary source behind a value | partial | a media-set read route, so the overlay can show the cited page rather than its metadata |
-| `useSteps` — the step list for the determined pathway, and each step's tabs | backlog | anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1); element rows; the document → element → slot → claim spine traverses and all four types hold zero rows; per-step completion state, which is the same pathway state usePathway waits on; pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9); the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row; uniqueness over (project, whichDetermination); nothing refuses a second det_review_level |
+| `useSteps` — the step list for the determined pathway, and each step's tabs | backlog | anything that creates a slot row — eleven of the seventeen acts are keyed on one and nothing creates any (§1); element rows; the document → element → slot → claim spine traverses and all four types hold zero rows; per-step completion state, which is the same pathway state usePathway waits on; pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9); the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row; uniqueness over (project, whichDetermination); nothing refuses a second det_review_level; WHETHER A LEVEL HAS BEEN ASSEMBLED — its documents opened, the references they incorporate pulled, drafting run against the answers above. `StepRail.assembly` carries it as waiting \| ready \| done, and a level that is DETERMINED but not ASSEMBLED has no steps at all: each step opens onto a document or a decision that assembly is what creates, so drawing them first shows work nobody can start. Nothing in the ontology says a level was built; open-document creates one document, not the whole level's shells. The fixture reaches the in-between state through ?assembled=no.; PER-TAB SUBMISSION — that the officer pressed Submit on a tab, addressed as <stepKey>/<tabId>. `TabEntry.submitted` and `StepEntry.submitted` carry it, and three surfaces read it: the tick in the rail, the tick on the tab strip, and the gate on the assemble control. Today it lives in sessionStorage (src/ui/data/submitted.ts) and the fixture port hands it to stepRail; the shape there is exactly what a backend answers. Submission belongs in the proposal record under 1b.9(a), not in a browser — this is the single highest-value addition on this surface, because everything the reader uses to tell finished work from unfinished is computed from it. |
 
 ## Surfaces the backend can answer today
 
@@ -140,14 +144,14 @@ from this one, so the two cannot disagree.
 | `signature-ready-freeze-slot-disposition` | blocked | no | none | `useElement`, `useLearning` |
 | `signature-ready-identify-expert-requirement` | blocked | no | none | `useExpertQueue`, `useExpertRequest` |
 | `signature-ready-open-determination` | exercisable | no | none | `useSteps`, `useElement` |
-| `signature-ready-open-document` | exercisable | no | none | `useSteps`, `useElement` |
+| `signature-ready-open-document` | exercisable | no | none | `useLevels`, `useSteps`, `useElement` |
 | `signature-ready-package-expert-request` | blocked | no | none | `useExpertQueue`, `useExpertRequest` |
 | `signature-ready-publish-under-compulsion` | exercisable | no | current_user_id | `useElement`, `useSteps` |
 | `signature-ready-record-artifact-arrival` | blocked | no | none | `useExpertQueue` |
 | `signature-ready-record-branch` | blocked | yes | current_user_id | `useSteps`, `useElement` |
 | `signature-ready-record-consistency-finding` | blocked | no | current_user_id | — |
-| `signature-ready-record-determination` | exercisable | yes | current_user_id | `useSteps`, `useElement` |
-| `signature-ready-record-determination-outcome` | exercisable | yes | none | `useSteps`, `useElement` |
+| `signature-ready-record-determination` | exercisable | yes | current_user_id | `useLevels`, `useSteps`, `useElement` |
+| `signature-ready-record-determination-outcome` | exercisable | yes | none | `useLevels`, `useSteps`, `useElement` |
 | `signature-ready-stamp-verifier-verdict` | blocked | no | none | `useElement`, `useLearning` |
 | `signature-ready-state-factor-finding` | blocked | yes | none | `useElement`, `useSteps`, `useExpertQueue`, `useExpertRequest` |
 | `signature-ready-submit-intake` | exercisable | no | none | `useInbox`, `useProject` |
@@ -266,6 +270,7 @@ Needed:
 - the submission-time Function; eight named preconditions wait on one, including adopt's rule that adoptedValue must be present unless adoptionState is 'rejected'
 - element and slot rows, as above
 - an address for the six grounds at 1b.2(e)(1)–(6) and for the 1b.2(f)(2) sequence; neither records which limb answered
+- A RECORD THAT THIS TAB WAS SUBMITTED, and one that a submission was reopened. The bar is a two-state control — Submit while anything binds, Reopen once it is submitted — and the state has to outlive the mount because the rail and the tab strip both draw a tick from it. It is sessionStorage today (src/ui/data/submitted.ts); see useSteps for the same gap stated where the rail reads it.
 
 Rendered rather than hidden:
 
@@ -310,6 +315,8 @@ Needed:
 - an actor on identify-expert-requirement, package-expert-request and state-factor-finding; none writes one, so the queue cannot show who sent a request
 - a holder-to-slot join (B.5.12); nothing joins a holder to the slot needing one, so a recipient is a suggestion the officer confirms
 - a record that an interdisciplinary review occurred — precisely what 1b.3(g)(2)(v) requires a FANEC to assert
+- A FIFTH STATUS: `drafted`. The four the queue had — overdue, awaiting, returned, accepted — all describe waiting on the SPECIALIST. A request the project workflow assembled and nobody has sent yet is waiting on the OFFICER, and there was no way to say so. It is also what the notification dot on the Expert Q section counts, so without it the dot has nothing to point at.
+- AN ADDRESS FOR WHETHER A DRAFTED REQUEST WAS SENT. Nothing here sends anything: the specialist is reached through the officer's own mail client, so the overlay assembles a whole message and copies it. What the record needs is that a message was copied, its exact text, and when — the surface holds that version and shows it as the record of what went out.
 
 Rendered rather than hidden:
 
@@ -353,9 +360,12 @@ Needed:
 - the same slot row the queue waits on
 - an actor on package-expert-request
 - an address for the regulatory basis of a request; the trigger is a factor finding and nothing joins it to the clause that required the discipline
+- A SUBJECT LINE on the drafted request. The request leaves through the officer's mail client, so what this surface has to produce is a whole message; a body someone must title themselves is not one. `ExpertDraft.subject` carries it and nothing in the ontology writes one.
+- A RECORD OF THE COPY: the exact text that went to the clipboard, and when. The overlay holds that version afterwards as the record of what was sent — the fields go read-only and greyed in the same treatment a submitted element panel uses — and one click reopens it for another pass. Both the holding and the reopening are client state today.
 
 Rendered rather than hidden:
 
+- NOTHING IS SENT FROM THIS SURFACE, and it must not say otherwise. There is no mail transport and no address book. The primary act is Copy — recipient, subject and body assembled into one message — and a button labelled Send would promise a delivery that cannot happen and leave the officer believing a specialist had been contacted. Clipboard access can be refused (a sandboxed frame, an insecure origin, a browser setting); on refusal the whole message is shown selectable to copy by hand and the version is NOT held, because holding it would record a send that did not happen.
 - package-expert-request is a modify ×2 — assignment.sentAt and expectedReturnDate, engagement.outcome='open' — and writes no actor. §1 records that as a named asymmetry.
 - Expert identities are notional for this build; nothing is transmitted (§6.4).
 
@@ -478,6 +488,48 @@ Rendered rather than hidden:
 - determinationEvidence has a declared evidence set for two of the five determinations and none for the other three, so those three report that nothing was asked rather than that nothing was found. That is the distinction working (§1).
 - Named as a future tile and not built: 1b.3(h) reliance on a prior CE determination is a genuine regulation-backed learning loop. §3 records precedent and prior_coverage in the spec and 51 artifacts in the prior-coverage corpus, and no object type records a reliance (§6.5).
 
+### `useLevels`
+
+which levels of NEPA review this proposal has occupied, in order. Verdict: **backlog**. Required by §8.0; §8.4; §7.1; §2 the determinations.
+
+| | |
+| --- | --- |
+| object types | `determination`, `project`, `document` |
+| properties | `determination.whichDetermination`, `determination.outcome`, `document.documentType`, `determination.supersededAt` *(proposed)* |
+| acts | `signature-ready-open-determination`, `signature-ready-record-determination-outcome`, `signature-ready-record-determination`, `signature-ready-open-document` |
+| datasets | — |
+| links traversed | `project.determinations` (project → determination), `project.documents` (project → document) |
+| addressed by | `:projectRef` |
+| query | not a list, sort `the order the determinations were made` asc, search none, counts length |
+| freshness | immediate |
+
+**Identity.** Per proposal, not per level. One proposal, one project row, one record — an escalation appends a determination and never a project.
+
+**Query.** Walk project → determinations, keep those whose whichDetermination is det_review_level, order them, and read the level off each outcome through the convention. Never a scan of the determination type. ORDER BY THE SUPERSEDES EDGE OR THE PLATFORM'S OWN EDIT ORDERING — decidedAt is a client-supplied parameter, so ordering on it lets the browser decide which level a proposal is on.
+
+**Authority.** The determinations at 1b.11(a)(46) are reserved to the responsible official, but their arbiter belongs to the act that RECORDS one, not to a surface that reads the history back. Reading which level a proposal is on is not a reserved act.
+
+**Freshness.** A recorded outcome is what fixes a level, so the history is stale across that write and the whole rail rebuilds from it. open-determination is deliberately not listed: it creates the row and changes no level, because the outcome is what decides. AMENDMENT-7 §7.8 said a reopened determination REPLACES the step set; §8 supersedes that. It APPENDS. A superseded level keeps its steps, readable and read-only — 1b.9(a) keeps the work in the proposal record and 1b.6(b)(1) and 1b.8(b)(1) incorporate it into whatever follows.
+
+Traversed rather than scanned:
+
+- `project.determinations` — EXPECT MORE THAN ONE, and order them. Nothing refuses a second det_review_level, and after §8 that is not a defect to close blanket — it is the seam an escalation runs on. Order by the supersedes edge or by the platform's own edit ordering, NEVER by decidedAt: that is a client-supplied parameter, so ordering on it lets the browser decide which level a proposal is on. The name is a normalisation and must be matched against the 38 link type resources first.
+- `project.documents` — The document ledger shown under each level band. Rows live in the edits layer and signatureReady.document holds zero, so a dataset query finds nothing at all.
+
+Needed:
+
+- a convention mapping determination.outcome onto P0–P4; the property is free text and nothing decodes a level from it
+- determination.supersededAt, or a supersedes edge — an ordered level history has no address at all today
+- uniqueness over (project, whichDetermination) SCOPED TO THE UNSUPERSEDED ROW; written blanket it permanently forecloses reopening
+- branch rows for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row
+- document.uniqueIdentificationNumber and its issuer, moved off project — 1b.9(u) attaches the number to the EA (1b.5(c)(7)) and the EIS (1b.7(h)(1)(v)), and one field on the project cannot carry two on an escalated proposal
+
+Rendered rather than hidden:
+
+- The rail is computed from the rule over the level ids this member returns; it is NOT this member's own array. A readonly array forbids mutation, not a shorter one, so an implementation that returned a single episode would silently delete the earlier level's steps and nothing on the client could tell.
+- Part 1b contains no cross-pathway dependency. P0–P4 are the mutually exclusive outcomes of one ordered elimination at 1b.2(f)(2); a FONSI after an EA (1b.6(a)) and a ROD after an EIS (1b.8(a)) are ordering WITHIN a level, and either may be one physical document with its predecessor.
+- Four transitions exist and their modalities differ: 1b.9(r)(2) is a duty to CONSIDER, the uncured-extraordinary-circumstance route is DERIVED from a chain of four paragraphs, 1b.9(r)(3) is a duty, and a redetermination under 1b.11(a)(46) is a PERMISSION. Nothing in this repository supports a rule that an environmental assessment finding significance requires a statement — 1b.5(a) and 1b.6(c) are cited nowhere and could not be retrieved.
+
 ### `useProject`
 
 the project band above every step. Verdict: **partial**. Required by §7.3 initiation overlay; §3 process, record and competence.
@@ -525,7 +577,7 @@ the corpus, faceted and searchable — the only page in the application with rea
 | query | 50 per page, sort `corpus` asc, search server, counts aggregation |
 | freshness | tolerant |
 
-**Identity.** /reference takes no parameter (src/ui/routes.ts): the corpus / regulation / catalogue groups, the facet selection and the open artifact are all component state. The digest is on every row and must stay there — it is the evidence the integrity strip is about — but the list resolves nothing, because the row it displays already carries the object. The fix belongs in the adapter's favour rather than the screen's: a faceted view over 312 artifacts that cannot be linked to cannot be cited in a review, so facets and search belong in the query string and the open artifact's primary key belongs in a path segment, which is useReferenceArtifact's parameter.
+**Identity.** THE OPEN ARTIFACT IS NOW IN THE ADDRESS: /reference?view=<id> opens that document in the viewer, and the screen reads and writes the parameter rather than holding it in component state. That is what lets anywhere else in the application hand a reader a specific document — the source overlay's 'Open the full document' link is exactly this address and needed nothing new on the port to work — and it survives a reload and can be sent to a colleague. `Destination.href` on `SourceDocument.full` is that address, so a backend filling it only has to name the corpus id. The <id> is the artifact's primary key and the fixture's rows carry fixture ids; the FDE substitutes the real key. The GROUPS and the facet selection are still component state and still cannot be linked to: a faceted view over 312 artifacts that cannot be cited in a review is the remaining half of this, and it belongs in the query string beside `view`. `withSearch` in src/ui/routes.ts MERGES query strings rather than concatenating, which is what makes an address carrying its own parameter expressible at all — a second '?' parses as one key whose value swallows the rest.
 
 **Query.** No section fixes a page size, so 50 is proposed; the fixture's seven rows are one per condition and not a page. Corpus is the primary grouping (§6.6) and no secondary order is specified anywhere — propose title as the tiebreak, because 312 rows grouped with no tiebreak re-order between pages. Search is server-side, and the reason is the counts rather than the volume: 312 rows would fetch, but a client filter leaves the header count and every facet count to be recomputed from what was fetched, at which point they stop being aggregations. They are aggregations over the whole corpus — 312 artifacts, 7 media sets, 283 practice / 4 regulation / 25 undeclared, FANEC 4 / DM 32 / EA 29 / FONSI 34 / EIS 51 / ROD 47, born-digital 253 / image-only 14 / ocr-derived 2 / unreadable 2, not-declared 25 — and no page size may change one of them. Search covers titles and metadata only: corpus.text holds 17 rows and zero PDF body text, so a box that promises full text lies. One chip has no property behind it at all — Rescinded, for the 26 FSH 1909.15 chapters rescinded in their entirety by WO Amendment 1909.15-2026-1 effective 2026-03-26 (§5, §6.6); no section names a column that carries it, so the FDE has to ground it. And no link type reaches corpusArtifact: §1's 38 link type resources are the project → document → element → slot → claim spine, manifest → unsatisfiedElement, the five C1 singletons and the ten wave-2 edges, none of which touches the corpus — so this page is a filter over one type, and the two columns that look like edges, proposalRecordItem.documentId and incorporatedByReference.documentId, point at a pinned corpus artifact and never at a document object, which makes resolving one a value lookup and a link there wrong rather than merely empty.
 
@@ -688,13 +740,13 @@ the step list for the determined pathway, and each step's tabs. Verdict: **backl
 | query | not a list, sort unaddressed, search none, counts length |
 | freshness | immediate |
 
-**Identity.** The step list is per project and carries useProject's ambiguity unchanged — prefer the primary key, and resolve a number only where one is typed. :stepId and :tabId are NOT object identities: they are pathways.ts's own ids — '0', '1', '2' and then the pathway's, plus 'x' for §7.7's cross-cutting tabs — and no object type holds a step or a tab. Nothing resolves them and nothing should try; §7.1 makes a step a phase and a tab a part of it, which is the rule's structure and not the ontology's. The primary-key PROPERTY is not named anywhere in the register, so none is asserted here: the FDE reads it off the object type in Ontology Manager and fills `primaryKey` in. Until it is filled, `isPrimaryKey` stays false, which is a statement about what is known and not about the URL.
+**Identity.** The step list is per project and carries useProject's ambiguity unchanged — prefer the primary key, and resolve a number only where one is typed. :stepId and :tabId are NOT object identities: they are pathways.ts's own ids — '0', '1', '2' and then the pathway's — and no object type holds a step or a tab. There is no longer an 'x' segment: §7.7's ten cross-cutting tabs are inside the steps whose completion each one conditions, so a step key and a tab id address everything the page has. Nothing resolves them and nothing should try; §7.1 makes a step a phase and a tab a part of it, which is the rule's structure and not the ontology's. The primary-key PROPERTY is not named anywhere in the register, so none is asserted here: the FDE reads it off the object type in Ontology Manager and fills `primaryKey` in. Until it is filled, `isPrimaryKey` stays false, which is a statement about what is known and not about the URL.
 
 **Query.** Not a paged list and not a sorted one. The step set is the rule's own sequence — three shared steps and then the pathway's, at most ten (§7.1) — so it is enumerated, never ordered by a query; §2 records that all five element lists are prefaced by 'may apply any format they choose', so no ordering shown here may be presented as required. The 'n of m tabs' meta is a LENGTH over pathways.ts's own tab array, not a platform count: per-step completion is slot closure and has no address, and element holds zero rows so nothing counts elements either.
 
 **Authority.** No gate on the step list. §7.2 requires every step, tab and row to be reachable and workable without agency credentials, and a waiting step still opens. The determinations that decide WHICH steps exist are reserved to the responsible official by 1b.11(a)(46), but their arbiter belongs to the row that records them, not to this surface. The one refusal the platform actually holds on this spine is record-determination's ordering — it refuses attribution while outcome is empty, and record-determination-outcome refuses a new outcome once actorPrincipal is set (§1) — and it is a sequencing rule, not a credential.
 
-**Freshness.** Step 2 fixes the pathway and populates Steps 3 and beyond, and §7.8 records that a reopened level-of-review determination REPLACES the step set — so the rail cannot be stale across that write. open-determination is deliberately not in the list: it creates the row and changes nothing the rail shows, because the outcome is what fixes the pathway. Marks and completion would additionally be staled by adopt, freeze-slot-disposition, record-branch and emit-document, and each of those stales state with no address today, so refetching on them buys nothing until C9 lands.
+**Freshness.** Step 2 fixes the level of review and populates Steps 3 and beyond. §7.8 said a reopened determination REPLACES the step set; §8 supersedes that and it APPENDS — a superseded level keeps its steps, readable and read-only, because 1b.9(a) keeps the work in the proposal record and 1b.6(b)(1) and 1b.8(b)(1) incorporate it into whatever follows. The rail is computed from the rule over the level ids useLevels returns, so a partial answer here can mislabel a level and can never delete a step; it cannot be stale across that write either way. open-determination is deliberately not in the list: it creates the row and changes nothing the rail shows, because the outcome is what fixes the pathway. Marks and completion would additionally be staled by adopt, freeze-slot-disposition, record-branch and emit-document, and each of those stales state with no address today, so refetching on them buys nothing until C9 lands.
 
 Traversed rather than scanned:
 
@@ -711,10 +763,16 @@ Needed:
 - pathway state — which document types remain possible given screening so far. document.documentType names the type of a document that exists, not the set still open, and 1b.2(f)(2) is an ordered elimination (C9)
 - the branch set for 1b.2(f)(2)(i)–(iv), so the limb that answered is recorded; branch and record-branch exist and nothing creates a branch row
 - uniqueness over (project, whichDetermination); nothing refuses a second det_review_level
+- WHETHER A LEVEL HAS BEEN ASSEMBLED — its documents opened, the references they incorporate pulled, drafting run against the answers above. `StepRail.assembly` carries it as waiting | ready | done, and a level that is DETERMINED but not ASSEMBLED has no steps at all: each step opens onto a document or a decision that assembly is what creates, so drawing them first shows work nobody can start. Nothing in the ontology says a level was built; open-document creates one document, not the whole level's shells. The fixture reaches the in-between state through ?assembled=no.
+- PER-TAB SUBMISSION — that the officer pressed Submit on a tab, addressed as <stepKey>/<tabId>. `TabEntry.submitted` and `StepEntry.submitted` carry it, and three surfaces read it: the tick in the rail, the tick on the tab strip, and the gate on the assemble control. Today it lives in sessionStorage (src/ui/data/submitted.ts) and the fixture port hands it to stepRail; the shape there is exactly what a backend answers. Submission belongs in the proposal record under 1b.9(a), not in a browser — this is the single highest-value addition on this surface, because everything the reader uses to tell finished work from unfinished is computed from it.
 
 Rendered rather than hidden:
 
 - Element counts are frozen at FANEC 6 / EA 7 / FONSI 5 / EIS 8 / ROD 8 = 34 and §2 re-derives every one from the current text (§7.10).
 - Steps 0–2 are shared and exist before any pathway is fixed; Steps 3 and beyond are the pathway's and do not exist until Step 2 determines it (§7.1). Unknown significance routes to P3, not P4 — 1b.2(f)(2)(iv)(A).
-- The rail is three segments in one sequence, and the wiring must preserve the distinction. Steps 0–2 are shared and exist from the start. The pathway's own steps exist only once Step 2 fixes a pathway and are generated from that determination. §7.7's ten items are shared by every pathway, so each is a step of its own and they follow the pathway's steps.
+- The rail is BANDED, and the wiring must preserve the banding. One shared band holds Steps 0–2 and exists from the start. One band per level of review the proposal has occupied, in order, each holding that level's own steps — a superseded band collapses to a summary and is never removed. §7.7's ten items are TEN TABS UNDER ONE RAIL ENTRY at a single step segment, not ten steps; the earlier description of them as steps of their own never matched the built shape.
 - A step is a phase; its tabs are the parts of that phase. Nothing that appears in the rail may also appear in the tab strip — a step with one part renders no strip at all.
+- ANSWERED AND SUBMITTED ARE TWO FACTS AND MUST STAY TWO. `answered` is nothing outstanding and no text missing from the build — it enables the Submit control. `submitted` is that the officer pressed it — it draws the tick and gates assembly. They were one field, and the consequence was that the only tabs carrying a tick were the only tabs still offering Submit: the mark and the control contradicting each other on the same row. An implementation that answers `submitted` from `answered` reintroduces that exactly.
+- STEP NUMBERS ARE DISPLAY, IDS ARE ADDRESSES. `StepEntry.n` counts from ONE and restarts at the seam — the shared steps are 1-3 and the level's own steps begin again at 1, because they are two sequences separated by the determination. The step's id and key are unchanged and count from zero: S.0 and E1.P3.3 are in every URL, every row anchor and the rid map. Do not renumber the address to match the display.
+- THE SEAM. Between the shared steps and the level's steps the rail carries one act, `StepRail.assembly`. Where it is `done` it is also the HEADING the level's steps sit under — the level of review in plain words. On a proposal that has occupied more than one level the band headers are that heading instead, one per level, and no seam is drawn: two headings for two different levels stacked on each other is the defect that shape avoids.
+- The tab strip and the panel heading both draw the same tick from the same field, because a step with a single tab renders no strip and a tab marked only when it has siblings is not consistently marked.

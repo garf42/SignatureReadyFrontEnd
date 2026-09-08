@@ -11,10 +11,14 @@ export type {
   ArchiveRow,
   ArtifactView,
   Catalogue,
+  Assembly,
   CatalogueRow,
   Citable,
   Destination,
   DocumentType,
+  BandEntry,
+  BandRef,
+  DocumentLedgerEntry,
   ElementPanel,
   ExpertDraft,
   ExpertQueue,
@@ -27,8 +31,14 @@ export type {
   Inbox,
   Learning,
   LearningTile,
+  Level,
+  LevelEpisode,
+  LevelHistory,
+  LevelState,
   Mark,
+  Modality,
   NavSection,
+  Options,
   PathwayId,
   ProjectHeader,
   ProjectRow,
@@ -47,10 +57,12 @@ export type {
   SourceRef,
   StepEntry,
   StepMark,
+  StepRail,
   StepSpec,
   SubmitBar,
   TabEntry,
   TabSpec,
+  TextState,
   TileTone
 } from "@/ui/data/types";
 
@@ -58,12 +70,14 @@ import type {
   Archive,
   ArtifactView,
   Catalogue,
+  DocumentType,
   ElementPanel,
   ExpertDraft,
   ExpertQueue,
   Gate,
   Inbox,
   Learning,
+  LevelHistory,
   ProjectHeader,
   Reference,
   Region,
@@ -71,13 +85,32 @@ import type {
   Session,
   SourceDocument,
   SourceKind,
-  StepEntry
+  StepRail
 } from "@/ui/data/types";
 
 export { sourceTitle, sectionsFor } from "@/ui/data/fixtures";
 export { PAGES } from "@/ui/data/support";
-export { CROSS_CUTTING, DOCUMENT_AUTHORITY, RETRIEVAL_PUSHES, TRIGGERS } from "@/ui/data/project";
-export { DISCRETIONS, PATHWAYS, PATHWAY_IDS, stepsFor } from "@/ui/data/pathways";
+export {
+  COMPETENCE_CONDITIONS,
+  CROSS_CUTTING,
+  DOCUMENT_AUTHORITY,
+  RETRIEVAL_PUSHES,
+  TRANSITIONS,
+  TRIGGERS
+} from "@/ui/data/project";
+export {
+  DISCRETIONS,
+  FILL_SAYS,
+  LEVELS,
+  LEVEL_IDS,
+  PATHWAYS,
+  PATHWAY_IDS,
+  REOPEN_STEP,
+  railFor,
+  ridFor,
+  stepsFor
+} from "@/ui/data/pathways";
+export { coverage } from "@/ui/data/coverage";
 
 /** The one seam, and from here on it is a CONTRACT rather than an
  *  implementation.
@@ -115,9 +148,29 @@ export interface DataPort {
   useSession(): Region<Session>;
   useInbox(): Region<Inbox>;
   useProject(projectRef: string): Region<ProjectHeader>;
-  useSteps(projectRef: string, stepId: string): Region<StepEntry[]>;
-  useGate(): Region<Gate>;
-  useElement(projectRef: string, stepId: string, tabId: string): Region<ElementPanel>;
+  /** Which levels of NEPA review this proposal has occupied, in order.
+   *
+   *  Wire this FIRST: everything downstream keys on it. It needs three things
+   *  the platform does not have today, and each is a decision rather than a
+   *  wiring gap. (a) A CONVENTION mapping `determination.outcome` onto P0–P4:
+   *  the property is free text, so nothing decodes a level from it, and if the
+   *  convention is invented privately the two sides will disagree with nothing
+   *  to detect it. (b) A SUPERSESSION edge, so an ordered history has an
+   *  address; until it exists this member returns `unresolved`, which is a
+   *  demoable state and not a bug. (c) An ordering that is NOT a client-supplied
+   *  timestamp — `decidedAt` is a parameter the browser sets.
+   *
+   *  And one constraint the FDE must not write as stated: uniqueness over
+   *  (project, whichDetermination), written blanket, permanently forecloses
+   *  reopening. Scope it to the unsuperseded row — at most one LIVE
+   *  determination of each kind, with an ordered history behind it. */
+  useLevels(projectRef: string): Region<LevelHistory>;
+  useSteps(projectRef: string, stepKey: string): Region<StepRail>;
+  /** Takes the document whose surface is being asked about. It took no argument
+   *  and returned one gate for the whole application whose citation was all
+   *  three joined, so per-document authority was inexpressible. */
+  useGate(documentType: DocumentType | null): Region<Gate>;
+  useElement(projectRef: string, stepKey: string, tabId: string): Region<ElementPanel>;
   useSource(kind: SourceKind): Region<SourceDocument>;
   useArchive(): Region<Archive>;
   useExpertQueue(): Region<ExpertQueue>;

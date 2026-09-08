@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Button, HTMLTable, Icon, InputGroup } from "@blueprintjs/core";
 
 import type { Citable } from "@/ui/data/port";
@@ -34,7 +35,27 @@ const CITABLE: Record<Citable, string> = {
  *  page in the application with real data in it. */
 export function ReferenceScreen() {
   const reference = usePort().useReference();
-  const [viewing, setViewing] = useState<string | null>(null);
+  /* The open document is in the ADDRESS, not in component state. That is what
+     lets anywhere else in the application hand a reader a specific document —
+     the "open the full document" link on a source overlay is a link to
+     `/reference?view=<id>` and needs nothing else to exist. It also survives a
+     reload and can be sent to a colleague. */
+  const [query, setQuery] = useSearchParams();
+  const viewing = query.get("view");
+  const setViewing = (id: string | null) => {
+    setQuery(
+      (previous) => {
+        const next = new URLSearchParams(previous);
+        if (id === null) {
+          next.delete("view");
+        } else {
+          next.set("view", id);
+        }
+        return next;
+      },
+      { replace: true }
+    );
+  };
   const [group, setGroup] = useState("corpus");
 
   return (
@@ -174,7 +195,7 @@ function RegulationPanel() {
                   <span className={css.sectionName}>{section.name}</span>
                   <span className={css.amended}>amended {section.amended}</span>
                   <span className={css.sectionGlyph}>
-                    <Icon icon={open[section.id] ? "minus" : "plus"} />
+                    <Icon icon={open[section.id] ? "chevron-down" : "chevron-right"} size={12} />
                   </span>
                 </button>
                 {open[section.id] ? (
@@ -198,7 +219,7 @@ function RegulationPanel() {
                 </span>
                 <span className={css.amended}>{page.unresolvedCitations.length} found</span>
                 <span className={css.sectionGlyph}>
-                  <Icon icon={open.citations ? "minus" : "plus"} />
+                  <Icon icon={open.citations ? "chevron-down" : "chevron-right"} size={12} />
                 </span>
               </button>
               {open.citations ? (

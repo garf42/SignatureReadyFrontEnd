@@ -7,10 +7,6 @@
   border-bottom: 1px solid var(--rule);
 }
 
-.railHead[aria-expanded] {
-  cursor: pointer;
-}
-
 .bandHead {
   display: flex;
   align-items: baseline;
@@ -44,60 +40,70 @@
 
 .split {
   display: grid;
-  grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, var(--rail-width, 280px)) auto minmax(0, 1fr);
   align-items: start;
 }
 
-/* Same rule as the section pane: the collapsed rail keeps the item's own left
-   padding, so a step number does not shift when the rail closes. */
-.split[data-rail="closed"] {
-  grid-template-columns: 46px minmax(0, 1fr);
+/* The divider. Two pixels of rule with a generous invisible target either side,
+   because a hit area the width of a hairline is a control only a mouse in good
+   condition can find. */
+.handle {
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 9px;
+  margin: 0 -4px;
+  padding: 0;
+  cursor: col-resize;
+  background: none;
+  border: 0;
+  touch-action: none;
+  position: relative;
+  z-index: 1;
+}
+
+/* Exactly one pixel, the same grey as every other rule on the page. It was
+   drawn by arithmetic — a 9px box inset 4px each side — which is 1px only if
+   the box is 9px, and a <button> carries user-agent padding that this had not
+   zeroed. The line came out heavier than the rules it sits among. Stating the
+   width outright means it cannot drift again. */
+.handle::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--rule);
+  transition: background 120ms ease;
+}
+
+.handle:hover::after,
+.handle[data-dragging="yes"]::after,
+.handle:focus-visible::after {
+  background: var(--link);
+}
+
+.handle:focus-visible {
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .handle::after {
+    transition: none;
+  }
 }
 
 .rail {
   overflow: hidden;
   padding: var(--s-3) 0 var(--s-4);
-  border-right: 1px solid var(--rule);
 }
 
 .rail :global(.bp6-menu) {
   min-width: 0;
 }
 
-/* Same cause as the section pane, different remedy: a collapsed step keeps its
-   number, so the filling span stays and centres its own text instead. */
-.split[data-rail="closed"] .rail :global(.bp6-menu-item) > :global(.bp6-fill) {
-  text-align: left;
-}
 
-.split[data-rail="closed"] .rail .number {
-  margin-right: 0;
-}
-
-.railHead {
-  display: flex;
-  width: 100%;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--s-2);
-  width: 100%;
-  appearance: none;
-  background: none;
-  border: 0;
-  padding: 0 var(--s-3) var(--s-2);
-  font-family: var(--mono);
-  font-size: var(--t-micro);
-  color: var(--ink-faint);
-  cursor: pointer;
-}
-
-.railGlyph {
-  font-family: var(--sans);
-  font-size: var(--t-read);
-  font-weight: 500;
-  line-height: 1;
-  color: var(--ink);
-}
 
 .step {
   border-bottom: 1px solid var(--rule);
@@ -134,10 +140,36 @@
 }
 
 .number {
+  display: inline-block;
+  min-width: 1ch;
   font-family: var(--mono);
   font-size: var(--t-micro);
   color: var(--ink-soft);
   margin-right: var(--s-2);
+}
+
+/* The tick sits at the right edge, in the slot the rail already kept for a
+   step's own word, so a finished step costs the row no column and the number —
+   which is how a reader finds a step again — is never given up for it. */
+.tick {
+  margin-left: var(--s-2);
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ok);
+}
+
+/* For a screen reader, and for anyone who cannot tell a tick from a digit at
+   this size. Never on screen. */
+.only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 .panel {
@@ -161,4 +193,359 @@
    its parts are tabs like any other step's. */
 .cross {
   border-top: 1px solid var(--rule);
+}
+
+/* --- the level line -------------------------------------------------------
+   Which level of review this proposal is on, on what authority, and what it
+   ends in — one sentence, under the project name. A person who is never told
+   which review they are doing cannot be driven to the correct one. */
+
+.levelLine {
+  margin-top: 0.75rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--rule);
+}
+
+.levelNote {
+  margin: 0;
+  font-size: 0.8125rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+}
+
+/* The determination, in three sentences. Weight carries the order a reader
+   takes them in — what the review IS, then why it is that one, then what it
+   ends in — so a person who reads only the first line has still been told the
+   thing the page exists to tell them. */
+/* NO MEASURE CAP. 80ch is a reading measure for a column of prose; these are
+   three sentences across the full width of the page, and the cap was wrapping
+   them at a third of the room they had, turning three lines into nine and
+   spending vertical space the steps need. They wrap where the band ends. */
+.levelSays {
+  display: block;
+  margin: 0;
+  font-size: var(--t-body);
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.levelWhy,
+.levelEnds {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.levelLine .levelNote {
+  margin-top: 0.35rem;
+}
+
+/* Where the reader is standing, and what this step is for. Sits below the
+   determination because the determination does not change and this does. */
+.here {
+  margin-top: 0.6rem;
+  padding-top: 0.5rem;
+  border-top: 1px dotted var(--rule);
+}
+
+.hereWhere {
+  display: block;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* One convention across the whole band: the head of a block is ink, the prose
+   under it is ink-soft. This was the outlier — darker than the level line's
+   two sentences directly above it, and darker than its own head, which is a
+   supporting line drawn heavier than the thing it supports. */
+.herePurpose {
+  margin: 0.2rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.levelLine[data-level="none"] .levelNote {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.levelDocs {
+  margin: 0.25rem 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* The eliminated levels, stated once as an elimination. Never a list of lanes
+   a reader might take for choices. */
+.foreclosed {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* --- the banded rail ------------------------------------------------------
+   One band per level of review the proposal has occupied, plus the shared
+   band. Only the live band opens; a superseded band collapses to a summary
+   that still names its step count and its documents. */
+
+/* NO RULE OF ITS OWN. The band drew one and its header drew another, with the
+   header's own top margin between them — two grey lines a gap apart, which is
+   what a divider looks like when two elements both think they are the one that
+   separates things. The header's box carries the rule, because the header IS
+   the boundary; a band with no header (the shared steps) needs none, since the
+   next band's header is what marks the change. */
+/* The SAME box the seam draws on a project that has occupied one level: a well
+   ground, a rule above it, and a bold left edge. One level or four, a level of
+   review is headed the same way, so an escalated project is the ordinary one
+   with more than one heading rather than a different-looking screen. */
+.bandHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 100%;
+  margin-top: var(--s-3);
+  padding: var(--s-3) var(--s-2) var(--s-2);
+  border: 0;
+  border-top: 1px solid var(--rule);
+  border-left: 3px solid var(--link);
+  background: var(--well);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+/* The only thing on the header that says it is a control. Turns rather than
+   swaps, so its direction carries the state without a second glyph to learn. */
+.bandChevron {
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--ink-soft);
+  transition: transform 120ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bandChevron {
+    transition: none;
+  }
+}
+
+.bandWords {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.bandSummary {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+/* NO ITALIC ON A SUPERSEDED BAND'S HEADING. A single-level project never has
+   one, so italicising it made the multi-level view a different-looking screen
+   for the sake of a fact the words already carry: the overline reads
+   "Level 1 of 2 · superseded" and the summary ends "read only". Setting the
+   same heading in two faces says they are two kinds of thing. They are not —
+   one of them is finished. */
+
+/* A superseded step is readable and read-only. It is not an error and not a
+   step that was never started, and before this it had no representation at
+   all — it was removed from the rail instead. */
+.superseded {
+  opacity: 0.72;
+}
+
+.superseded :global(.bp6-menu-item-label) {
+  font-style: italic;
+}
+
+/* A step whose document cannot begin until another exists — 1b.6(a) for a
+   finding, 1b.8(a) for a record of decision. It still opens. */
+.blocked :global(.bp6-menu-item-label) {
+  color: var(--ink-soft);
+}
+
+/* Band titles are long by nature — "Level 2 · P4 Environmental impact
+   statement" — and the rail is narrow. They wrap; they are never clipped. */
+/* Band titles are long by nature — "Level 2 · P4 Environmental impact
+   statement" — and the rail is 280px. They wrap onto a second line; they are
+   never clipped, and never broken mid-word. The step rows below them keep the
+   single-line treatment they already had. */
+.bandTitle,
+.bandSummary {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+/* --- the seam ------------------------------------------------------------
+   Between the steps every review has and the steps this determination
+   created. The break is drawn, because the two halves are true for different
+   reasons and a rail that runs them together says they are one list. */
+.gate {
+  margin: var(--s-3) 0;
+  padding: var(--s-3) var(--s-2);
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: var(--well);
+}
+
+/* Sized to its own label, not to the pane. It filled the rail's width, so the
+   same button grew and shrank as the divider moved — a control whose size is a
+   side effect of a layout choice reads as a different control at each width.
+   The cap is the one concession: below its natural size there is nothing to do
+   but clip it, and a clipped button is worse than a narrow one. */
+.gateButton {
+  width: fit-content;
+  max-width: 100%;
+  font-size: var(--t-meta);
+}
+
+.gateSays,
+.gateWaiting,
+.gateDone {
+  margin: var(--s-2) 0 0;
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  color: var(--ink-soft);
+  text-wrap: pretty;
+}
+
+.gateWaiting {
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+/* Done, the seam stops being a control and becomes the heading the pathway
+   steps sit under. It keeps a ground and loses its bottom rule, so it reads as
+   attached to what follows rather than as a band of its own. */
+.gate[data-state="done"] {
+  margin-bottom: 0;
+  padding-bottom: var(--s-2);
+  border-bottom: none;
+  border-left: 3px solid var(--link);
+}
+
+/* Shared with the band headers, so the seam on a one-level project and a band
+   header on an escalated one are the same two lines set the same way. */
+.gateOverline {
+  display: block;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.gateLevel {
+  display: block;
+  margin: 0.15rem 0 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--ink);
+  text-wrap: pretty;
+  overflow-wrap: break-word;
+}
+
+.gate[data-state="done"] .gateDone {
+  margin-top: 0.3rem;
+}
+
+.gateRunning {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: var(--t-meta);
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* Three dots that fill in turn. Deliberately not a spinner: a spinner says
+   "busy" and this says "still going", which is the question a reader has
+   during a wait long enough to doubt it started. */
+.dots {
+  display: inline-flex;
+  gap: 0.15rem;
+}
+
+.dots i {
+  width: 0.25rem;
+  height: 0.25rem;
+  border-radius: 50%;
+  background: var(--ink-soft);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+.dots i:nth-child(2) {
+  animation-delay: 0.18s;
+}
+
+.dots i:nth-child(3) {
+  animation-delay: 0.36s;
+}
+
+@keyframes pulse {
+  0%,
+  70%,
+  100% {
+    opacity: 0.25;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+
+/* The words already say it is running, and the live region announces it, so
+   removing the motion removes nothing. */
+@media (prefers-reduced-motion: reduce) {
+  .dots i {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+
+/* --- the fold ------------------------------------------------------------
+   A top line that is also the control, over a body that can be put away. The
+   same chevron the rail's bands use, so a reader learns the gesture once. */
+.fold {
+  min-width: 0;
+}
+
+.foldHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+/* The chevron sits on the first line's baseline rather than the block's, so it
+   does not drift down as the head wraps. */
+.foldHead .bandChevron {
+  align-self: flex-start;
+  margin-top: 0.2rem;
+}
+
+.foldBody {
+  padding-left: 1.15rem;
 }

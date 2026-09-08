@@ -149,3 +149,136 @@
   content: " ·";
   color: var(--ink-faint);
 }
+
+/* The anchor. Monospace, quiet, and always present — it is what a review
+   comment resolves to and what a backend eventually joins per-row state on. */
+.rid {
+  margin: 0 0 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.01em;
+  color: var(--ink-soft);
+  opacity: 0.7;
+  user-select: all;
+}
+
+/* One note per modality. They differ in what they say, so they differ in how
+   they look: a permission relieves, a duty-to-consider constrains the process
+   and not the answer, a derived consequence is not a choice at all, and an
+   outbound request is somebody else's act. */
+.consider,
+.derived,
+.outbound,
+.echo {
+  margin: 0 0 0.6rem;
+  padding-left: 0.7rem;
+  border-left: 2px solid var(--rule);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.derived {
+  border-left-color: var(--ink-soft);
+  color: var(--ink);
+}
+
+/* A row whose own text is not in the build. It is unresolved rather than
+   absent — the lane could not have answered, because the question has not been
+   written — and the mark says so without the state word reaching the screen. */
+.row[data-text="placeholder"] .label {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* How this element fills, and what it becomes on the filed page. Both belong
+   on the surface: an element nobody can say how to fill is not designed, and
+   one with no template is one the document cannot carry. */
+.build {
+  margin: 0 0 0.7rem;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 0.9rem;
+  align-items: baseline;
+  font-size: var(--t-meta);
+}
+
+.build dt {
+  font-size: var(--t-micro);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.build dd {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.build dd em {
+  font-style: normal;
+  color: var(--ink);
+}
+
+.fill {
+  display: inline-block;
+  font-size: var(--t-micro);
+  padding: 0 0.3rem;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-box);
+  margin-right: 0.25rem;
+  white-space: nowrap;
+}
+
+/* The fill methods differ in WHO acts, so they differ in colour: the lane
+   proposes, the officer decides, the rule supplies, a reference answers. */
+.fill[data-fill="drafted"] { color: var(--link); }
+.fill[data-fill="authored"] { color: var(--unresolved); }
+.fill[data-fill="attested"] { color: var(--blocked); }
+.fill[data-fill="computed"],
+.fill[data-fill="carried"] { color: var(--ok); }
+.fill[data-fill="catalogue"],
+.fill[data-fill="referenced"] { color: var(--ink-soft); }
+.fill[data-fill="intake"],
+.fill[data-fill="choice"] { color: var(--ink-faint); }
+
+.section {
+  display: block;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  margin-bottom: 0.2rem;
+}
+
+/* The text this element produces, with braces where the value lands. Shown as
+   what it is — a template — rather than dressed up as an answer. */
+.template {
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  background: var(--well);
+  border-left: 2px solid var(--rule);
+  border-radius: 0 var(--radius-box) var(--radius-box) 0;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  color: var(--ink);
+}
+
+.notemplate {
+  color: var(--ink-faint);
+  font-style: italic;
+}
+
+/* The browse control on a sources-only element. Sits where a field would be,
+   because naming documents IS how this element is answered. */
+.browseRow {
+  margin-top: var(--s-2);
+}
+
+.browse {
+  font-size: var(--t-meta);
+}

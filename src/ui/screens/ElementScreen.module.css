@@ -23,6 +23,11 @@
   white-space: nowrap;
 }
 
+/* The same green the rail's tick uses, for the same claim. */
+.progress[data-done="yes"] {
+  color: var(--ok);
+}
+
 .help {
   font-size: var(--t-meta);
   line-height: 1.55;

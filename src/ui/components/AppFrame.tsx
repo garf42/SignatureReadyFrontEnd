@@ -4,18 +4,24 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, MenuItem } from "@blueprintjs/core";
 
 import type { SectionIcon } from "@/ui/data/port";
-import { sectionsFor } from "@/ui/data/port";
+import { sectionsFor, usePort } from "@/ui/data/port";
+import { useSeen } from "@/ui/data/seen";
 import { INBOX, withSearch } from "@/ui/routes";
 
 import css from "@/ui/components/AppFrame.module.css";
 
-/** Blueprint's brain glyph is filed under `predictive-analysis`; there is no
- *  `brain` in the 16px set. */
-const ICONS: Record<SectionIcon, "inbox" | "document" | "box" | "predictive-analysis" | "people"> = {
+/** Blueprint's brain glyph is filed under `predictive-analysis`, and it is the
+ *  one icon in this row drawn as a filled organic shape rather than as a
+ *  stroked outline — beside `inbox`, `document`, `box` and `people` it reads as
+ *  borrowed from another set. There is no second brain in the 16px set to swap
+ *  it for, so the section takes the glyph that carries the same meaning at the
+ *  same weight: `learning`, the mortarboard, which is stroked like its four
+ *  neighbours and is what the section is actually called. */
+const ICONS: Record<SectionIcon, "inbox" | "document" | "box" | "learning" | "people"> = {
   inbox: "inbox",
   documents: "document",
   archive: "box",
-  learning: "predictive-analysis",
+  learning: "learning",
   people: "people"
 };
 
@@ -28,6 +34,23 @@ const ICONS: Record<SectionIcon, "inbox" | "document" | "box" | "predictive-anal
  *  included. `href` is kept for the affordance a link should have — middle
  *  click, copy link — but the click is handled by the router, because a plain
  *  href reloads the document and drops the shell with it. */
+/** How many drafted expert requests this person has not opened.
+ *
+ *  Read here rather than put on `NavSection`, because the section list is
+ *  application structure and deliberately does not travel through a region: a
+ *  page that cannot load its own contents still has to show the way out of
+ *  itself. A badge is the opposite — if the count cannot be read, not drawing
+ *  it is the correct outcome, and a region gives exactly that for free. */
+function useUnopenedRequests(): number {
+  const queue = usePort().useExpertQueue();
+  const seen = useSeen();
+  if (queue.state !== "filled") {
+    return 0;
+  }
+  return queue.value.rows.filter((row) => row.status === "drafted" && !seen.includes(row.id))
+    .length;
+}
+
 export function AppFrame({
   current,
   padded = true,
@@ -41,6 +64,7 @@ export function AppFrame({
   const { search } = useLocation();
   const navigate = useNavigate();
   const sections = sectionsFor(current);
+  const unopened = useUnopenedRequests();
 
   return (
     <main className={css.screen}>
@@ -69,7 +93,27 @@ export function AppFrame({
                   key={section.id}
                   className={css.section + (section.current ? " " + css.current : "")}
                   icon={ICONS[section.icon]}
-                  text={navOpen ? section.name : ""}
+                  text={
+                    <>
+                      {navOpen ? section.name : ""}
+                      {/* The dot. Expert requests are drafted BY the project
+                          workflow rather than by a person, so without a mark on
+                          the frame a request can be created, sit unopened, and
+                          be discovered only by someone who happened to visit
+                          the page. It counts drafted-and-unopened, and it goes
+                          out when the draft is opened — see `seen.ts` for why
+                          "opened" is client state and "drafted" is not. */}
+                      {section.id === "experts" && unopened > 0 ? (
+                        <span
+                          className={css.dot}
+                          aria-label={`${String(unopened)} drafted ${unopened === 1 ? "request" : "requests"} not yet opened`}
+                          role="status"
+                        >
+                          {navOpen ? unopened : ""}
+                        </span>
+                      ) : null}
+                    </>
+                  }
                   title={section.name}
                   href={to}
                   onClick={(event: MouseEvent<HTMLElement>) => {

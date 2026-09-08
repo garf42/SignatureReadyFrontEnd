@@ -4,18 +4,21 @@ import * as fx from "@/ui/data/fixtures";
 import * as pj from "@/ui/data/project";
 import * as sp from "@/ui/data/support";
 import { PATHWAY_IDS } from "@/ui/data/pathways";
+import { useSubmitted } from "@/ui/data/submitted";
 
 import type { DataPort } from "@/ui/data/port";
 import type {
   Archive,
   ArtifactView,
   Catalogue,
+  DocumentType,
   ElementPanel,
   ExpertDraft,
   ExpertQueue,
   Gate,
   Inbox,
   Learning,
+  LevelHistory,
   PathwayId,
   ProjectHeader,
   Reference,
@@ -24,7 +27,7 @@ import type {
   Session,
   SourceDocument,
   SourceKind,
-  StepEntry
+  StepRail
 } from "@/ui/data/types";
 
 /** The default implementation of the port: fixtures, one per state per screen,
@@ -56,10 +59,34 @@ export interface Overrides {
    *  that page's own fallback on another. */
   state: StateKey | null;
   shell: StateKey | null;
-  pathway: PathwayId | null;
+  rail: StateKey | null;
+  /** The levels this proposal has occupied, IN ORDER. `?levels=P3,P4` is a
+   *  whole escalation in one URL: P3 superseded and still readable, P4 live.
+   *  `?pathway=P3` is accepted as the one-level alias so every existing link,
+   *  bookmark and test keeps working. */
+  levels: PathwayId[];
+  /** Whether the level's review has been BUILT — documents opened, references
+   *  pulled, drafting done. Default true, so every existing link keeps its
+   *  steps. `?assembled=no` reaches the state the assemble control exists for:
+   *  a level fixed by Step 2 with nothing yet built from it, and the steps
+   *  above it still unanswered, so the control is grey and names what it waits
+   *  on. `?assembled=ready` is the same with those steps treated as answered,
+   *  which is the only way to see the control live — the fixture's rows are
+   *  markers and no step in it is ever genuinely finished. */
+  assembled: "yes" | "no" | "ready";
   session: "in" | "out" | "pending";
   held: boolean;
   retrievalUp: boolean;
+}
+
+function assembledKnob(raw: string | null): Overrides["assembled"] {
+  if (raw === "no") {
+    return "no";
+  }
+  if (raw === "ready") {
+    return "ready";
+  }
+  return "yes";
 }
 
 function sessionKnob(raw: string | null): Overrides["session"] {
@@ -76,11 +103,20 @@ function sessionKnob(raw: string | null): Overrides["session"] {
 export function readOverrides(params: URLSearchParams): Overrides {
   const state = params.get("state");
   const shell = params.get("shell");
-  const pathway = params.get("pathway");
+  const rail = params.get("rail");
+  const levels = (params.get("levels") ?? params.get("pathway") ?? "")
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part): part is PathwayId => PATHWAY_IDS.some((id) => id === part));
   return {
     state: STATES.find((s) => s === state) ?? null,
     shell: STATES.find((s) => s === shell) ?? null,
-    pathway: PATHWAY_IDS.find((id) => id === pathway) ?? null,
+    /* Split out of `shell` so the band and the rail can be in different
+       states. They read the same knob before, so the partial failure a
+       half-wired backend produces most often was unreachable. */
+    rail: STATES.find((s) => s === rail) ?? null,
+    levels,
+    assembled: assembledKnob(params.get("assembled")),
     session: sessionKnob(params.get("session")),
     held: params.get("gate") === "held",
     retrievalUp: params.get("retrieval") !== "down"
@@ -158,9 +194,26 @@ function useProject(_projectRef: string): Region<ProjectHeader> {
   }
 }
 
-function useSteps(_projectRef: string, stepId: string): Region<StepEntry[]> {
+function useLevels(_projectRef: string): Region<LevelHistory> {
   const o = useOverrides();
   switch (o.shell ?? "filled") {
+    case "pending":
+      return asking(pj.levelsAbsent);
+    case "absent":
+      return pj.levelsAbsent;
+    case "blocked":
+      return pj.levelsBlocked;
+    case "unresolved":
+      return pj.levelsUnresolved;
+    default:
+      return pj.levelHistory(o.levels);
+  }
+}
+
+function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
+  const o = useOverrides();
+  const submitted = useSubmitted();
+  switch (o.rail ?? o.shell ?? "filled") {
     case "pending":
       return asking(pj.stepsAbsentSpec);
     case "absent":
@@ -170,14 +223,25 @@ function useSteps(_projectRef: string, stepId: string): Region<StepEntry[]> {
     case "unresolved":
       return pj.stepsUnresolvedSpec;
     default:
-      return pj.stepEntries(o.pathway, stepId || "0");
+      /* The one place client state reaches the rail. `useSteps` on the
+         DataPort is unchanged — a backend answers this from the proposal
+         record, and until one does the fixture stands in for it. */
+      return pj.stepRail(
+        o.levels,
+        stepKey || "S.0",
+        o.assembled === "yes",
+        o.held,
+        o.retrievalUp,
+        o.assembled === "ready" ? true : null,
+        submitted
+      );
   }
 }
 
 /** The three surfaces the rule reserves to the responsible official. The
  *  interface presents the gate and cannot verify a credential: a gate held
  *  only in the client is not a gate. */
-function useGate(): Region<Gate> {
+function useGate(documentType: DocumentType | null): Region<Gate> {
   const o = useOverrides();
   if (o.state === "pending") {
     return fx.pending("⟨authority.credential_lookup⟩");
@@ -185,11 +249,14 @@ function useGate(): Region<Gate> {
   if (o.state === "unresolved") {
     return pj.gateUnresolved;
   }
-  return pj.gateFor(o.held);
+  return pj.gateFor(documentType, o.held);
 }
 
-function useElement(_projectRef: string, stepId: string, tabId: string): Region<ElementPanel> {
+function useElement(_projectRef: string, stepKey: string, tabId: string): Region<ElementPanel> {
   const o = useOverrides();
+  /* A step key is `E<seq>.<PathwayId>.<localId>`, or a bare local id from an
+     older link. Both resolve; the bare one resolves against the live level. */
+  const local = stepKey.includes(".") ? stepKey.slice(stepKey.lastIndexOf(".") + 1) : stepKey;
   switch (o.state ?? "filled") {
     case "pending":
       return asking(pj.elementAbsentSpec);
@@ -200,7 +267,7 @@ function useElement(_projectRef: string, stepId: string, tabId: string): Region<
     case "unresolved":
       return pj.elementUnresolvedSpec;
     default:
-      return pj.panelRegion(o.pathway, stepId || "0", tabId, o.held, o.retrievalUp);
+      return pj.panelRegion(o.levels, local || "0", tabId, o.held, o.retrievalUp);
   }
 }
 
@@ -338,6 +405,7 @@ export const fixturePort: DataPort = {
   useSession,
   useInbox,
   useProject,
+  useLevels,
   useSteps,
   useGate,
   useElement,

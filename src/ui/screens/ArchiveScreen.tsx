@@ -75,6 +75,11 @@ export function ArchiveScreen() {
               <Button className={css.secondary} onClick={() => setPurging(null)}>
                 Cancel
               </Button>
+              {/* The three exceptions to one-verb-per-button are the three
+                  where the second word IS the meaning: "Sign in" and "Initiate
+                  project" are the names of the acts, and here "permanently" is
+                  the whole warning — a bare "delete" reads undoable, and this
+                  is not. */}
               <Button className={css.destructive} onClick={() => setPurging(null)}>
                 Delete permanently
               </Button>

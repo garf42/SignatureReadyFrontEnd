@@ -82,7 +82,9 @@ export function RecordTable({
                 aria-label={open[record.id] ? "Hide the details" : "Show the details"}
                 onClick={() => setOpen((state) => ({ ...state, [record.id]: !state[record.id] }))}
               >
-                <Icon icon={open[record.id] ? "minus" : "plus"} />
+                {/* One reveal gesture across the application — the chevron the
+                    rail, the band and every element row use. */}
+                <Icon icon={open[record.id] ? "chevron-down" : "chevron-right"} size={12} />
               </button>
             </td>
           </tr>

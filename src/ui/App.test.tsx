@@ -1,8 +1,10 @@
 import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { App } from "@/ui/App";
+import { withSearch } from "@/ui/routes";
+import { forgetSeen } from "@/ui/data/seen";
 
 import generated from "@/ui/data/PORT-ADDITIONS.generated.md?raw";
 
@@ -276,13 +278,13 @@ describe("Expert Q shows the queue and its compose overlay — §6.4", () => {
     fireEvent.click(container.querySelector("tbody tr") as HTMLElement);
     expect(screen.getByText("Request specialist input")).toBeTruthy();
     expect(screen.getByText(/⟨finding.trigger⟩/)).toBeTruthy();
-    fireEvent.click(screen.getByText("Cancel"));
+    fireEvent.click(screen.getByText("Close"));
     expect(screen.queryByText("Request specialist input")).toBeNull();
   });
 
   it("says the sender is not recorded, because no expert act writes one", () => {
     at("/experts");
-    expect(screen.getAllByText("Sender not recorded").length).toBe(4);
+    expect(screen.getAllByText("Sender not recorded").length).toBe(5);
   });
 });
 
@@ -400,4 +402,140 @@ describe("no backend vocabulary reaches the screen", () => {
       }
     }
   );
+});
+
+/** A destination may carry its own query — `/reference?view=<id>` opens that
+ *  document in the viewer — and the carried state has to merge with it rather
+ *  than be glued on after a second `?`. */
+describe("withSearch", () => {
+  it("carries the reader's state onto a plain path", () => {
+    expect(withSearch("/reference", "?levels=P3")).toBe("/reference?levels=P3");
+  });
+
+  it("merges rather than concatenating when the destination has its own query", () => {
+    const merged = withSearch("/reference?view=doc-1", "?levels=P3");
+    expect(merged.startsWith("/reference?")).toBe(true);
+    expect(merged.split("?")).toHaveLength(2);
+    const query = new URLSearchParams(merged.split("?")[1]);
+    expect(query.get("view")).toBe("doc-1");
+    expect(query.get("levels")).toBe("P3");
+  });
+
+  it("lets the destination's own keys win over the carried ones", () => {
+    const merged = withSearch("/reference?view=wanted", "?view=stale&levels=P3");
+    expect(new URLSearchParams(merged.split("?")[1]).get("view")).toBe("wanted");
+  });
+
+  it("leaves the path alone when there is nothing to carry", () => {
+    expect(withSearch("/reference?view=doc-1", "")).toBe("/reference?view=doc-1");
+    expect(withSearch("/reference", "?")).toBe("/reference");
+  });
+});
+
+/** The reference page's open document lives in the address, which is the whole
+ *  of what lets a source overlay hand a reader a specific document. */
+describe("the reference viewer is addressable", () => {
+  it("opens the document named by ?view=", () => {
+    at("/reference?view=a1");
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+
+  it("opens nothing without it", () => {
+    at("/reference");
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+});
+
+/** Nothing is sent from this application. The specialist is reached through the
+ *  officer's own mail client, so what the overlay produces is a whole message
+ *  and a way to get it into that client — and a button that promised delivery
+ *  promised something that could never happen. */
+describe("the expert request is copied, not sent", () => {
+  afterEach(forgetSeen);
+
+  const openDraft = () => {
+    const { container } = at("/experts");
+    fireEvent.click(container.querySelector("tbody tr") as HTMLElement);
+    return container;
+  };
+
+  it("offers no send", () => {
+    openDraft();
+    expect(screen.queryByText("Send request")).toBeNull();
+    expect(screen.getByText("Copy")).toBeTruthy();
+  });
+
+  it("assembles a whole message — recipient, subject and body", () => {
+    openDraft();
+    expect(screen.getByText("Recipient")).toBeTruthy();
+    expect(screen.getByText("Subject")).toBeTruthy();
+    expect(screen.getByText("Message")).toBeTruthy();
+  });
+
+  it("holds the copied version, and lets it be reopened", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    vi.stubGlobal("navigator", { ...navigator, clipboard: { writeText } });
+    openDraft();
+    fireEvent.click(screen.getByText("Copy"));
+    await screen.findByText("Copied — this version is held");
+    const message = writeText.mock.calls[0][0] as string;
+    expect(message).toContain("To: ");
+    expect(message).toContain("Subject: ");
+    /* Held means held, and it LOOKS the same as every other locked box: the
+       element panel greys a submitted part out and stops it taking input. */
+    expect(
+      [...document.querySelectorAll("textarea")].some((area) => area.readOnly)
+    ).toBe(true);
+    expect(document.querySelector("[data-locked='yes']")).not.toBeNull();
+    fireEvent.click(screen.getByText("Reopen"));
+    expect(screen.queryByText("Copied — this version is held")).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
+  /* A refused clipboard is silent unless it is caught, and locking on a copy
+     that never happened would record a send that never happened. */
+  it("does not hold the version when the clipboard is refused", async () => {
+    vi.stubGlobal("navigator", {
+      ...navigator,
+      clipboard: { writeText: vi.fn().mockRejectedValue(new Error("denied")) }
+    });
+    openDraft();
+    fireEvent.click(screen.getByText("Copy"));
+    await screen.findByText("The clipboard was refused");
+    expect(screen.queryByText("Copied — this version is held")).toBeNull();
+    expect(screen.getByText("Copy")).toBeTruthy();
+    expect(screen.getByText("The whole message, to copy by hand")).toBeTruthy();
+    vi.unstubAllGlobals();
+  });
+});
+
+/** Expert requests are drafted BY the project workflow rather than by a person,
+ *  so without a mark on the frame one can be created, sit unopened, and be
+ *  found only by someone who happened to visit the page. */
+describe("the frame marks a drafted request nobody has opened", () => {
+  afterEach(forgetSeen);
+
+  it("draws a dot on Expert Q, saying how many and of what", () => {
+    forgetSeen();
+    at("/");
+    const dot = screen.getByRole("status");
+    expect(dot.getAttribute("aria-label")).toBe("1 drafted request not yet opened");
+  });
+
+  it("clears it when the draft is opened, not merely when the page is visited", () => {
+    forgetSeen();
+    const { container } = at("/experts");
+    expect(screen.queryByRole("status")).not.toBeNull();
+    fireEvent.click(container.querySelector("tbody tr") as HTMLElement);
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("stays cleared across pages", () => {
+    forgetSeen();
+    const { container } = at("/experts");
+    fireEvent.click(container.querySelector("tbody tr") as HTMLElement);
+    cleanup();
+    at("/");
+    expect(screen.queryByRole("status")).toBeNull();
+  });
 });

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
+import { Button, Callout, FormGroup, HTMLTable, InputGroup, TextArea } from "@blueprintjs/core";
 
 import type { ExpertStatus } from "@/ui/data/port";
 import { PAGES, usePort } from "@/ui/data/port";
@@ -9,10 +9,12 @@ import { PageHead } from "@/ui/components/PageHead";
 import { Overlay, OverlayActions } from "@/ui/components/Overlay";
 import { Region } from "@/ui/components/Region";
 import { SourceLine } from "@/ui/components/SourceLine";
+import { markSeen } from "@/ui/data/seen";
 
 import css from "@/ui/screens/Support.module.css";
 
 const STATUS: Record<ExpertStatus, string> = {
+  drafted: "Drafted, not sent",
   overdue: "Overdue",
   awaiting: "Awaiting return",
   returned: "Returned",
@@ -25,6 +27,14 @@ const STATUS: Record<ExpertStatus, string> = {
 export function ExpertQScreen() {
   const queue = usePort().useExpertQueue();
   const [composing, setComposing] = useState<string | null>(null);
+
+  /* Opening the drafted request is what clears its dot. Not hovering it, not
+     visiting the page — the dot points at a message somebody has to read, and
+     it goes out when they have read it. */
+  const open = (id: string) => {
+    markSeen(id);
+    setComposing(id);
+  };
 
   return (
     <AppFrame current="experts">
@@ -58,7 +68,7 @@ export function ExpertQScreen() {
                 </thead>
                 {page.rows.map((row) => (
                   <tbody key={row.id} className={css.group} data-status={row.status}>
-                    <tr className={css.clickable} onClick={() => setComposing(row.id)}>
+                    <tr className={css.clickable} onClick={() => open(row.id)}>
                       <td className={css.name}>
                         {row.expert}
                         <p className={css.meta}>{row.qualification}</p>
@@ -75,7 +85,13 @@ export function ExpertQScreen() {
                       <td className={css.cell}>{row.expectedReturn}</td>
                       <td
                         className={
-                          css.cell + " " + (row.status === "overdue" ? css.bad : row.status === "accepted" ? css.ok : css.faint)
+                          css.cell +
+                          " " +
+                          (row.status === "overdue"
+                            ? css.bad
+                            : row.status === "accepted"
+                              ? css.ok
+                              : css.faint)
                         }
                       >
                         {STATUS[row.status]}
@@ -89,10 +105,15 @@ export function ExpertQScreen() {
                             className={css.secondary}
                             onClick={(event) => {
                               event.stopPropagation();
-                              setComposing(row.id);
+                              open(row.id);
                             }}
                           >
-                            Open request
+                            {/* One word, the same on every row. The object is
+                                the row it sits in, and the Status column beside
+                                it already says which kind of request this is —
+                                varying the label made two identical acts look
+                                like two different ones. */}
+                            Open
                           </Button>
                         </div>
                       </td>
@@ -114,55 +135,145 @@ export function ExpertQScreen() {
   );
 }
 
-/** Mounted only while a request is open, so the hook below runs unconditionally. */
+/** The compose overlay.
+ *
+ *  NOTHING IS SENT FROM HERE, and the surface used to say otherwise. This
+ *  application has no mail transport and no address book: the specialist is
+ *  reached through the officer's own mail client, so what this page can honestly
+ *  produce is a finished message and a way to get it into that client. A button
+ *  labelled "Send request" promised a delivery that could never happen, and
+ *  would have left the officer believing a specialist had been contacted.
+ *
+ *  So the act is: copy the whole message — recipient, subject, body — and then
+ *  hold that exact version, on the assumption it has now gone out. The lock is
+ *  the record: what is on screen afterwards is what was copied, so a person
+ *  coming back to the row can see the words that were sent rather than a field
+ *  they might have typed into since. It reverses in one click, because the
+ *  assumption can be wrong — a copy that never reached the mail client, a
+ *  recipient corrected on second thought — and a lock that cannot be undone
+ *  turns a wrong guess into a dead row.
+ *
+ *  Clipboard access can be refused (an insecure origin, a sandboxed frame, a
+ *  browser setting) and the refusal is silent unless it is caught. On failure
+ *  the message is shown in full, selected, with a line saying to copy it by
+ *  hand — and the version is NOT locked, because nothing was copied. */
 function ComposeOverlay({ onClose }: { onClose: () => void }) {
   const draft = usePort().useExpertRequest();
-  const [body, setBody] = useState("");
+  const [recipient, setRecipient] = useState<string | null>(null);
+  const [body, setBody] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   return (
     <Region region={draft}>
-      {(request) => (
-        <Overlay
-          title="Request specialist input"
-          onClose={onClose}
-          footer={
-            <OverlayActions>
-              <Button className={css.secondary} onClick={onClose}>
-                Cancel
-              </Button>
-              <Button className={css.primary} onClick={onClose}>
-                Send request
-              </Button>
-            </OverlayActions>
-          }
-        >
-          <p className={css.meta}>
-            {request.project} · {request.uniqueIdentificationNumber}
-          </p>
-          {/* The three facts the request is assembled from are read, not
-              edited, so they are a list rather than three disabled fields. */}
-          <dl className={css.facts}>
-            <dt>Trigger</dt>
-            <dd>{request.trigger}</dd>
-            <dt>Artifact awaited</dt>
-            <dd>{request.artifactAwaited}</dd>
-            <dt>Expected return</dt>
-            <dd>{request.expectedReturn}</dd>
-          </dl>
-          <FormGroup className={css.field} label="Proposed recipient">
-            <InputGroup defaultValue={request.proposedRecipient} />
-          </FormGroup>
-          <FormGroup className={css.field} label="Request">
-            <TextArea
-              rows={5}
-              placeholder={request.body}
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-            />
-          </FormGroup>
-          <SourceLine source={request.regulatoryBasis} />
-        </Overlay>
-      )}
+      {(request) => {
+        const to = recipient ?? request.proposedRecipient;
+        const text = body ?? request.body;
+        const message = `To: ${to}\nSubject: ${request.subject}\n\n${text}`;
+        const locked = copied !== null;
+
+        const copy = () => {
+          void (async () => {
+            try {
+              await navigator.clipboard.writeText(message);
+              setFailed(false);
+              setCopied(message);
+            } catch {
+              /* Refused. Say so and leave the version unlocked — locking would
+                 record a send that did not happen. */
+              setFailed(true);
+            }
+          })();
+        };
+
+        return (
+          <Overlay
+            title="Request specialist input"
+            onClose={onClose}
+            footer={
+              <OverlayActions>
+                <Button className={css.secondary} onClick={onClose}>
+                  Close
+                </Button>
+                {locked ? (
+                  <Button className={css.secondary} onClick={() => setCopied(null)}>
+                    Reopen
+                  </Button>
+                ) : (
+                  <Button className={css.primary} onClick={copy}>
+                    Copy
+                  </Button>
+                )}
+              </OverlayActions>
+            }
+          >
+            <p className={css.meta}>
+              {request.project} · {request.uniqueIdentificationNumber}
+            </p>
+
+            {locked ? (
+              <Callout className={css.field} intent="success" title="Copied — this version is held">
+                These are the words that went to your clipboard, kept as the record of what was
+                sent. Nothing here reaches the specialist on its own: paste it into your mail
+                client and send it from there. Reopen to change it and copy again.
+              </Callout>
+            ) : failed ? (
+              <Callout className={css.field} intent="warning" title="The clipboard was refused">
+                Your browser would not let this page write to the clipboard. The whole message is
+                below — select it and copy it by hand. Nothing has been held as sent.
+              </Callout>
+            ) : null}
+
+            {/* The three facts the request is assembled from are read, not
+                edited, so they are a list rather than three disabled fields. */}
+            <dl className={css.facts}>
+              <dt>Trigger</dt>
+              <dd>{request.trigger}</dd>
+              <dt>Artifact awaited</dt>
+              <dd>{request.artifactAwaited}</dd>
+              <dt>Expected return</dt>
+              <dd>{request.expectedReturn}</dd>
+            </dl>
+
+            {failed ? (
+              <FormGroup className={css.field} label="The whole message, to copy by hand">
+                <TextArea
+                  rows={9}
+                  readOnly
+                  value={message}
+                  onFocus={(event) => event.currentTarget.select()}
+                />
+              </FormGroup>
+            ) : (
+              /* Locked reads the same everywhere. The element panel greys a
+                 submitted part out and stops it taking input, and a held
+                 message is the same claim: these are the words that went out,
+                 and they are not editable until the version is reopened. */
+              <div data-locked={locked ? "yes" : "no"} className={css.lockable}>
+                <FormGroup className={css.field} label="Recipient">
+                  <InputGroup
+                    readOnly={locked}
+                    value={to}
+                    onChange={(event) => setRecipient(event.target.value)}
+                  />
+                </FormGroup>
+                <FormGroup className={css.field} label="Subject">
+                  <InputGroup readOnly value={request.subject} />
+                </FormGroup>
+                <FormGroup className={css.field} label="Message">
+                  <TextArea
+                    rows={7}
+                    readOnly={locked}
+                    value={text}
+                    onChange={(event) => setBody(event.target.value)}
+                  />
+                </FormGroup>
+              </div>
+            )}
+            <SourceLine source={request.regulatoryBasis} />
+          </Overlay>
+        );
+      }}
     </Region>
   );
 }
