@@ -508,13 +508,30 @@ describe("the seam names the level of review", () => {
     expect(gate.textContent).not.toMatch(/\bP3\b/);
   });
 
-  /* On an escalated proposal each band carries its own level heading, and a
-     seam that also named one would name the LIVE level while sitting above a
-     superseded band. */
-  it("does not name a level where the bands already do", () => {
+  /* On an escalated proposal each band header IS that heading, one per level.
+     A seam as well would be a second box saying the same kind of thing about a
+     different level, directly above the one that says it correctly. */
+  it("is not drawn at all where the band headers already head the levels", () => {
     const { container } = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4");
-    const gate = rail(container).querySelector("[data-state='done']") as HTMLElement;
-    expect(gate.querySelector("h2")).toBeNull();
+    expect(rail(container).querySelector("[data-state='done']")).toBeNull();
+  });
+
+  /* One level or four, a level of review is headed the same way — the same
+     well ground, the same rule above, the same bold left edge — so an escalated
+     project is the ordinary one with more than one heading rather than a
+     different-looking screen. */
+  it("heads every level with the same box, however many there are", () => {
+    const one = at("/projects/p1/steps/4/ea?pathway=P3").container;
+    const seam = rail(one).querySelector("[data-state='done']") as HTMLElement;
+    expect(seam.querySelector("h2")?.textContent).toBe("Environmental assessment");
+    cleanup();
+    const two = at("/projects/p1/steps/E2.P4.5/eis?levels=P3,P4").container;
+    const headers = [...rail(two).querySelectorAll("[class*='bandHeader']")];
+    expect(headers).toHaveLength(2);
+    for (const header of headers) {
+      expect(header.querySelector("[class*='gateOverline']")).not.toBeNull();
+      expect(header.querySelector("[class*='gateLevel']")).not.toBeNull();
+    }
   });
 });
 

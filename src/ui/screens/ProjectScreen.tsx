@@ -202,10 +202,16 @@ export function ProjectScreen() {
                       : true;
                     return (
                       <Fragment key={key}>
-                      {index === 1 ? (
+                      {/* The seam is a HEADING, and on a project that has
+                          occupied more than one level the band headers are
+                          already that heading — one per level, each naming its
+                          own. A seam as well would be a second box saying the
+                          same kind of thing about a different level, directly
+                          above the one that says it correctly. So it is drawn
+                          only where there is no band header to do the job. */}
+                      {index === 1 && !banded ? (
                         <AssembleGate
                           assembly={value.assembly}
-                          banded={banded}
                           onAssembled={() => go(pathname)}
                         />
                       ) : null}
@@ -265,11 +271,7 @@ export function ProjectScreen() {
                     it is drawn here instead — it is the only thing that says
                     what the shared steps are leading to. */}
                 {value.bands.filter((entry) => entry.band.kind === "episode").length === 0 ? (
-                  <AssembleGate
-                    assembly={value.assembly}
-                    banded={false}
-                    onAssembled={() => go(pathname)}
-                  />
+                  <AssembleGate assembly={value.assembly} onAssembled={() => go(pathname)} />
                 ) : null}
               </>
               );
@@ -384,14 +386,9 @@ export type { BandEntry };
  *  only thing the screen owns is saying that it asked. */
 function AssembleGate({
   assembly,
-  banded,
   onAssembled
 }: {
   assembly: Assembly;
-  /* On an escalated proposal each band already carries its own level heading,
-     and a seam that also names one would name the LIVE level while sitting
-     above a superseded band. There it stays the quiet line. */
-  banded: boolean;
   onAssembled: () => void;
 }) {
   const [running, setRunning] = useState(false);
@@ -406,7 +403,7 @@ function AssembleGate({
            only place that boundary gets said, and the steps under it read as
            belonging to it rather than as a continuation of the list above. */
         <>
-          {assembly.level && !banded ? (
+          {assembly.level ? (
             <>
               <p className={css.gateOverline}>Level of review</p>
               <h2 className={css.gateLevel}>{assembly.level}</h2>

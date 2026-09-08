@@ -303,14 +303,21 @@
   border-top: none;
 }
 
+/* The SAME box the seam draws on a project that has occupied one level: a well
+   ground, a rule above it, and a bold left edge. One level or four, a level of
+   review is headed the same way, so an escalated project is the ordinary one
+   with more than one heading rather than a different-looking screen. */
 .bandHeader {
   display: flex;
   align-items: flex-start;
   gap: 0.4rem;
   width: 100%;
-  padding: 0.5rem 0.75rem 0.35rem;
+  margin-top: var(--s-3);
+  padding: var(--s-3) var(--s-2) var(--s-2);
   border: 0;
-  background: none;
+  border-top: 1px solid var(--rule);
+  border-left: 3px solid var(--link);
+  background: var(--well);
   text-align: left;
   cursor: pointer;
   font: inherit;
