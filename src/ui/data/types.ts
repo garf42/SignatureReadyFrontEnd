@@ -161,6 +161,10 @@ export interface TabEntry {
    *  Submit button, which reads backwards. Whether it WAS submitted is not
    *  something the port can answer yet; see `submitted.ts`. */
   answered: boolean;
+  /** The officer pressed Submit on this tab. Answered says it COULD be
+   *  submitted; this says it was. Two facts, because conflating them put a
+   *  tick on exactly the tabs that still offered a Submit button. */
+  submitted: boolean;
   /** How many binding rows are still outstanding, or null where completion has
    *  no ontology address. Null is not zero, and must not render as done. */
   outstanding: number | null;
@@ -198,6 +202,8 @@ export interface StepEntry {
    *  cannot say both. Counted from the same rows the panel shows, so the rail
    *  and the panel can never disagree about what is outstanding. */
   answered: boolean;
+  /** Every tab in this step has been submitted. */
+  submitted: boolean;
   tabs: TabEntry[];
   band: BandRef;
   /** The citation a blocked step waits on — 1b.6(a) for a FONSI, 1b.8(a) for a

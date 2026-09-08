@@ -287,7 +287,8 @@ function tabEntries(
   stepKey: string,
   tabs: TabSpec[],
   held: boolean,
-  retrievalUp: boolean
+  retrievalUp: boolean,
+  submitted: readonly string[]
 ): TabEntry[] {
   return tabs.map((tab) => {
     const left = outstanding(rowsFor(stepKey, tab, held, retrievalUp));
@@ -295,6 +296,7 @@ function tabEntries(
       id: tab.id,
       name: tab.name,
       answered: left === 0 && tab.elements.every((row) => row.text !== "placeholder"),
+      submitted: submitted.includes(`${stepKey}/${tab.id}`),
       outstanding: left,
       placeholders: tab.elements.filter((row) => row.text === "placeholder").length,
       level: tab.level
@@ -351,7 +353,7 @@ function assemblyFor(
       level: null,
       label: "Assemble review",
       says: live
-        ? "Assembly reads every answer above it, so those steps have to be finished before the review can be built from them."
+        ? "Assembly reads every answer above it, so those steps have to be answered AND submitted before the review can be built from them."
         : "Nothing can be built until the level of review is fixed. The three steps above decide it, and this is where the review it calls for gets built.",
       waitingOn: unfinished[0] ?? SHARED_STEPS[2].name,
       produces: []
@@ -397,9 +399,15 @@ export function stepRail(
   /* DEMO OVERRIDE, and the only one in this file. The fixture's rows are
      markers, so no shared step is ever genuinely finished and the ready state
      would be unreachable — a control nobody can see is a control nobody can
-     review. `?assembled=ready` says "treat the steps above as answered". A
-     backend answers this from the real rows and never needs it. */
-  sharedComplete: boolean | null = null
+     review. `?assembled=ready` says "treat the steps above as finished" —
+     answered AND submitted. A backend answers this from the real rows and the
+     real record, and never needs it. */
+  sharedComplete: boolean | null = null,
+  /* Which tabs the officer has submitted, as `<stepKey>/<tabId>`. Client state
+     today — see `submitted.ts` — and the fixture port hands it in rather than
+     this file reading it, so the shape is exactly what a backend answers once
+     one exists. */
+  submitted: readonly string[] = []
 ): Region<StepRail> {
   /* A level that has been DETERMINED but not yet ASSEMBLED has no steps. The
      determination says which review this is; the steps exist once the review
@@ -420,7 +428,7 @@ export function stepRail(
      that nobody could find in any procedure. */
   const seen = new Map<string, number>();
   const steps: StepEntry[] = rail.map((entry) => {
-    const tabs = tabEntries(entry.key, entry.step.tabs, held, retrievalUp);
+    const tabs = tabEntries(entry.key, entry.step.tabs, held, retrievalUp, submitted);
     const superseded = entry.band.kind === "episode" && entry.band.seq !== liveSeq;
     const waitKey =
       entry.band.kind === "episode" ? `${entry.band.pathway}.${entry.step.id}` : "";
@@ -457,6 +465,7 @@ export function stepRail(
          themselves in the panel. */
       meta: superseded ? "Read only" : waitingOn ? "Waiting" : null,
       answered: tabs.every((tab) => tab.answered),
+      submitted: tabs.every((tab) => tab.submitted),
       tabs,
       band:
         entry.band.kind === "shared"
@@ -521,7 +530,10 @@ export function stepRail(
     sharedComplete === true
       ? []
       : steps
-          .filter((step) => step.band.kind === "shared" && !step.answered)
+          /* ANSWERED AND SUBMITTED. Assembly reads every answer above it, and an
+             answer nobody has committed is a draft — building a whole level of
+             review on drafts is the thing this gate exists to prevent. */
+          .filter((step) => step.band.kind === "shared" && !(step.answered && step.submitted))
           .map((step) => step.name);
 
   return filled<StepRail>({

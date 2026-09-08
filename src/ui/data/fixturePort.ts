@@ -4,6 +4,7 @@ import * as fx from "@/ui/data/fixtures";
 import * as pj from "@/ui/data/project";
 import * as sp from "@/ui/data/support";
 import { PATHWAY_IDS } from "@/ui/data/pathways";
+import { useSubmitted } from "@/ui/data/submitted";
 
 import type { DataPort } from "@/ui/data/port";
 import type {
@@ -211,6 +212,7 @@ function useLevels(_projectRef: string): Region<LevelHistory> {
 
 function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
   const o = useOverrides();
+  const submitted = useSubmitted();
   switch (o.rail ?? o.shell ?? "filled") {
     case "pending":
       return asking(pj.stepsAbsentSpec);
@@ -221,13 +223,17 @@ function useSteps(_projectRef: string, stepKey: string): Region<StepRail> {
     case "unresolved":
       return pj.stepsUnresolvedSpec;
     default:
+      /* The one place client state reaches the rail. `useSteps` on the
+         DataPort is unchanged — a backend answers this from the proposal
+         record, and until one does the fixture stands in for it. */
       return pj.stepRail(
         o.levels,
         stepKey || "S.0",
         o.assembled === "yes",
         o.held,
         o.retrievalUp,
-        o.assembled === "ready" ? true : null
+        o.assembled === "ready" ? true : null,
+        submitted
       );
   }
 }

@@ -794,3 +794,35 @@ describe("a superseded level is headed like any other", () => {
     expect(pane.textContent).toContain("read only");
   });
 });
+
+/** Assembly reads every answer above it, and an answer nobody has committed is
+ *  a draft. Building a whole level of review on drafts is what this gate is
+ *  for, so readiness alone is not enough — the steps above have to be
+ *  submitted. */
+describe("assembly waits on submissions, not only on answers", () => {
+  it("stays grey while a step above it is answered but unsubmitted", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(true);
+    expect(gate.textContent).toContain("answered AND submitted");
+  });
+
+  /* The demo override stands in for a backend that would answer both halves
+     from the real rows and the real record. */
+  it("offers the act once the steps above count as finished", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=ready");
+    const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(false);
+  });
+
+  /* Submitting one tab of a step does not finish the step, so the gate does not
+     move — which is the point of computing it from the same place the tick
+     comes from rather than from a second count that could drift. */
+  it("does not move on one tab of a step being submitted", () => {
+    const { container } = at("/projects/p1/steps/0/proposed-action?pathway=P3&assembled=no");
+    fireEvent.click(screen.getByText("Submit"));
+    const gate = rail(container).querySelector("[class*='gate']") as HTMLElement;
+    expect(gate.textContent).toContain("Waiting on Intake");
+    expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(true);
+  });
+});

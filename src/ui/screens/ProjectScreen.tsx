@@ -8,7 +8,6 @@ import { usePort } from "@/ui/data/port";
 import { AppFrame } from "@/ui/components/AppFrame";
 import { Region } from "@/ui/components/Region";
 import { TabStrip } from "@/ui/components/TabStrip";
-import { useSubmitted } from "@/ui/data/submitted";
 import { tabPath, withSearch } from "@/ui/routes";
 
 import css from "@/ui/screens/ProjectScreen.module.css";
@@ -50,7 +49,6 @@ export function ProjectScreen() {
      told. Closing is theirs to choose; it is not the state they arrive in. */
   const [levelOpen, setLevelOpen] = useState(true);
   const [hereOpen, setHereOpen] = useState(true);
-  const submitted = useSubmitted();
   const [openBands, setOpenBands] = useState<Record<string, boolean>>({});
 
   const go = (path: string) => navigate(withSearch(path, search));
@@ -258,9 +256,7 @@ export function ProjectScreen() {
                                 /* A step is finished when every tab in it has
                                    been submitted. Nothing outstanding only
                                    means it COULD be. */
-                                done={step.tabs.every((tab) =>
-                                  submitted.includes(`${step.key}/${tab.id}`)
-                                )}
+                                done={step.submitted}
                                 active={step.key === stepId || step.id === stepId}
                                 onOpen={() =>
                                   go(tabPath(projectRef, step.key, step.tabs[0]?.id ?? tabId))
@@ -303,10 +299,7 @@ export function ProjectScreen() {
                    same condition, which put a tick on exactly the tabs that
                    still had a live Submit button — the mark and the control
                    contradicting each other on the same row. */
-                tabs={tabsFor(value, stepId).map((tab) => ({
-                  ...tab,
-                  done: submitted.includes(`${stepId}/${tab.id}`)
-                }))}
+                tabs={tabsFor(value, stepId).map((tab) => ({ ...tab, done: tab.submitted }))}
                 selected={tabId}
                 onSelect={(next) => go(tabPath(projectRef, stepId, next))}
               />
