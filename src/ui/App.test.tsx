@@ -481,10 +481,12 @@ describe("the expert request is copied, not sent", () => {
     const message = writeText.mock.calls[0][0] as string;
     expect(message).toContain("To: ");
     expect(message).toContain("Subject: ");
-    /* Held means held: the fields are no longer typeable. */
+    /* Held means held, and it LOOKS the same as every other locked box: the
+       element panel greys a submitted part out and stops it taking input. */
     expect(
       [...document.querySelectorAll("textarea")].some((area) => area.readOnly)
     ).toBe(true);
+    expect(document.querySelector("[data-locked='yes']")).not.toBeNull();
     fireEvent.click(screen.getByText("Reopen for edits"));
     expect(screen.queryByText("Copied — this version is held")).toBeNull();
     vi.unstubAllGlobals();

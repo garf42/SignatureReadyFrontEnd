@@ -245,7 +245,11 @@ function ComposeOverlay({ onClose }: { onClose: () => void }) {
                 />
               </FormGroup>
             ) : (
-              <>
+              /* Locked reads the same everywhere. The element panel greys a
+                 submitted part out and stops it taking input, and a held
+                 message is the same claim: these are the words that went out,
+                 and they are not editable until the version is reopened. */
+              <div data-locked={locked ? "yes" : "no"} className={css.lockable}>
                 <FormGroup className={css.field} label="Recipient">
                   <InputGroup
                     readOnly={locked}
@@ -264,7 +268,7 @@ function ComposeOverlay({ onClose }: { onClose: () => void }) {
                     onChange={(event) => setBody(event.target.value)}
                   />
                 </FormGroup>
-              </>
+              </div>
             )}
             <SourceLine source={request.regulatoryBasis} />
           </Overlay>
