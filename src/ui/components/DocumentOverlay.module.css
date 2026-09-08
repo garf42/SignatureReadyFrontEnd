@@ -25,10 +25,13 @@
   background: var(--paper);
 }
 
-.section + .section {
-  margin-top: var(--s-4);
-  padding-top: var(--s-3);
-  border-top: 1px solid var(--rule);
+/* Sections run on as a document runs on. They were separated by a rule each,
+   which turned one document into a stack of cards. */
+.section {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-3);
+  margin-top: var(--s-3);
 }
 
 /* A section whose tab is still open is IN the document with nothing in it —
@@ -115,4 +118,43 @@
 
 .page > div + div .document {
   margin-top: var(--s-5);
+}
+
+/* --- the document ---------------------------------------------------------
+   Set as a document, not as data about one. The templates carry their own
+   numbered headings, so nothing here adds a second; the citation goes in the
+   margin, which is provenance a reader needs and a document does not have. */
+.body {
+  min-width: 0;
+}
+
+.flow {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+/* A marker is where a value arrives, not text anyone wrote. Drawn as a slot so
+   a reader never has to work out which words are the document's. */
+.slot {
+  padding: 0 0.2em;
+  border-radius: 2px;
+  background: var(--well);
+  box-shadow: inset 0 -1px 0 var(--rule);
+  font-family: var(--mono);
+  font-size: 0.8125em;
+  color: var(--ink-soft);
+}
+
+.cite {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  font-family: var(--mono);
+  font-size: var(--t-micro);
+  color: var(--ink-faint);
+  white-space: nowrap;
 }

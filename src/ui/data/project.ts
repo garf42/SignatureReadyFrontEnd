@@ -621,7 +621,12 @@ export function documentPreview(
         sections.push({
           id: `${tab.id}-${String(i)}`,
           documentType: tab.documentType,
-          name: element.produces.section,
+          /* The section's own name in the document, not the document's name.
+             `produces.section` says WHICH DOCUMENT an element lands in — it is
+             "EA" for all seven of the assessment's — so using it as a heading
+             put the word EA above every paragraph and made one document read
+             as seven patched together. */
+          name: element.label,
           ref: element.ref,
           template: element.produces.template,
           state: filled ? "filled" : "pending",

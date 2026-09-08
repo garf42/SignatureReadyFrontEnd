@@ -88,8 +88,12 @@ export function ProjectScreen() {
                     empty shape presented as the document teaches a reader that
                     the document is empty rather than that it has not started. */}
                 {preview && preview.sections.some((section) => section.state === "filled") ? (
-                  <Button className={css.viewDocument} onClick={() => setViewing(true)}>
-                    View {preview.documentTypes.join(" and ")}
+                  <Button
+                    className={css.viewDocument}
+                    data-ready="yes"
+                    onClick={() => setViewing(true)}
+                  >
+                    View document
                   </Button>
                 ) : null}
               </div>

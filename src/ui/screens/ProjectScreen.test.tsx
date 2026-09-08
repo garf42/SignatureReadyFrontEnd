@@ -895,7 +895,7 @@ describe("the document can be viewed, and never edited, from the band", () => {
 
   const open = (path: string) => {
     const { container } = at(path);
-    fireEvent.click(screen.getByText(/^View /));
+    fireEvent.click(screen.getByText("View document"));
     return container;
   };
 
@@ -911,19 +911,25 @@ describe("the document can be viewed, and never edited, from the band", () => {
     expect(screen.queryByText(/^View /)).toBeNull();
   });
 
-  it("opens once a section has been submitted, and names the document", () => {
-    at(ready);
-    expect(screen.getByText("View FANEC")).toBeTruthy();
+  /* One label on every pathway. The document's own name is said once, inside,
+     where it starts — a button naming it too says it twice and says a
+     different thing on each pathway. */
+  it("opens once a section has been submitted, under one label", () => {
+    const { container } = at(ready);
+    const view = screen.getByText("View document");
+    expect(view).toBeTruthy();
+    expect(
+      (container.querySelector("[class*='viewDocument']") as HTMLElement).getAttribute("data-ready")
+    ).toBe("yes");
   });
 
   /* A level of review can produce TWO documents — an assessment then a
      finding, a statement then a record of decision. They are separate
      documents written in sequence, and running them together in one list is a
      claim about what gets filed. */
-  it("names both documents where the level produces two, and heads them apart", () => {
+  it("heads the two documents apart where the level produces two", () => {
     at("/projects/p1/steps/E1.P3.4/ea?levels=P3&submitted=all");
-    expect(screen.getByText("View EA and FONSI")).toBeTruthy();
-    fireEvent.click(screen.getByText("View EA and FONSI"));
+    fireEvent.click(screen.getByText("View document"));
     const dialog = screen.getByRole("dialog");
     const heads = [...dialog.querySelectorAll("h3")].map((h) => h.textContent);
     expect(heads).toEqual(["EA", "FONSI"]);
@@ -936,8 +942,43 @@ describe("the document can be viewed, and never edited, from the band", () => {
     const dialog = screen.getByRole("dialog");
     /* Six elements at 1b.3(g)(2), and the count is frozen in pathways.ts. */
     expect(dialog.querySelectorAll("section[data-state]").length).toBe(6);
-    expect(dialog.querySelectorAll("pre").length).toBeGreaterThan(0);
     expect(dialog.textContent).toContain("1b.3(g)(2)(i)");
+  });
+
+  /* It has to READ as the document. The templates carry their own numbered
+     headings, so a second heading per section — and a chip naming the document
+     on every paragraph — made one document look patched together. */
+  it("names the document once, where it starts, and never per section", () => {
+    open(ready);
+    const dialog = screen.getByRole("dialog");
+    const heads = [...dialog.querySelectorAll("h3")].map((h) => h.textContent);
+    expect(heads).toEqual(["FANEC"]);
+    /* Six sections, and the word FANEC appears once as a heading rather than
+       six times as a label. */
+    const labels = [...dialog.querySelectorAll("section[data-state] span")].filter(
+      (span) => span.textContent === "FANEC"
+    );
+    expect(labels).toEqual([]);
+  });
+
+  /* A marker is where a value arrives, not text anyone wrote — so the PROSE
+     is what must come out clean. A repeated block is one slot and legitimately
+     carries fields inside it; what must never happen is a stray brace landing
+     in the document's own words. */
+  it("draws the markers as slots and leaves no brace in the prose", () => {
+    open(ready);
+    const dialog = screen.getByRole("dialog");
+    const flow = [...dialog.querySelectorAll<HTMLElement>("[class*='flow']")];
+    expect(flow.length).toBeGreaterThan(0);
+    expect(dialog.querySelectorAll("[class*='slot']").length).toBeGreaterThan(0);
+    for (const paragraph of flow) {
+      for (const span of paragraph.children) {
+        if (/slot/.test(span.className)) {
+          continue;
+        }
+        expect(span.textContent ?? "").not.toMatch(/[{}]/);
+      }
+    }
   });
 
   /* The load-bearing property: no field anywhere in it. */

@@ -556,9 +556,20 @@
   min-width: 0;
 }
 
+/* The same primary the assemble control uses. It is only ever rendered when
+   it is live — the band draws nothing at all until the document has a
+   submitted section — so a live control looks live wherever it is. */
 .viewDocument {
   flex: 0 0 auto;
   font-size: var(--t-meta);
+}
+
+.viewDocument[data-ready="yes"],
+.viewDocument[data-ready="yes"]:hover {
+  background: var(--link);
+  color: var(--paper);
+  border: 1px solid var(--link);
+  box-shadow: var(--shadow-button);
 }
 
 /* The page's own primary, matching the submit bar and every dialog: --link on

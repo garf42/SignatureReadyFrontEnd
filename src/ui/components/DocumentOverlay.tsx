@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 import type { DocumentPreview } from "@/ui/data/port";
 import { Overlay, OverlayActions } from "@/ui/components/Overlay";
+import { slots } from "@/ui/data/template";
 import { tabPath, withSearch } from "@/ui/routes";
 
 import css from "@/ui/components/DocumentOverlay.module.css";
@@ -54,42 +55,56 @@ export function DocumentOverlay({
         {filled} of {preview.sections.length} sections submitted
       </p>
 
+      {/* THE DOCUMENT, not an inspector over it. The templates already carry
+          their own numbered headings — "1. PURPOSE AND NEED" — so a second
+          heading per section, and a chip naming the document on every
+          paragraph, made a cohesive document read as something patched
+          together. The document's name is said once, where it starts.
+
+          The citation goes in the margin rather than the flow: provenance a
+          reader needs and a document does not have. It is the link back to
+          where the words are authored, which is the section's only act. */}
       <div className={css.page}>
         {preview.sections.map((section, i) => (
           <div key={section.id}>
-            {/* A level of review can produce TWO documents — an assessment then
-                a finding, a statement then a record of decision — and they are
-                separate documents that happen to be written in sequence. Run
-                together in one list they read as one document, which is a
-                claim about what gets filed. */}
             {i === 0 || preview.sections[i - 1].documentType !== section.documentType ? (
               <h3 className={css.document}>{section.documentType}</h3>
             ) : null}
-          <section className={css.section} data-state={section.state}>
-            <header className={css.head}>
-              <span className={css.order}>{i + 1}</span>
-              <span className={css.name}>{section.name}</span>
-              <span className={css.ref}>{section.ref}</span>
-            </header>
-            {section.template ? (
-              <pre className={css.template}>{section.template}</pre>
-            ) : (
-              <p className={css.notemplate}>
-                No layout yet — the rule&rsquo;s own words for this item are not in the build.
-              </p>
-            )}
-            {/* The one act a section offers: go to where its words are written.
-                Never a field — see the note above the component. */}
-            <p className={css.authored}>
-              {section.state === "filled" ? "Submitted at" : "Written at"}{" "}
+            <section className={css.section} data-state={section.state}>
+              <div className={css.body}>
+                {section.template ? (
+                  <p className={css.flow}>
+                    {/* A marker is where a value arrives, not text anyone
+                        wrote, so it is drawn as a slot rather than set as
+                        prose — otherwise a reader has to work out which words
+                        are the document's and which are the build's. */}
+                    {slots(section.template).map((part, at) =>
+                      part.slot ? (
+                        <span key={at} className={css.slot}>
+                          {part.text}
+                        </span>
+                      ) : (
+                        <span key={at}>{part.text}</span>
+                      )
+                    )}
+                  </p>
+                ) : (
+                  <p className={css.notemplate}>
+                    No layout yet — the rule&rsquo;s own words for this item are not in the build.
+                  </p>
+                )}
+              </div>
               <Link
+                className={css.cite}
+                title={`${section.name} — ${
+                  section.state === "filled" ? "submitted" : "written"
+                } at ${section.tabId}`}
                 to={withSearch(tabPath(projectRef, section.stepKey, section.tabId), search)}
                 onClick={onClose}
               >
-                {section.tabId}
+                {section.ref}
               </Link>
-            </p>
-          </section>
+            </section>
           </div>
         ))}
       </div>
@@ -103,3 +118,5 @@ export function DocumentOverlay({
     </Overlay>
   );
 }
+
+
