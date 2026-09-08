@@ -195,7 +195,7 @@ function RegulationPanel() {
                   <span className={css.sectionName}>{section.name}</span>
                   <span className={css.amended}>amended {section.amended}</span>
                   <span className={css.sectionGlyph}>
-                    <Icon icon={open[section.id] ? "minus" : "plus"} />
+                    <Icon icon={open[section.id] ? "chevron-down" : "chevron-right"} size={12} />
                   </span>
                 </button>
                 {open[section.id] ? (
@@ -219,7 +219,7 @@ function RegulationPanel() {
                 </span>
                 <span className={css.amended}>{page.unresolvedCitations.length} found</span>
                 <span className={css.sectionGlyph}>
-                  <Icon icon={open.citations ? "minus" : "plus"} />
+                  <Icon icon={open.citations ? "chevron-down" : "chevron-right"} size={12} />
                 </span>
               </button>
               {open.citations ? (

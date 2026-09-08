@@ -826,3 +826,54 @@ describe("assembly waits on submissions, not only on answers", () => {
     expect(gate.querySelector("button")?.hasAttribute("disabled")).toBe(true);
   });
 });
+
+/** Finished work is greyed as well as ticked — the convention an accepted row
+ *  already uses, carried onto the rail and the strip. */
+describe("finished steps and tabs are greyed", () => {
+  it("grounds a submitted step on the well, alongside its tick", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    const before = rail(container).querySelectorAll("[class*='completed']").length;
+    fireEvent.click(screen.getByText("Submit"));
+    /* Public involvement is one of three tabs on this step, so the STEP is not
+       finished and does not grey — the tab is. */
+    expect(rail(container).querySelectorAll("[class*='completed']").length).toBe(before);
+    const strip = container.querySelector("[role='tablist']") as HTMLElement;
+    expect(strip.querySelector("[class*='doneTab']")).not.toBeNull();
+  });
+
+  /* The grey and the tick are the same fact said twice, so neither may appear
+     without the other. In the fixture no step is ever fully submitted — several
+     of its rows can never be cleared — so what this pins is the invariant
+     rather than a reachable state. */
+  it("greys exactly the steps it ticks", () => {
+    const { container } = at("/projects/p1/steps/E1.P3.3/public-involvement?levels=P3");
+    fireEvent.click(screen.getByText("Submit"));
+    const pane = rail(container);
+    for (const item of pane.querySelectorAll("li")) {
+      const greyed = /completed/.test(item.querySelector("a")?.className ?? "");
+      const ticked = item.querySelector("[class*='tick']") !== null;
+      expect(greyed).toBe(ticked);
+    }
+  });
+});
+
+/** One reveal gesture across the application. Plus and minus said the same
+ *  thing in a second alphabet — and worse, they read as add and remove where a
+ *  chevron reads as reveal, which is what these do. */
+describe("everything that opens uses the same chevron", () => {
+  it("never draws a plus or a minus to expand something", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    expect(container.querySelector("[data-icon='plus']")).toBeNull();
+    expect(container.querySelector("[data-icon='minus']")).toBeNull();
+    expect(container.querySelector("[data-icon='chevron-right']")).not.toBeNull();
+  });
+
+  it("turns it on an element row the same way as everywhere else", () => {
+    const { container } = at("/projects/p1/steps/4/ea?pathway=P3");
+    const row = container.querySelector("[data-rid]") as HTMLElement;
+    const header = row.querySelector("button[aria-expanded]") as HTMLElement;
+    expect(header.querySelector("[data-icon='chevron-right']")).not.toBeNull();
+    fireEvent.click(header);
+    expect(header.querySelector("[data-icon='chevron-down']")).not.toBeNull();
+  });
+});

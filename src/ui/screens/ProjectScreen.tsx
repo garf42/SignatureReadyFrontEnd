@@ -332,7 +332,19 @@ function StepItem({
 }) {
   return (
     <MenuItem
-      className={css.step + " " + css[active ? "active" : step.mark]}
+      /* Finished work is GREYED as well as ticked, which is the convention an
+         accepted row already uses: it sits on the well while unfinished rows
+         sit on paper. `.completed` was in this stylesheet from the start and
+         nothing ever set it, because `mark` never took that value — the class
+         was waiting for a fact the rail could not answer until submission
+         existed. It composes with `.active`: both ground on the well, so the
+         step you are standing on keeps its edge bar. */
+      className={
+        css.step +
+        " " +
+        css[active ? "active" : step.mark] +
+        (done ? " " + css.completed : "")
+      }
       title={step.waitingOn ? `${step.name} — waits on ${step.waitingOn}` : step.name}
       /* The number is an address and is always shown — swapping it for the
          tick cost the reader the one thing they use to find a step again. The

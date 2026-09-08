@@ -90,8 +90,12 @@ export function QuestionRow({
         <span className={css.ref}>{row.ref}</span>
         <span className={css.label}>{row.label}</span>
         <StatusMark mark={row.mark} />
+        {/* The same chevron the rail's bands and the project band use, turning
+            the same way. Plus and minus were a second gesture that meant the
+            same thing — and worse, plus/minus reads as add and remove where a
+            chevron reads as reveal, which is what this does. */}
         <span className={css.glyph}>
-          <Icon icon={open ? "minus" : "plus"} />
+          <Icon icon={open ? "chevron-down" : "chevron-right"} size={12} />
         </span>
       </button>
       {open ? (

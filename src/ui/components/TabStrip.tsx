@@ -65,6 +65,12 @@ export function TabStrip({
             <Tab
               key={tab.id}
               id={tab.id}
+              /* Greyed as well as ticked, in the strip's own grammar. An
+                 accepted ROW sits on the well while unfinished rows sit on
+                 paper; in a strip the paper state is the SELECTED tab, so a
+                 finished tab you are standing on grounds on the well instead —
+                 the same claim, made where the strip can make it. */
+              className={tab.done ? css.doneTab : undefined}
               title={
                 <>
                   {tab.name}
